@@ -1132,7 +1132,23 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
             const openAddResourceModal = (shelfId) => { currentShelfIdForResource = shelfId; resourceTitleInput.value = ''; resourceContentInput.value = ''; addResourceModal.classList.remove('hidden'); };
             const addResource = async () => { if (!userId || !currentShelfIdForResource) return; const title = resourceTitleInput.value.trim(); let content = resourceContentInput.value.trim(); if (!title || !content) { showNotification("Помилка", "Всі поля повинні бути заповнені"); return; } if (!content.startsWith('http')) { content = 'https://' + content; } const newItem = { id: Date.now().toString() + Math.random().toString(36).substr(2, 5), title: title, type: 'link', url: content }; try { const shelfRef = doc(db, `artifacts/${appId}/users/${userId}/resources`, currentShelfIdForResource); await updateDoc(shelfRef, { items: arrayUnion(newItem) }); addResourceModal.classList.add('hidden'); } catch (e) { console.error("Error adding resource: ", e); } };
             const deleteResource = async (shelfId, itemId, currentItems) => { if (!userId) return; try { const updatedItems = currentItems.filter(item => item.id !== itemId); const shelfRef = doc(db, `artifacts/${appId}/users/${userId}/resources`, shelfId); await updateDoc(shelfRef, { items: updatedItems }); } catch (e) { console.error("Error deleting resource: ", e); } };
+            const addStickerModalEl = document.getElementById('add-sticker-modal');
+            const stickerTypeRadios = addStickerModalEl.querySelectorAll('input[name="stickerType"]');
+            const stickerTextInputEl = document.getElementById('sticker-text-input');
+            const stickerTextWrapperEl = document.getElementById('stickerTextWrapper');
+            const stickerImageWrapperEl = document.getElementById('stickerImageWrapper');
+            const stickerImageInputEl = document.getElementById('stickerImageInput');
+            const stickerImagePreviewEl = document.getElementById('stickerImagePreview');
+            const stickerImageProgressEl = document.getElementById('stickerImageProgress');
+            const stickerImageProgressBarEl = document.getElementById('stickerImageProgressBar');
+            const saveStickerBtnEl = document.getElementById('save-sticker-btn');
+            const cancelStickerBtnEl = document.getElementById('cancel-sticker-btn');
 
+            // Ensure boardStickersArea exists (you already have it)
+            const boardStickersAreaEl = boardStickersArea;
+
+            // Config
+            const IMAGE_STICKER_SIZE = 120; // px square
             // --- BOARDS LOGIC ---
             
             const openBoardsView = () => {

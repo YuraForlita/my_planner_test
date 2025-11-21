@@ -610,7 +610,16 @@
             </div>
         </div>
     </div>
-
+    <div id="editBoardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl w-96">
+            <h3 class="font-bold mb-2 text-lg">Редагувати дошку</h3>
+            <input type="text" id="editBoardTitleInput" class="w-full mb-4 p-2 border rounded" placeholder="Назва дошки">
+            <div class="flex justify-end gap-2">
+                <button id="cancelEditBoardBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
+                <button id="saveEditBoardBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+            </div>
+        </div>
+    </div>
     <!-- Секція Live Boards (Оновлена для мобільних) -->
     <div id="boards-section" class="max-w-7xl w-full hidden h-[90vh]">
         <div class="bg-white h-full p-6 rounded-2xl shadow-xl flex flex-col">
@@ -840,6 +849,41 @@
             });
 
             let currentEditingTask = null;
+
+            let currentEditingBoard = null;
+
+const editBoardModal = document.getElementById('editBoardModal');
+const editBoardTitleInput = document.getElementById('editBoardTitleInput');
+const cancelEditBoardBtn = document.getElementById('cancelEditBoardBtn');
+const saveEditBoardBtn = document.getElementById('saveEditBoardBtn');
+
+const openEditBoardModal = (board) => {
+    if(board.ownerId !== userId) return; // Тільки власник може редагувати
+    currentEditingBoard = board;
+    editBoardTitleInput.value = board.title;
+    editBoardModal.classList.remove('hidden');
+};
+
+cancelEditBoardBtn.addEventListener('click', () => {
+    editBoardModal.classList.add('hidden');
+});
+
+saveEditBoardBtn.addEventListener('click', async () => {
+    if(!currentEditingBoard) return;
+    const newTitle = editBoardTitleInput.value.trim();
+    if(!newTitle) return alert("Вкажіть назву дошки!");
+    
+    try {
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'boards', currentEditingBoard.id), {
+            title: newTitle
+        });
+        editBoardModal.classList.add('hidden');
+        showNotification('Успіх', 'Назву дошки успішно змінено.');
+    } catch(e) {
+        console.error("Error updating board title", e);
+        showNotification('Помилка', 'Не вдалося оновити назву дошки.');
+    }
+});
 
 const editBoardTaskModal = document.getElementById('editBoardTaskModal');
 const editBoardTaskTitle = document.getElementById('editBoardTaskTitle');
@@ -1094,36 +1138,53 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
                         return;
                     }
                     snapshot.forEach(doc => {
-                        const board = { id: doc.id, ...doc.data() };
-                        const isOwner = board.ownerId === userId;
-                        const el = document.createElement('div');
-                        el.className = 'bg-white p-6 rounded-xl shadow-lg border border-orange-100 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group';
-                        
-                        // Delete Button (Only for Owner)
-                        const deleteBtnHtml = isOwner 
-                            ? `<button class="delete-board-btn absolute top-2 right-2 text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Видалити дошку"><i class="fas fa-trash-alt"></i></button>`
-                            : '';
+    const board = { id: doc.id, ...doc.data() };
+    const isOwner = board.ownerId === userId;
 
-                        el.innerHTML = `
-                            <h3 class="font-bold text-xl text-gray-800 mb-2 pr-6">${board.title}</h3>
-                            <p class="text-sm text-gray-500"><i class="fas fa-user-friends"></i> ${board.members ? board.members.length : 0} учасників</p>
-                            ${deleteBtnHtml}
-                        `;
-                        
-                        el.addEventListener('click', (e) => {
-                            if(e.target.closest('.delete-board-btn')) return;
-                            openActiveBoard(board);
-                        });
+    const el = document.createElement('div');
+    el.className = 'bg-white p-6 rounded-xl shadow-lg border border-orange-100 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group';
 
-                        if(isOwner) {
-                            el.querySelector('.delete-board-btn').addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                showConfirmModal(() => deleteBoard(board.id), `Видалити дошку "${board.title}"? Це видалить всі завдання та стікери на ній.`, "Видалити");
-                            });
-                        }
+    // Delete Button (тільки для власника)
+    const deleteBtnHtml = isOwner 
+        ? `<button class="delete-board-btn absolute top-2 right-2 text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Видалити дошку"><i class="fas fa-trash-alt"></i></button>`
+        : '';
 
-                        boardsGrid.appendChild(el);
-                    });
+    // Edit Button (тільки для власника)
+    const editBtnHtml = isOwner
+        ? `<button class="edit-board-btn absolute top-2 left-2 text-gray-300 hover:text-blue-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Редагувати назву"><i class="fas fa-edit"></i></button>`
+        : '';
+
+    el.innerHTML = `
+        <h3 class="font-bold text-xl text-gray-800 mb-2 pr-6">${board.title}</h3>
+        <p class="text-sm text-gray-500"><i class="fas fa-user-friends"></i> ${board.members ? board.members.length : 0} учасників</p>
+        ${deleteBtnHtml}
+        ${editBtnHtml}
+    `;
+
+    // Відкриття дошки
+    el.addEventListener('click', (e) => {
+        if(e.target.closest('.delete-board-btn') || e.target.closest('.edit-board-btn')) return;
+        openActiveBoard(board);
+    });
+
+    // Видалення дошки
+    if(isOwner && el.querySelector('.delete-board-btn')) {
+        el.querySelector('.delete-board-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showConfirmModal(() => deleteBoard(board.id), `Видалити дошку "${board.title}"? Це видалить всі завдання та стікери на ній.`, "Видалити");
+        });
+    }
+
+    // Редагування назви дошки
+    if(isOwner && el.querySelector('.edit-board-btn')) {
+        el.querySelector('.edit-board-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditBoardModal(board);
+        });
+    }
+
+    boardsGrid.appendChild(el);
+});
                 });
             };
 

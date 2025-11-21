@@ -598,6 +598,18 @@
              </div>
         </div>
     </div>
+    <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl w-96">
+            <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
+            <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-2 border rounded" placeholder="Назва завдання">
+            <div id="editSubtasksContainer" class="mb-2"></div>
+            <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
+            <div class="flex justify-end gap-2">
+                <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
+                <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Секція Live Boards (Оновлена для мобільних) -->
     <div id="boards-section" class="max-w-7xl w-full hidden h-[90vh]">
@@ -826,6 +838,71 @@
                     boardsSection.classList.add('hidden');
                 }
             });
+
+            let currentEditingTask = null;
+
+const editBoardTaskModal = document.getElementById('editBoardTaskModal');
+const editBoardTaskTitle = document.getElementById('editBoardTaskTitle');
+const editSubtasksContainer = document.getElementById('editSubtasksContainer');
+const addEditSubtaskBtn = document.getElementById('addEditSubtaskBtn');
+const cancelEditBoardTaskBtn = document.getElementById('cancelEditBoardTaskBtn');
+const saveEditBoardTaskBtn = document.getElementById('saveEditBoardTaskBtn');
+
+const openEditBoardTask = (task) => {
+    currentEditingTask = task;
+    editBoardTaskTitle.value = task.text;
+    editSubtasksContainer.innerHTML = '';
+
+    if(task.subtasks) {
+        task.subtasks.forEach((s, idx) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = s.text;
+            input.dataset.idx = idx;
+            input.className = 'w-full mb-1 p-1 border rounded subtask-input';
+            editSubtasksContainer.appendChild(input);
+        });
+    }
+
+    editBoardTaskModal.classList.remove('hidden');
+};
+
+// Додавання нового субтаска
+addEditSubtaskBtn.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = `Крок ${editSubtasksContainer.children.length + 1}`;
+    input.className = 'w-full mb-1 p-1 border rounded subtask-input';
+    editSubtasksContainer.appendChild(input);
+});
+
+// Закриття без збереження
+cancelEditBoardTaskBtn.addEventListener('click', () => {
+    editBoardTaskModal.classList.add('hidden');
+});
+
+// Збереження змін
+saveEditBoardTaskBtn.addEventListener('click', async () => {
+    if(!currentEditingTask) return;
+
+    const newTitle = editBoardTaskTitle.value.trim();
+    if(!newTitle) return alert("Вкажіть назву завдання!");
+
+    const newSubtasks = Array.from(editSubtasksContainer.querySelectorAll('.subtask-input'))
+        .map((inp, idx) => ({ text: inp.value.trim(), completed: currentEditingTask.subtasks?.[idx]?.completed || false }))
+        .filter(s => s.text !== '');
+
+    try {
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', currentEditingTask.id), {
+            text: newTitle,
+            subtasks: newSubtasks
+        });
+        editBoardTaskModal.classList.add('hidden');
+    } catch(e) {
+        console.error("Error updating task", e);
+        alert("Не вдалося оновити завдання");
+    }
+});
             
             // ... Helper functions ...
             const signInWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { console.error("Sign-in error:", error); } };
@@ -1159,44 +1236,52 @@
             };
 
             const renderBoardTask = (item) => {
-                const total = item.subtasks ? item.subtasks.length : 0;
-                const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-                const percent = total > 0 ? Math.round((done/total) * 100) : 0;
+    const total = item.subtasks ? item.subtasks.length : 0;
+    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+    const percent = total > 0 ? Math.round((done/total) * 100) : 0;
 
-                const el = document.createElement('div');
-                el.className = 'board-task-card p-3 mb-2';
-                
-                let subtasksHtml = '';
-                if(item.subtasks) {
-                    subtasksHtml = item.subtasks.map((s, idx) => `
-                        <div class="flex items-start gap-2 mt-1">
-                            <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                            <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
-                        </div>
-                    `).join('');
-                }
+    const el = document.createElement('div');
+    el.className = 'board-task-card p-3 mb-2 border rounded';
 
-                el.innerHTML = `
-                    <div class="flex justify-between items-start mb-1">
-                        <h4 class="font-bold text-gray-800">${item.text}</h4>
-                        <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                        <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-                    </div>
-                    <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-                    <div class="pl-1 space-y-1">
-                        ${subtasksHtml}
-                    </div>
-                `;
+    let subtasksHtml = '';
+    if(item.subtasks) {
+        subtasksHtml = item.subtasks.map((s, idx) => `
+            <div class="flex items-start gap-2 mt-1">
+                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
+            </div>
+        `).join('');
+    }
 
-                el.querySelector('.delete-item-btn').addEventListener('click', () => deleteBoardItem(item.id));
-                el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                    cb.addEventListener('change', (e) => toggleSubtask(item, parseInt(e.target.dataset.idx), e.target.checked));
-                });
+    el.innerHTML = `
+        <div class="flex justify-between items-start mb-1">
+            <h4 class="font-bold text-gray-800">${item.text}</h4>
+            <div class="flex gap-2">
+                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+        <div class="pl-1 space-y-1">
+            ${subtasksHtml}
+        </div>
+    `;
 
-                boardTasksList.appendChild(el);
-            };
+    // Події
+    el.querySelector('.delete-item-btn').addEventListener('click', () => deleteBoardItem(item.id));
+    el.querySelector('.edit-item-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditBoardTask(item);
+    });
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => toggleSubtask(item, parseInt(e.target.dataset.idx), e.target.checked));
+    });
+
+    boardTasksList.appendChild(el);
+};
 
             const toggleSubtask = async (item, idx, isChecked) => {
                 const newSubtasks = [...item.subtasks];

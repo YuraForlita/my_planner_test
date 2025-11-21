@@ -1526,17 +1526,76 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
             };
 
             const renderBoardSticker = (item) => {
-                const el = document.createElement('div');
-                el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
-                el.innerHTML = `
-                    <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
-                    <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
-                        ${item.text}
-                    </div>
-                `;
-                el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem(item.id));
-                boardStickersArea.appendChild(el);
-            };
+    // item: { id, type: 'sticker', stickerType: 'text'|'image', text?, imageUrl?, color?, x, y, width?, height? }
+    const el = document.createElement('div');
+    el.className = 'relative';
+    // wrapper that will be absolutely positioned inside board-stickers-column area
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'relative';
+    wrapper.style.width = (item.stickerType === 'image' ? `${item.width || IMAGE_STICKER_SIZE}px` : 'auto');
+    wrapper.style.height = (item.stickerType === 'image' ? `${item.height || IMAGE_STICKER_SIZE}px` : 'auto');
+    wrapper.style.margin = '6px';
+    wrapper.dataset.id = item.id;
+
+    // for layout consistency on desktop board-stickers-area, we append block items;
+    // If you want precise x/y positioning on canvas, adjust to absolute positioning and use item.x/item.y
+    if (item.stickerType === 'text') {
+        const card = document.createElement('div');
+        card.className = `sticker p-3 rounded shadow-sm ${item.color || 'bg-yellow-200'} text-sm break-words relative`;
+        card.style.minWidth = '120px';
+        card.innerHTML = `
+            <button class="delete-sticker-btn absolute top-1 right-1 text-gray-600 hover:text-red-600"><i class="fas fa-times"></i></button>
+            <div class="flex items-center justify-center h-full">${escapeHtml(item.text || '')}</div>
+        `;
+        card.querySelector('.delete-sticker-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showConfirmModal(() => deleteBoardItem(item.id), "Видалити стікер?", "Видалити");
+        });
+        wrapper.appendChild(card);
+    } else if (item.stickerType === 'image') {
+        const card = document.createElement('div');
+        card.className = `relative overflow-hidden rounded shadow-sm bg-white`;
+        card.style.width = `${item.width || IMAGE_STICKER_SIZE}px`;
+        card.style.height = `${item.height || IMAGE_STICKER_SIZE}px`;
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'center';
+
+        const img = document.createElement('img');
+        img.src = item.imageUrl;
+        img.alt = 'Sticker image';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.display = 'block';
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-sticker-btn absolute top-1 right-1 text-gray-600 hover:text-red-600 bg-white/70 rounded p-1';
+        delBtn.innerHTML = '<i class="fas fa-times"></i>';
+        delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // optionally also delete storage object? we won't do that automatically to avoid complications
+            showConfirmModal(() => deleteBoardItem(item.id), "Видалити фото-стікер?", "Видалити");
+        });
+
+        card.appendChild(img);
+        card.appendChild(delBtn);
+        wrapper.appendChild(card);
+    }
+
+    el.appendChild(wrapper);
+    boardStickersAreaEl.appendChild(el);
+};
+
+// helper to escape HTML inside text sticker
+function escapeHtml(unsafe) {
+    return (unsafe || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
             const deleteBoardItem = async (itemId) => {
                 if(!confirm('Видалити цей елемент?')) return;

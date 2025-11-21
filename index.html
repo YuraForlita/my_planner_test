@@ -1286,6 +1286,33 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
 
                 subscribeToBoardItems(board.id);
             };
+            stickerTypeRadios.forEach(r => r.addEventListener('change', () => {
+                const v = document.querySelector('input[name="stickerType"]:checked').value;
+                if (v === 'text') {
+                    stickerTextWrapperEl.classList.remove('hidden');
+                    stickerImageWrapperEl.classList.add('hidden');
+                } else {
+                    stickerTextWrapperEl.classList.add('hidden');
+                    stickerImageWrapperEl.classList.remove('hidden');
+                }
+            }));
+
+            // Preview chosen image
+            stickerImageInputEl.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    stickerImagePreviewEl.classList.add('hidden');
+                    stickerImagePreviewEl.style.backgroundImage = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => {
+                    stickerImagePreviewEl.style.backgroundImage = `url(${reader.result})`;
+                    stickerImagePreviewEl.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            });
+
 
             const switchMobileTab = (tab) => {
                 currentMobileTab = tab;

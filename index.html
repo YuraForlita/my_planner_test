@@ -1369,6 +1369,57 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
                     );
                 });
             };
+            const addStickerSaveHandler = async () => {
+            if (!currentBoardId) {
+                showNotification('Помилка', 'Спочатку виберіть дошку.');
+                return;
+            }
+            const type = document.querySelector('input[name="stickerType"]:checked').value;
+            if (type === 'text') {
+                const text = stickerTextInputEl.value.trim();
+                if (!text) { showNotification('Помилка', 'Введіть текст стікера.'); return; }
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+                        boardId: currentBoardId,
+                        type: 'sticker',
+                        stickerType: 'text',
+                        text,
+                        color: selectedStickerColor || 'bg-yellow-200',
+                        x: 200,
+                        y: 200,
+                        createdAt: serverTimestamp()
+                    });
+                    addStickerModalEl.classList.add('hidden');
+                } catch (e) {
+                    console.error('Error saving text sticker', e);
+                    showNotification('Помилка', 'Не вдалося створити стікер.');
+                }
+            } else { // image
+                const file = stickerImageInputEl.files[0];
+                if (!file) { showNotification('Помилка', 'Оберіть фото для стікера.'); return; }
+                try {
+                    const downloadURL = await uploadStickerImage(file, currentBoardId);
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+                        boardId: currentBoardId,
+                        type: 'sticker',
+                        stickerType: 'image',
+                        imageUrl: downloadURL,
+                        width: IMAGE_STICKER_SIZE,
+                        height: IMAGE_STICKER_SIZE,
+                        x: 200,
+                        y: 200,
+                        createdAt: serverTimestamp()
+                    });
+                    addStickerModalEl.classList.add('hidden');
+                } catch (e) {
+                    console.error('Error saving image sticker', e);
+                    showNotification('Помилка', 'Не вдалося завантажити фото або створити стікер.');
+                }
+            }
+        };
+
+        // bind save
+        saveStickerBtnEl.addEventListener('click', addStickerSaveHandler);
 
 
             const switchMobileTab = (tab) => {

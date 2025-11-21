@@ -1313,6 +1313,63 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
                 reader.readAsDataURL(file);
             });
 
+            addStickerBtn.addEventListener('click', () => {
+                // Reset modal fields
+                stickerTextInputEl.value = '';
+                stickerImageInputEl.value = '';
+                stickerImagePreviewEl.style.backgroundImage = '';
+                stickerImagePreviewEl.classList.add('hidden');
+                stickerImageProgressEl.classList.add('hidden');
+                stickerImageProgressBarEl.style.width = '0%';
+                // default to text
+                addStickerModalEl.querySelector('input[value="text"]').checked = true;
+                stickerTextWrapperEl.classList.remove('hidden');
+                stickerImageWrapperEl.classList.add('hidden');
+
+                addStickerModalEl.classList.remove('hidden');
+            });
+
+            // Cancel
+            cancelStickerBtnEl.addEventListener('click', () => {
+                addStickerModalEl.classList.add('hidden');
+            });
+
+            // Helper: upload image to Firebase Storage with progress (returns downloadURL)
+            const uploadStickerImage = (file, boardId) => {
+                return new Promise((resolve, reject) => {
+                    if (!file) return reject(new Error('No file'));
+                    const id = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const path = `boards/${boardId}/stickers/${id}.${ext}`;
+                    const storageRef = ref(storage, path);
+                    const uploadTask = uploadBytesResumable(storageRef, file);
+
+                    stickerImageProgressEl.classList.remove('hidden');
+
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                            stickerImageProgressBarEl.style.width = `${pct}%`;
+                        },
+                        (error) => {
+                            console.error('Sticker upload error', error);
+                            stickerImageProgressEl.classList.add('hidden');
+                            reject(error);
+                        },
+                        async () => {
+                            try {
+                                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                                stickerImageProgressEl.classList.add('hidden');
+                                resolve(downloadURL);
+                            } catch (e) {
+                                stickerImageProgressEl.classList.add('hidden');
+                                reject(e);
+                            }
+                        }
+                    );
+                });
+            };
+
 
             const switchMobileTab = (tab) => {
                 currentMobileTab = tab;

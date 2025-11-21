@@ -1210,6 +1210,169 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
                 });
             };
 
+            const createBoard = async () => {
+                const title = boardNameInput.value.trim();
+                if(!title || !userId) return;
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), {
+                        title,
+                        ownerId: userId,
+                        members: [userId],
+                        createdAt: serverTimestamp()
+                    });
+                    createBoardModal.classList.add('hidden');
+                    boardNameInput.value = '';
+                } catch(e) { console.error("Error creating board", e); }
+            };
+
+            const deleteBoard = async (boardId) => {
+                if(!boardId || !userId) return;
+                try {
+                    // 1. Delete all board items
+                    const itemsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
+                    const itemsSnapshot = await getDocs(itemsQuery);
+                    const batch = writeBatch(db);
+                    
+                    itemsSnapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    
+                    // 2. Delete the board itself
+                    batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'boards', boardId));
+                    
+                    await batch.commit();
+                    showNotification('Успіх', 'Дошку успішно видалено.');
+                } catch(e) {
+                    console.error("Error deleting board:", e);
+                    showNotification('Помилка', 'Не вдалося видалити дошку.');
+                }
+            };
+
+            const openActiveBoard = (board) => {
+                currentBoardId = board.id;
+                activeBoardTitle.textContent = board.title;
+                getEl('board-member-count').textContent = board.members.length;
+                
+                boardsListView.classList.add('hidden');
+                activeBoardView.classList.remove('hidden');
+                activeBoardView.classList.add('flex');
+                
+                // Reset mobile view to tasks
+                switchMobileTab('tasks');
+                
+                // Update member select options
+                boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+                Object.values(friendsCache).forEach(f => {
+                    if(!board.members.includes(f.userId)) {
+                        boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
+                    }
+                });
+
+                subscribeToBoardItems(board.id);
+            };
+
+            const switchMobileTab = (tab) => {
+                currentMobileTab = tab;
+                
+                // UI State Update
+                if (tab === 'tasks') {
+                    mobileTabTasks.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+                    mobileTabTasks.classList.remove('text-gray-500');
+                    mobileTabStickers.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+                    mobileTabStickers.classList.add('text-gray-500');
+                    
+                    boardTasksColumn.classList.remove('hidden');
+                    boardStickersColumn.classList.add('hidden');
+                    
+                    // Restore desktop flex behavior if resized
+                    boardTasksColumn.classList.add('md:flex');
+                    boardStickersColumn.classList.add('md:block');
+                } else {
+                    mobileTabStickers.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
+                    mobileTabStickers.classList.remove('text-gray-500');
+                    mobileTabTasks.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
+                    mobileTabTasks.classList.add('text-gray-500');
+
+                    boardStickersColumn.classList.remove('hidden');
+                    boardTasksColumn.classList.add('hidden');
+                    
+                    // Restore desktop behavior
+                     boardStickersColumn.classList.add('md:block');
+                     boardTasksColumn.classList.add('md:flex');
+                }
+            };
+
+            const subscribeToBoardItems = (boardId) => {
+                if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
+                
+                unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+                    boardTasksList.innerHTML = '';
+                    boardStickersArea.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const item = { id: doc.id, ...doc.data() };
+                        if(item.type === 'task') renderBoardTask(item);
+                        else if(item.type === 'sticker') renderBoardSticker(item);
+                    });
+                });
+            };
+
+            const renderBoardTask = (item) => {
+    const total = item.subtasks ? item.subtasks.length : 0;
+    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+    const percent = total > 0 ? Math.round((done/total) * 100) : 0;
+
+    const el = document.createElement('div');
+    el.className = 'board-task-card p-3 mb-2 border rounded';
+
+    let subtasksHtml = '';
+    if(item.subtasks) {
+        subtasksHtml = item.subtasks.map((s, idx) => `
+            <div class="flex items-start gap-2 mt-1">
+                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
+            </div>
+        `).join('');
+    }
+
+    el.innerHTML = `
+        <div class="flex justify-between items-start mb-1">
+            <h4 class="font-bold text-gray-800">${item.text}</h4>
+            <div class="flex gap-2">
+                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+        <div class="pl-1 space-y-1">
+            ${subtasksHtml}
+        </div>
+    `;
+
+    // Події
+    el.querySelector('.delete-item-btn').addEventListener('click', () => deleteBoardItem(item.id));
+    el.querySelector('.edit-item-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditBoardTask(item);
+    });
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => toggleSubtask(item, parseInt(e.target.dataset.idx), e.target.checked));
+    });
+
+    boardTasksList.appendChild(el);
+};
+
+            const toggleSubtask = async (item, idx, isChecked) => {
+                const newSubtasks = [...item.subtasks];
+                newSubtasks[idx].completed = isChecked;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+                    subtasks: newSubtasks
+                });
+            };
 
             const addStickerModalEl = document.getElementById('add-sticker-modal');
 const stickerTypeRadios = addStickerModalEl.querySelectorAll('input[name="stickerType"]');
@@ -1442,183 +1605,6 @@ function escapeHtml(unsafe) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
-
-            const createBoard = async () => {
-                const title = boardNameInput.value.trim();
-                if(!title || !userId) return;
-                try {
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), {
-                        title,
-                        ownerId: userId,
-                        members: [userId],
-                        createdAt: serverTimestamp()
-                    });
-                    createBoardModal.classList.add('hidden');
-                    boardNameInput.value = '';
-                } catch(e) { console.error("Error creating board", e); }
-            };
-
-            const deleteBoard = async (boardId) => {
-                if(!boardId || !userId) return;
-                try {
-                    // 1. Delete all board items
-                    const itemsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-                    const itemsSnapshot = await getDocs(itemsQuery);
-                    const batch = writeBatch(db);
-                    
-                    itemsSnapshot.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    
-                    // 2. Delete the board itself
-                    batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'boards', boardId));
-                    
-                    await batch.commit();
-                    showNotification('Успіх', 'Дошку успішно видалено.');
-                } catch(e) {
-                    console.error("Error deleting board:", e);
-                    showNotification('Помилка', 'Не вдалося видалити дошку.');
-                }
-            };
-
-            const openActiveBoard = (board) => {
-                currentBoardId = board.id;
-                activeBoardTitle.textContent = board.title;
-                getEl('board-member-count').textContent = board.members.length;
-                
-                boardsListView.classList.add('hidden');
-                activeBoardView.classList.remove('hidden');
-                activeBoardView.classList.add('flex');
-                
-                // Reset mobile view to tasks
-                switchMobileTab('tasks');
-                
-                // Update member select options
-                boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
-                Object.values(friendsCache).forEach(f => {
-                    if(!board.members.includes(f.userId)) {
-                        boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
-                    }
-                });
-
-                subscribeToBoardItems(board.id);
-            };
-
-            const switchMobileTab = (tab) => {
-                currentMobileTab = tab;
-                
-                // UI State Update
-                if (tab === 'tasks') {
-                    mobileTabTasks.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
-                    mobileTabTasks.classList.remove('text-gray-500');
-                    mobileTabStickers.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
-                    mobileTabStickers.classList.add('text-gray-500');
-                    
-                    boardTasksColumn.classList.remove('hidden');
-                    boardStickersColumn.classList.add('hidden');
-                    
-                    // Restore desktop flex behavior if resized
-                    boardTasksColumn.classList.add('md:flex');
-                    boardStickersColumn.classList.add('md:block');
-                } else {
-                    mobileTabStickers.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
-                    mobileTabStickers.classList.remove('text-gray-500');
-                    mobileTabTasks.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
-                    mobileTabTasks.classList.add('text-gray-500');
-
-                    boardStickersColumn.classList.remove('hidden');
-                    boardTasksColumn.classList.add('hidden');
-                    
-                    // Restore desktop behavior
-                     boardStickersColumn.classList.add('md:block');
-                     boardTasksColumn.classList.add('md:flex');
-                }
-            };
-
-            const subscribeToBoardItems = (boardId) => {
-                if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-                
-                unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-                    boardTasksList.innerHTML = '';
-                    boardStickersArea.innerHTML = '';
-                    
-                    snapshot.forEach(doc => {
-                        const item = { id: doc.id, ...doc.data() };
-                        if(item.type === 'task') renderBoardTask(item);
-                        else if(item.type === 'sticker') renderBoardSticker(item);
-                    });
-                });
-            };
-
-            const renderBoardTask = (item) => {
-    const total = item.subtasks ? item.subtasks.length : 0;
-    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-    const percent = total > 0 ? Math.round((done/total) * 100) : 0;
-
-    const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-2 border rounded';
-
-    let subtasksHtml = '';
-    if(item.subtasks) {
-        subtasksHtml = item.subtasks.map((s, idx) => `
-            <div class="flex items-start gap-2 mt-1">
-                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
-            </div>
-        `).join('');
-    }
-
-    el.innerHTML = `
-        <div class="flex justify-between items-start mb-1">
-            <h4 class="font-bold text-gray-800">${item.text}</h4>
-            <div class="flex gap-2">
-                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-        </div>
-        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-        <div class="pl-1 space-y-1">
-            ${subtasksHtml}
-        </div>
-    `;
-
-    // Події
-    el.querySelector('.delete-item-btn').addEventListener('click', () => deleteBoardItem(item.id));
-    el.querySelector('.edit-item-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditBoardTask(item);
-    });
-    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', (e) => toggleSubtask(item, parseInt(e.target.dataset.idx), e.target.checked));
-    });
-
-    boardTasksList.appendChild(el);
-};
-
-            const toggleSubtask = async (item, idx, isChecked) => {
-                const newSubtasks = [...item.subtasks];
-                newSubtasks[idx].completed = isChecked;
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-                    subtasks: newSubtasks
-                });
-            };
-
-            const renderBoardSticker = (item) => {
-                const el = document.createElement('div');
-                el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
-                el.innerHTML = `
-                    <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
-                    <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
-                        ${item.text}
-                    </div>
-                `;
-                el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem(item.id));
-                boardStickersArea.appendChild(el);
-            };
 
             const deleteBoardItem = async (itemId) => {
                 if(!confirm('Видалити цей елемент?')) return;

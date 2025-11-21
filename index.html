@@ -382,43 +382,21 @@
 
     <!-- Modal: Add Sticker -->
     <div id="add-sticker-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
-  <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-    <h3 class="text-lg font-bold mb-4 text-gray-800">Новий Стікер</h3>
-
-    <div class="mb-3">
-      <label class="font-semibold block mb-2">Тип стікера:</label>
-      <div class="flex gap-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio" name="stickerType" value="text" checked class="form-radio">
-          <span>Текст</span>
-        </label>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="radio" name="stickerType" value="image" class="form-radio">
-          <span>Фото</span>
-        </label>
-      </div>
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Новий Стікер</h3>
+            <textarea id="sticker-text-input" placeholder="Текст нотатки..." rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <div class="h-8 w-8 rounded-full bg-yellow-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-yellow-200"></div>
+                <div class="h-8 w-8 rounded-full bg-blue-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-blue-200"></div>
+                <div class="h-8 w-8 rounded-full bg-green-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-green-200"></div>
+                <div class="h-8 w-8 rounded-full bg-pink-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-pink-200"></div>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="save-sticker-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Приліпити</button>
+                <button id="cancel-sticker-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
     </div>
-
-    <!-- TEXT MODE -->
-    <div id="stickerTextWrapper">
-      <textarea id="sticker-text-input" placeholder="Текст нотатки..." rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
-    </div>
-
-    <!-- IMAGE MODE -->
-    <div id="stickerImageWrapper" class="hidden">
-      <input type="file" id="stickerImageInput" accept="image/*" class="mb-2 w-full">
-      <div id="stickerImagePreview" class="hidden w-32 h-32 bg-gray-100 border rounded bg-center bg-cover"></div>
-      <div id="stickerImageProgress" class="w-full bg-gray-200 rounded h-2 mt-2 hidden">
-        <div id="stickerImageProgressBar" class="h-2 rounded" style="width:0%; background: linear-gradient(90deg,#60a5fa,#3b82f6)"></div>
-      </div>
-    </div>
-
-    <div class="flex justify-end space-x-2 mt-4">
-      <button id="cancel-sticker-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      <button id="save-sticker-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Приліпити</button>
-    </div>
-  </div>
-</div>
     
     <!-- Modal: Add Complex Task -->
     <div id="add-board-task-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
@@ -1374,237 +1352,18 @@ saveEditBoardTaskBtn.addEventListener('click', async () => {
                 });
             };
 
-            const addStickerModalEl = document.getElementById('add-sticker-modal');
-const stickerTypeRadios = addStickerModalEl.querySelectorAll('input[name="stickerType"]');
-const stickerTextInputEl = document.getElementById('sticker-text-input');
-const stickerTextWrapperEl = document.getElementById('stickerTextWrapper');
-const stickerImageWrapperEl = document.getElementById('stickerImageWrapper');
-const stickerImageInputEl = document.getElementById('stickerImageInput');
-const stickerImagePreviewEl = document.getElementById('stickerImagePreview');
-const stickerImageProgressEl = document.getElementById('stickerImageProgress');
-const stickerImageProgressBarEl = document.getElementById('stickerImageProgressBar');
-const saveStickerBtnEl = document.getElementById('save-sticker-btn');
-const cancelStickerBtnEl = document.getElementById('cancel-sticker-btn');
-
-// Ensure boardStickersArea exists (you already have it)
-const boardStickersAreaEl = boardStickersArea;
-
-// Config
-const IMAGE_STICKER_SIZE = 120; // px square
-
-// Toggle UI by type
-stickerTypeRadios.forEach(r => r.addEventListener('change', () => {
-    const v = document.querySelector('input[name="stickerType"]:checked').value;
-    if (v === 'text') {
-        stickerTextWrapperEl.classList.remove('hidden');
-        stickerImageWrapperEl.classList.add('hidden');
-    } else {
-        stickerTextWrapperEl.classList.add('hidden');
-        stickerImageWrapperEl.classList.remove('hidden');
-    }
-}));
-
-// Preview chosen image
-stickerImageInputEl.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-        stickerImagePreviewEl.classList.add('hidden');
-        stickerImagePreviewEl.style.backgroundImage = '';
-        return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-        stickerImagePreviewEl.style.backgroundImage = `url(${reader.result})`;
-        stickerImagePreviewEl.classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-});
-
-// Open add sticker modal (you already had addStickerBtn event opening it — ensure it resets)
-addStickerBtn.addEventListener('click', () => {
-    // Reset modal fields
-    stickerTextInputEl.value = '';
-    stickerImageInputEl.value = '';
-    stickerImagePreviewEl.style.backgroundImage = '';
-    stickerImagePreviewEl.classList.add('hidden');
-    stickerImageProgressEl.classList.add('hidden');
-    stickerImageProgressBarEl.style.width = '0%';
-    // default to text
-    addStickerModalEl.querySelector('input[value="text"]').checked = true;
-    stickerTextWrapperEl.classList.remove('hidden');
-    stickerImageWrapperEl.classList.add('hidden');
-
-    addStickerModalEl.classList.remove('hidden');
-});
-
-// Cancel
-cancelStickerBtnEl.addEventListener('click', () => {
-    addStickerModalEl.classList.add('hidden');
-});
-
-// Helper: upload image to Firebase Storage with progress (returns downloadURL)
-const uploadStickerImage = (file, boardId) => {
-    return new Promise((resolve, reject) => {
-        if (!file) return reject(new Error('No file'));
-        const id = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2,9)}`;
-        const ext = file.name.split('.').pop().toLowerCase();
-        const path = `boards/${boardId}/stickers/${id}.${ext}`;
-        const storageRef = ref(storage, path);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-
-        stickerImageProgressEl.classList.remove('hidden');
-
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                stickerImageProgressBarEl.style.width = `${pct}%`;
-            },
-            (error) => {
-                console.error('Sticker upload error', error);
-                stickerImageProgressEl.classList.add('hidden');
-                reject(error);
-            },
-            async () => {
-                try {
-                    const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                    stickerImageProgressEl.classList.add('hidden');
-                    resolve(downloadURL);
-                } catch (e) {
-                    stickerImageProgressEl.classList.add('hidden');
-                    reject(e);
-                }
-            }
-        );
-    });
-};
-
-// Save sticker (text or image) into the same collection used for board items: 'board_items'
-const addStickerSaveHandler = async () => {
-    if (!currentBoardId) {
-        showNotification('Помилка', 'Спочатку виберіть дошку.');
-        return;
-    }
-    const type = document.querySelector('input[name="stickerType"]:checked').value;
-    if (type === 'text') {
-        const text = stickerTextInputEl.value.trim();
-        if (!text) { showNotification('Помилка', 'Введіть текст стікера.'); return; }
-        try {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-                boardId: currentBoardId,
-                type: 'sticker',
-                stickerType: 'text',
-                text,
-                color: selectedStickerColor || 'bg-yellow-200',
-                x: 200,
-                y: 200,
-                createdAt: serverTimestamp()
-            });
-            addStickerModalEl.classList.add('hidden');
-        } catch (e) {
-            console.error('Error saving text sticker', e);
-            showNotification('Помилка', 'Не вдалося створити стікер.');
-        }
-    } else { // image
-        const file = stickerImageInputEl.files[0];
-        if (!file) { showNotification('Помилка', 'Оберіть фото для стікера.'); return; }
-        try {
-            const downloadURL = await uploadStickerImage(file, currentBoardId);
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-                boardId: currentBoardId,
-                type: 'sticker',
-                stickerType: 'image',
-                imageUrl: downloadURL,
-                width: IMAGE_STICKER_SIZE,
-                height: IMAGE_STICKER_SIZE,
-                x: 200,
-                y: 200,
-                createdAt: serverTimestamp()
-            });
-            addStickerModalEl.classList.add('hidden');
-        } catch (e) {
-            console.error('Error saving image sticker', e);
-            showNotification('Помилка', 'Не вдалося завантажити фото або створити стікер.');
-        }
-    }
-};
-
-// bind save
-saveStickerBtnEl.addEventListener('click', addStickerSaveHandler);
-
-// --- Updated renderBoardSticker to support image stickers ---
-// Replace your existing renderBoardSticker with this implementation
-
-const renderBoardSticker = (item) => {
-    // item: { id, type: 'sticker', stickerType: 'text'|'image', text?, imageUrl?, color?, x, y, width?, height? }
-    const el = document.createElement('div');
-    el.className = 'relative';
-    // wrapper that will be absolutely positioned inside board-stickers-column area
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    wrapper.style.width = (item.stickerType === 'image' ? `${item.width || IMAGE_STICKER_SIZE}px` : 'auto');
-    wrapper.style.height = (item.stickerType === 'image' ? `${item.height || IMAGE_STICKER_SIZE}px` : 'auto');
-    wrapper.style.margin = '6px';
-    wrapper.dataset.id = item.id;
-
-    // for layout consistency on desktop board-stickers-area, we append block items;
-    // If you want precise x/y positioning on canvas, adjust to absolute positioning and use item.x/item.y
-    if (item.stickerType === 'text') {
-        const card = document.createElement('div');
-        card.className = `sticker p-3 rounded shadow-sm ${item.color || 'bg-yellow-200'} text-sm break-words relative`;
-        card.style.minWidth = '120px';
-        card.innerHTML = `
-            <button class="delete-sticker-btn absolute top-1 right-1 text-gray-600 hover:text-red-600"><i class="fas fa-times"></i></button>
-            <div class="flex items-center justify-center h-full">${escapeHtml(item.text || '')}</div>
-        `;
-        card.querySelector('.delete-sticker-btn').addEventListener('click', (e) => {
-            e.stopPropagation();
-            showConfirmModal(() => deleteBoardItem(item.id), "Видалити стікер?", "Видалити");
-        });
-        wrapper.appendChild(card);
-    } else if (item.stickerType === 'image') {
-        const card = document.createElement('div');
-        card.className = `relative overflow-hidden rounded shadow-sm bg-white`;
-        card.style.width = `${item.width || IMAGE_STICKER_SIZE}px`;
-        card.style.height = `${item.height || IMAGE_STICKER_SIZE}px`;
-        card.style.display = 'flex';
-        card.style.alignItems = 'center';
-        card.style.justifyContent = 'center';
-
-        const img = document.createElement('img');
-        img.src = item.imageUrl;
-        img.alt = 'Sticker image';
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.display = 'block';
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-sticker-btn absolute top-1 right-1 text-gray-600 hover:text-red-600 bg-white/70 rounded p-1';
-        delBtn.innerHTML = '<i class="fas fa-times"></i>';
-        delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            // optionally also delete storage object? we won't do that automatically to avoid complications
-            showConfirmModal(() => deleteBoardItem(item.id), "Видалити фото-стікер?", "Видалити");
-        });
-
-        card.appendChild(img);
-        card.appendChild(delBtn);
-        wrapper.appendChild(card);
-    }
-
-    el.appendChild(wrapper);
-    boardStickersAreaEl.appendChild(el);
-};
-
-// helper to escape HTML inside text sticker
-function escapeHtml(unsafe) {
-    return (unsafe || '')
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+            const renderBoardSticker = (item) => {
+                const el = document.createElement('div');
+                el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
+                el.innerHTML = `
+                    <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
+                    <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
+                        ${item.text}
+                    </div>
+                `;
+                el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem(item.id));
+                boardStickersArea.appendChild(el);
+            };
 
             const deleteBoardItem = async (itemId) => {
                 if(!confirm('Видалити цей елемент?')) return;

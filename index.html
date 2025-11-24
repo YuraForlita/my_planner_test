@@ -1549,6 +1549,30 @@ boardReportClose.addEventListener('click', () => {
     if (unsubscribeFromBoardActivities) { unsubscribeFromBoardActivities(); unsubscribeFromBoardActivities = null; }
 });
 
+boardReportFilterUser.addEventListener('change', () => renderBoardReport(latestBoardActivities));
+boardReportFilterType.addEventListener('change', () => renderBoardReport(latestBoardActivities));
+boardReportSearch.addEventListener('input', debounce(() => renderBoardReport(latestBoardActivities), 250));
+
+// download JSON
+boardReportDownload.addEventListener('click', () => {
+    const data = latestBoardActivities;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `board-${currentBoardId || 'report'}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+});
+
+// debounce helper
+function debounce(fn, wait) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+}
+
             const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

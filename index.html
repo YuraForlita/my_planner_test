@@ -1675,6 +1675,27 @@ const deleteBoardItem_withLogging = async (itemId) => {
     }
 };
 
+if (typeof addBoardTask === 'function') { window.__orig_addBoardTask = addBoardTask; addBoardTask = addBoardTask_withLogging; }
+if (typeof toggleSubtask === 'function') { window.__orig_toggleSubtask = toggleSubtask; toggleSubtask = toggleSubtask_withLogging; }
+if (typeof addSticker === 'function') { window.__orig_addSticker = addSticker; addSticker = addSticker_withLogging; }
+if (typeof deleteBoardItem === 'function') { window.__orig_deleteBoardItem = deleteBoardItem; deleteBoardItem = deleteBoardItem_withLogging; }
+
+/* Add "Звіт" button in active board header (if not already present) */
+(function addBoardReportButton() {
+    try {
+        const header = document.querySelector('#active-board-title')?.parentElement;
+        if (!header) return;
+        // create button only once
+        if (getEl('open-board-report-btn')) return;
+        const btn = document.createElement('button');
+        btn.id = 'open-board-report-btn';
+        btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
+        btn.textContent = 'Звіт';
+        btn.addEventListener('click', openBoardReport);
+        header.appendChild(btn);
+    } catch (e) { console.error(e); }
+})();
+
             const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

@@ -1598,61 +1598,70 @@ window.onload = function () {
     boardReportBody.appendChild(dayHeader);
     
     grouped[dayKey].forEach(a => {
-            const performerName = getDisplayNameFor(a.performedBy);
-            const performerInitials = performerName ? performerName.charAt(0).toUpperCase() : '?';
-            let icon = 'fas fa-info-circle';
-            let color = 'bg-gray-400';
-            let actionText = 'невідома дія';
-            
-            // Визначення іконки, кольору та тексту на основі типу активності
-            switch (a.type) {
-                case 'task_added':
-                    icon = 'fas fa-plus-circle'; color = 'bg-green-500'; 
-                    actionText = `додав(ла) завдання: "${a.itemText || ''}"`;
-                    break;
-                case 'task_completed':
-                    icon = 'fas fa-check-circle'; color = 'bg-indigo-500'; 
-                    actionText = `завершив(ла) завдання: "${a.itemText || ''}"`;
-                    break;
-                case 'task_subtask_toggled':
-                    icon = 'fas fa-clipboard-check'; color = 'bg-blue-500'; 
-                    actionText = `відмітив(ла) крок "${a.subtaskText || ''}" як ${a.completed ? 'виконаний' : 'невиконаний'} у завданні: "${a.itemText || ''}"`;
-                    break;
-                case 'sticker_added':
-                    icon = 'fas fa-thumbtack'; color = 'bg-yellow-500'; 
-                    actionText = `приліпив(ла) стікер: "${a.stickerText || ''}"`;
-                    break;
-                case 'board_member_added':
-                    icon = 'fas fa-user-plus'; color = 'bg-purple-500'; 
-                    actionText = `додав(ла) учасника ${getDisplayNameFor(a.newMemberId || '')}`;
-                    break;
-                case 'task_deleted':
-                    icon = 'fas fa-trash-alt'; color = 'bg-red-600';
-                    actionText = `видалив(ла) завдання: "${a.itemText || ''}"`;
-                    break;
-                default:
-                    actionText = `виконав(ла) невідому дію (${a.type})`;
-            }
-            
-            // Створення HTML-структури елемента часової шкали
-            const html = `
-                <div class="timeline-avatar ${color}">${performerInitials}</div>
-                <div class="timeline-card">
-                    <div class="font-semibold text-gray-800">${performerName}</div>
-                    <p class="text-sm text-gray-700 mt-1 break-words">${actionText}</p>
-                    <div class="timeline-meta">
-                        <span class="timeline-badge"><i class="${icon} text-xs mr-1"></i>${a.type.replace(/_/g, ' ')}</span>
-                        <span class="ml-2">${formatTime(a.timestamp)}</span>
+            try { // <--- ДОДАНО TRY/CATCH ДЛЯ ІЗОЛЯЦІЇ ПОМИЛОК
+                const performerName = getDisplayNameFor(a.performedBy);
+                // БЕЗПЕЧНЕ ОТРИМАННЯ ІНІЦІАЛІВ:
+                const performerInitials = (performerName && performerName.length > 0) ? performerName.charAt(0).toUpperCase() : '?'; 
+                let icon = 'fas fa-info-circle';
+                let color = 'bg-gray-400';
+                let actionText = 'виконав(ла) невідому дію';
+                
+                // Визначення іконки, кольору та тексту на основі типу активності (a.type)
+                switch (a.type) {
+                    case 'task_added':
+                        icon = 'fas fa-plus-circle'; color = 'bg-green-500'; 
+                        // БЕЗПЕЧНИЙ ДОСТУП: a.itemText || ''
+                        actionText = `додав(ла) завдання: "${a.itemText || ''}"`;
+                        break;
+                    case 'task_completed':
+                        icon = 'fas fa-check-circle'; color = 'bg-indigo-500'; 
+                        actionText = `завершив(ла) завдання: "${a.itemText || ''}"`;
+                        break;
+                    case 'task_subtask_toggled':
+                        icon = 'fas fa-clipboard-check'; color = 'bg-blue-500'; 
+                        actionText = `відмітив(ла) крок "${a.subtaskText || ''}" як ${a.completed ? 'виконаний' : 'невиконаний'} у завданні: "${a.itemText || ''}"`;
+                        break;
+                    case 'sticker_added':
+                        icon = 'fas fa-thumbtack'; color = 'bg-yellow-500'; 
+                        // БЕЗПЕЧНИЙ ДОСТУП: a.stickerText || ''
+                        actionText = `приліпив(ла) стікер: "${a.stickerText || ''}"`;
+                        break;
+                    case 'board_member_added':
+                        icon = 'fas fa-user-plus'; color = 'bg-purple-500'; 
+                        actionText = `додав(ла) учасника ${getDisplayNameFor(a.newMemberId || '')}`;
+                        break;
+                    case 'task_deleted':
+                        icon = 'fas fa-trash-alt'; color = 'bg-red-600';
+                        actionText = `видалив(ла) завдання: "${a.itemText || ''}"`;
+                        break;
+                    default:
+                        actionText = `виконав(ла) невідому дію (${a.type || 'UNKNOWN TYPE'})`;
+                }
+                
+                // Створення HTML-структури елемента часової шкали
+                const html = `
+                    <div class="timeline-avatar ${color}">${performerInitials}</div>
+                    <div class="timeline-card">
+                        <div class="font-semibold text-gray-800">${performerName}</div>
+                        <p class="text-sm text-gray-700 mt-1 break-words">${actionText}</p>
+                        <div class="timeline-meta">
+                            <span class="timeline-badge"><i class="${icon} text-xs mr-1"></i>${(a.type || 'error').replace(/_/g, ' ')}</span>
+                            <span class="ml-2">${formatTime(a.timestamp)}</span>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            const el = document.createElement('div');
-            el.className = 'timeline-item bg-white shadow-md border border-gray-100 mb-3 relative z-10';
-            el.innerHTML = html;
-            
-            // ЦЕЙ РЯДОК ПОВИНЕН БУТИ!
-            boardReportBody.appendChild(el); 
+                const el = document.createElement('div');
+                el.className = 'timeline-item bg-white shadow-md border border-gray-100 mb-3 relative z-10';
+                el.innerHTML = html;
+                
+                // Це має бути останній рядок у циклі:
+                boardReportBody.appendChild(el); 
+
+            } catch (e) {
+                // Якщо помилка виникає, ми її логуємо і продовжуємо цикл
+                console.error("Помилка рендерингу елемента активності:", a, e);
+            }
         });
 });
     };

@@ -1573,6 +1573,108 @@ function debounce(fn, wait) {
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
 }
 
+const addBoardTask_withLogging = async () => {
+    const title = boardTaskTitle.value.trim();
+    if(!title || !currentBoardId) return;
+
+    const subtaskInputs = document.querySelectorAll('.subtask-input');
+    const subtasks = Array.from(subtaskInputs).map(inp => ({
+        text: inp.value.trim(),
+        completed: false
+    })).filter(s => s.text !== '');
+
+    try {
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+            boardId: currentBoardId,
+            type: 'task',
+            text: title,
+            subtasks,
+            createdAt: serverTimestamp()
+        });
+        // log activity
+        await logBoardActivity(currentBoardId, {
+            type: 'task_added',
+            itemId: docRef.id,
+            itemText: title
+        });
+        addBoardTaskModal.classList.add('hidden');
+        boardTaskTitle.value = '';
+        subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
+    } catch(e) { console.error("Error adding board task", e); }
+};
+
+// 2) toggleSubtask() — after updating, we log
+// Replace existing toggleSubtask implementation with:
+
+const toggleSubtask_withLogging = async (item, idx, isChecked) => {
+    try {
+        const newSubtasks = [...item.subtasks];
+        const oldText = newSubtasks[idx]?.text || '';
+        newSubtasks[idx].completed = isChecked;
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            subtasks: newSubtasks
+        });
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+            itemId: item.id,
+            subtaskIdx: idx,
+            subtaskText: oldText
+        });
+    } catch (e) { console.error("Error toggling subtask:", e); }
+};
+
+// 3) addSticker() — log when added
+const addSticker_withLogging = async () => {
+    try {
+        const text = stickerTextInput.value.trim();
+        if(!text || !currentBoardId) return;
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+            boardId: currentBoardId,
+            type: 'sticker',
+            text,
+            color: selectedStickerColor,
+            createdAt: serverTimestamp()
+        });
+        await logBoardActivity(currentBoardId, {
+            type: 'sticker_added',
+            itemId: docRef.id,
+            stickerText: text,
+            stickerColor: selectedStickerColor
+        });
+        addStickerModal.classList.add('hidden');
+        stickerTextInput.value = '';
+    } catch(e) { console.error("Error adding sticker", e); }
+};
+
+// 4) deleteBoardItem() — we need to read doc content, then delete and log
+const deleteBoardItem_withLogging = async (itemId) => {
+    try {
+        const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
+        const snapshot = await getDoc(itemRef);
+        if (!snapshot.exists()) { console.warn('Item not found for deletion', itemId); return; }
+        const item = { id: snapshot.id, ...snapshot.data() };
+        // log depending on type
+        if(item.type === 'sticker') {
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'sticker_removed',
+                itemId: item.id,
+                stickerText: item.text,
+                stickerColor: item.color
+            });
+        } else {
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'task_deleted',
+                itemId: item.id,
+                itemText: item.text
+            });
+        }
+        // delete
+        await deleteDoc(itemRef);
+    } catch (e) {
+        console.error("Error deleting board item with logging:", e);
+    }
+};
+
             const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

@@ -1453,6 +1453,7 @@ window.onload = function () {
         }
     };
 let editingBoardTask = null;
+let editingBoard = null;
 
 function openEditBoardTask(item) {
     editingBoardTask = item;
@@ -1560,6 +1561,47 @@ async function saveEditBoardTask() {
 
     loadBoardTasks();
 }
+
+async function saveEditedBoard() {
+    if (!editingBoard) return;
+
+    const newTitle = getEl("editBoardTitleInput").value.trim();
+    if (!newTitle) {
+        cancelEditBoard(); 
+        return;
+    }
+
+    try {
+        // Оновлюємо документ у колекції 'boards'
+        await updateDoc(
+            doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
+            { title: newTitle }
+        );
+
+        // Оновлюємо заголовок активної дошки на сторінці, якщо ми її редагували
+        if (editingBoard.id === currentBoardId) {
+            // Припускаємо, що активний заголовок дошки має ID 'activeBoardTitle'
+            const activeBoardTitleEl = getEl('activeBoardTitle');
+            if (activeBoardTitleEl) activeBoardTitleEl.textContent = newTitle;
+        }
+
+        // Закриваємо модальне вікно
+        cancelEditBoard();
+
+    } catch (e) {
+        console.error("Помилка оновлення назви дошки:", e);
+    }
+}
+
+// 2.3. Функція скасування/закриття модального вікна дошки
+function cancelEditBoard() {
+    getEl("editBoardModal").classList.add("hidden"); 
+    editingBoard = null;
+}
+getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
+
+// Прив'язка для кнопки Скасувати назву дошки
+getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
 
 getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
 

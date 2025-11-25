@@ -1546,17 +1546,22 @@ getEl("addEditSubtaskBtn").addEventListener("click", () => {
 
 // --- Зберегти оновлення ---
 async function updateBoardItem_withLogging(taskId, data) {
+    // Оновлюємо завдання
     await updateDoc(
         doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
         data
     );
 
+    // Беремо UID користувача напряму з Firebase Auth
+    const uid = auth?.currentUser?.uid || null;
+
+    // Логування
     await addDoc(
         collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
         {
             boardId: currentBoardId,
             type: "edit_task",
-            performedBy: currentUid,
+            performedBy: uid,
             itemId: taskId,
             itemText: data.text,
             timestamp: serverTimestamp()

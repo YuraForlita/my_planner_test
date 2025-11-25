@@ -1497,7 +1497,7 @@ window.onload = function () {
             boardTasksColumn.classList.add('md:flex');
         }
     };
- let editingBoardTask = null;
+let editingBoardTask = null;
 
 // --- Відкрити модалку ---
 function openEditBoardTask(item) {
@@ -1600,6 +1600,51 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
     getEl("editBoardTaskModal").classList.add("hidden");
     editingBoardTask = null;
 });
+    const renderBoardTask = (item) => {
+        const total = item.subtasks ? item.subtasks.length : 0;
+        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+        const percent = total > 0 ? Math.round((done/total) * 100) : 0;
+
+        const el = document.createElement('div');
+        el.className = 'board-task-card p-3 mb-2 border rounded';
+
+        let subtasksHtml = '';
+        if(item.subtasks) {
+            subtasksHtml = item.subtasks.map((s, idx) => `
+                <div class="flex items-start gap-2 mt-1">
+                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
+                </div>
+            `).join('');
+        }
+
+        el.innerHTML = `
+            <div class="flex justify-between items-start mb-1">
+                <h4 class="font-bold text-gray-800">${item.text}</h4>
+                <div class="flex gap-2">
+                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+            <div class="pl-1 space-y-1">
+                ${subtasksHtml}
+            </div>
+        `;
+
+        const deleteBtn = el.querySelector('.delete-item-btn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const editBtn = el.querySelector('.edit-item-btn');
+        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+        });
+
+        boardTasksList.appendChild(el);
+    };
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');

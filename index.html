@@ -1452,173 +1452,166 @@ window.onload = function () {
             boardTasksColumn.classList.add('md:flex');
         }
     };
-let editingBoardTask = null;
-let editingBoard = null;
+    let editingBoardTask = null;
+    let editingBoard = null;
 
-function openEditBoardTask(item) {
-    editingBoardTask = item;
+    function openEditBoardTask(item) {
+        editingBoardTask = item;
 
-    getEl("editBoardTaskTitle").value = item.text;
+        getEl("editBoardTaskTitle").value = item.text;
 
-    const container = getEl("editSubtasksContainer");
-    container.innerHTML = "";
+        const container = getEl("editSubtasksContainer");
+        container.innerHTML = "";
 
-    if (item.subtasks && item.subtasks.length > 0) {
-        item.subtasks.forEach((s) => {
-            addEditSubtaskRow(s.text);
-        });
-    }
-
-    getEl("editBoardTaskModal").classList.remove("hidden");
-}
-
-function addEditSubtaskRow(text = "") {
-    const container = getEl("editSubtasksContainer");
-
-    const row = document.createElement("div");
-    row.className = "flex items-center gap-2 mb-1";
-
-    row.innerHTML = `
-        <input type="text"
-               class="edit-subtask-input w-full px-2 py-1 border rounded"
-               value="${text}">
-        <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
-    `;
-
-    row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
-        row.remove();
-    });
-
-    container.appendChild(row);
-}
-
-getEl("addEditSubtaskBtn").addEventListener("click", () => {
-    addEditSubtaskRow("");
-});
-
-async function updateBoardItem_withLogging(taskId, data) {
-
-    await updateDoc(
-        doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
-        data
-    );
-
-    const uid = auth?.currentUser?.uid || null;
-
-    await addDoc(
-        collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
-        {
-            boardId: currentBoardId,
-            type: "edit_task",
-            performedBy: uid,
-            itemId: taskId,
-            itemText: data.text,
-            timestamp: serverTimestamp()
+        if (item.subtasks && item.subtasks.length > 0) {
+            item.subtasks.forEach((s) => {
+                addEditSubtaskRow(s.text);
+            });
         }
-    );
-}
 
-async function saveEditBoardTask() {
-    if (!editingBoardTask) return;
-
-    const title = getEl("editBoardTaskTitle").value.trim();
-    if (!title) return;
-
-    const originalSubtasks = editingBoardTask.subtasks || [];
-    
-    const originalSubtaskMap = new Map();
-    originalSubtasks.forEach(s => {
-
-        originalSubtaskMap.set(s.text, s.completed); 
-    });
-
-    const subtasks = Array.from(
-        document.querySelectorAll(".edit-subtask-input")
-    )
-    .map(el => {
-        const text = el.value.trim();
-        let completed = false;
-
-        if (originalSubtaskMap.has(text)) {
-            completed = originalSubtaskMap.get(text);
-        } 
-
-        return {
-            text: text,
-            completed: completed
-        };
-    })
-    .filter(s => s.text !== "");
-
-    await updateBoardItem_withLogging(editingBoardTask.id, {
-        text: title,
-        subtasks
-    });
-
-    getEl("editBoardTaskModal").classList.add("hidden");
-
-    editingBoardTask = null;
-
-    loadBoardTasks();
-}
-
-async function saveEditedBoard() {
-    if (!editingBoard) return;
-
-    const newTitle = getEl("editBoardTitleInput").value.trim();
-    if (!newTitle) {
-        cancelEditBoard(); 
-        return;
+        getEl("editBoardTaskModal").classList.remove("hidden");
     }
 
-    try {
-        // Оновлюємо документ у колекції 'boards'
+    function addEditSubtaskRow(text = "") {
+        const container = getEl("editSubtasksContainer");
+
+        const row = document.createElement("div");
+        row.className = "flex items-center gap-2 mb-1";
+
+        row.innerHTML = `
+            <input type="text"
+                class="edit-subtask-input w-full px-2 py-1 border rounded"
+                value="${text}">
+            <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
+        `;
+
+        row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
+            row.remove();
+        });
+
+        container.appendChild(row);
+    }
+
+    getEl("addEditSubtaskBtn").addEventListener("click", () => {
+        addEditSubtaskRow("");
+    });
+
+    async function updateBoardItem_withLogging(taskId, data) {
+
         await updateDoc(
-            doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
-            { title: newTitle }
+            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
+            data
         );
 
-        // Оновлюємо заголовок активної дошки на сторінці, якщо ми її редагували
-        if (editingBoard.id === currentBoardId) {
-            // Припускаємо, що активний заголовок дошки має ID 'activeBoardTitle'
-            const activeBoardTitleEl = getEl('activeBoardTitle');
-            if (activeBoardTitleEl) activeBoardTitleEl.textContent = newTitle;
+        const uid = auth?.currentUser?.uid || null;
+
+        await addDoc(
+            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
+            {
+                boardId: currentBoardId,
+                type: "edit_task",
+                performedBy: uid,
+                itemId: taskId,
+                itemText: data.text,
+                timestamp: serverTimestamp()
+            }
+        );
+    }
+
+    async function saveEditBoardTask() {
+        if (!editingBoardTask) return;
+
+        const title = getEl("editBoardTaskTitle").value.trim();
+        if (!title) return;
+
+        const originalSubtasks = editingBoardTask.subtasks || [];
+        
+        const originalSubtaskMap = new Map();
+        originalSubtasks.forEach(s => {
+
+            originalSubtaskMap.set(s.text, s.completed); 
+        });
+
+        const subtasks = Array.from(
+            document.querySelectorAll(".edit-subtask-input")
+        )
+        .map(el => {
+            const text = el.value.trim();
+            let completed = false;
+
+            if (originalSubtaskMap.has(text)) {
+                completed = originalSubtaskMap.get(text);
+            } 
+
+            return {
+                text: text,
+                completed: completed
+            };
+        })
+        .filter(s => s.text !== "");
+
+        await updateBoardItem_withLogging(editingBoardTask.id, {
+            text: title,
+            subtasks
+        });
+
+        getEl("editBoardTaskModal").classList.add("hidden");
+
+        editingBoardTask = null;
+
+        loadBoardTasks();
+    }
+
+    async function saveEditedBoard() {
+        if (!editingBoard) return;
+
+        const newTitle = getEl("editBoardTitleInput").value.trim();
+        if (!newTitle) {
+            cancelEditBoard(); 
+            return;
         }
 
-        // Закриваємо модальне вікно
-        cancelEditBoard();
+        try {
 
-    } catch (e) {
-        console.error("Помилка оновлення назви дошки:", e);
+            await updateDoc(
+                doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
+                { title: newTitle }
+            );
+
+            if (editingBoard.id === currentBoardId) {
+                const activeBoardTitleEl = getEl('activeBoardTitle');
+                if (activeBoardTitleEl) activeBoardTitleEl.textContent = newTitle;
+            }
+
+            cancelEditBoard();
+
+        } catch (e) {
+            console.error("Помилка оновлення назви дошки:", e);
+        }
     }
-}
 
-// 2.3. Функція скасування/закриття модального вікна дошки
-function cancelEditBoard() {
-    getEl("editBoardModal").classList.add("hidden"); 
-    editingBoard = null;
-}
-getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
+    function cancelEditBoard() {
+        getEl("editBoardModal").classList.add("hidden"); 
+        editingBoard = null;
+    }
+    getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
 
-function openEditBoardModal(board) {
-    editingBoard = board; 
-    
-    // Встановлюємо поточну назву дошки у поле введення
-    getEl("editBoardTitleInput").value = board.title;
-    
-    // Показуємо модальне вікно
-    getEl("editBoardModal").classList.remove("hidden"); 
-}
+    function openEditBoardModal(board) {
+        editingBoard = board; 
+        
+        getEl("editBoardTitleInput").value = board.title;
+        
+        getEl("editBoardModal").classList.remove("hidden"); 
+    }
 
-// Прив'язка для кнопки Скасувати назву дошки
-getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
+    getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
 
-getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
+    getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
 
-getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
-    getEl("editBoardTaskModal").classList.add("hidden");
-    editingBoardTask = null;
-});
+    getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
+        getEl("editBoardTaskModal").classList.add("hidden");
+        editingBoardTask = null;
+    });
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;
         const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

@@ -1497,6 +1497,82 @@ window.onload = function () {
             boardTasksColumn.classList.add('md:flex');
         }
     };
+    function openEditBoardTask(item) {
+    window.currentEditingBoardTask = item; // зберігаємо, що саме редагуємо
+
+    // показуємо модалку
+    document.getElementById('editBoardTaskModal').classList.remove('hidden');
+
+    // заповнюємо назву
+    const titleInput = document.getElementById('editBoardTaskTitle');
+    titleInput.value = item.text;
+
+    // рендеримо підзадачі
+    const container = document.getElementById('editSubtasksContainer');
+    container.innerHTML = '';
+
+    if (item.subtasks && item.subtasks.length > 0) {
+        item.subtasks.forEach((sub, index) => {
+            const row = document.createElement('div');
+            row.className = "flex items-center gap-2 mb-2";
+
+            row.innerHTML = `
+                <input type="checkbox" data-idx="${index}" ${sub.completed ? "checked" : ""}>
+                <input type="text" data-idx="${index}" class="flex-1 p-1 border rounded text-sm" value="${sub.text}">
+            `;
+            container.appendChild(row);
+        });
+    }
+}
+
+document.getElementById('addEditSubtaskBtn').addEventListener('click', () => {
+    const container = document.getElementById('editSubtasksContainer');
+
+    const row = document.createElement('div');
+    row.className = "flex items-center gap-2 mb-2";
+
+    row.innerHTML = `
+        <input type="checkbox">
+        <input type="text" class="flex-1 p-1 border rounded text-sm" placeholder="Новий крок">
+    `;
+
+    container.appendChild(row);
+});
+
+document.getElementById('cancelEditBoardTaskBtn').addEventListener('click', () => {
+    document.getElementById('editBoardTaskModal').classList.add('hidden');
+});
+
+document.getElementById('saveEditBoardTaskBtn').addEventListener('click', () => {
+    const item = window.currentEditingBoardTask;
+    if (!item) return;
+
+    item.text = document.getElementById('editBoardTaskTitle').value.trim();
+
+    const rows = document.querySelectorAll('#editSubtasksContainer div');
+    const updatedSubtasks = [];
+
+    rows.forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const input = row.querySelector('input[type="text"]');
+
+        const txt = input.value.trim();
+        if (txt !== "") {
+            updatedSubtasks.push({
+                text: txt,
+                completed: checkbox.checked
+            });
+        }
+    });
+
+    item.subtasks = updatedSubtasks;
+
+    // ТУТ ТИ ВЖЕ МАЄШ ГОТОВУ ФУНКЦІЮ
+    updateBoardItem_withLogging(item);
+
+    document.getElementById('editBoardTaskModal').classList.add('hidden');
+});
+
 
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;

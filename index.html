@@ -1497,83 +1497,78 @@ window.onload = function () {
             boardTasksColumn.classList.add('md:flex');
         }
     };
-    function openEditBoardTask(item) {
-    window.currentEditingBoardTask = item; // зберігаємо, що саме редагуємо
+ let editingBoardTask = null;
 
-    // показуємо модалку
-    document.getElementById('editBoardTaskModal').classList.remove('hidden');
+function openEditBoardTask(item) {
+    editingBoardTask = item;
 
-    // заповнюємо назву
-    const titleInput = document.getElementById('editBoardTaskTitle');
-    titleInput.value = item.text;
-
-    // рендеримо підзадачі
-    const container = document.getElementById('editSubtasksContainer');
-    container.innerHTML = '';
+    getEl("editBoardTaskTitle").value = item.text;
+    const container = getEl("editSubtasksContainer");
+    container.innerHTML = "";
 
     if (item.subtasks && item.subtasks.length > 0) {
-        item.subtasks.forEach((sub, index) => {
-            const row = document.createElement('div');
-            row.className = "flex items-center gap-2 mb-2";
-
+        item.subtasks.forEach((s, idx) => {
+            const row = document.createElement("div");
+            row.className = "flex items-center gap-2 mb-1";
             row.innerHTML = `
-                <input type="checkbox" data-idx="${index}" ${sub.completed ? "checked" : ""}>
-                <input type="text" data-idx="${index}" class="flex-1 p-1 border rounded text-sm" value="${sub.text}">
+                <input type="text" class="edit-subtask-input w-full px-2 py-1 border rounded" value="${s.text}">
+                <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
             `;
+
+            row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
+                row.remove();
+            });
+
             container.appendChild(row);
         });
     }
+
+    getEl("editBoardTaskModal").classList.remove("hidden");
 }
 
-document.getElementById('addEditSubtaskBtn').addEventListener('click', () => {
-    const container = document.getElementById('editSubtasksContainer');
+async function updateBoardItem_withLogging(taskId, data) {
+    await updateDoc(
+        doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
+        data
+    );
 
-    const row = document.createElement('div');
-    row.className = "flex items-center gap-2 mb-2";
+    // 🔥 Додаємо запис у звіт
+    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), {
+        boardId: currentBoardId,
+        type: "edit_task",
+        performedBy: currentUid,
+        itemId: taskId,
+        itemText: data.text,
+        timestamp: serverTimestamp()
+    });
+}
 
-    row.innerHTML = `
-        <input type="checkbox">
-        <input type="text" class="flex-1 p-1 border rounded text-sm" placeholder="Новий крок">
-    `;
+async function saveEditBoardTask() {
+    if (!editingBoardTask) return;
 
-    container.appendChild(row);
-});
+    const title = getEl("editBoardTaskTitle").value.trim();
+    if (!title) return;
 
-document.getElementById('cancelEditBoardTaskBtn').addEventListener('click', () => {
-    document.getElementById('editBoardTaskModal').classList.add('hidden');
-});
+    const subtasks = Array.from(
+        document.querySelectorAll(".edit-subtask-input")
+    ).map(el => ({
+        text: el.value.trim(),
+        completed: false
+    })).filter(s => s.text !== "");
 
-document.getElementById('saveEditBoardTaskBtn').addEventListener('click', () => {
-    const item = window.currentEditingBoardTask;
-    if (!item) return;
-
-    item.text = document.getElementById('editBoardTaskTitle').value.trim();
-
-    const rows = document.querySelectorAll('#editSubtasksContainer div');
-    const updatedSubtasks = [];
-
-    rows.forEach(row => {
-        const checkbox = row.querySelector('input[type="checkbox"]');
-        const input = row.querySelector('input[type="text"]');
-
-        const txt = input.value.trim();
-        if (txt !== "") {
-            updatedSubtasks.push({
-                text: txt,
-                completed: checkbox.checked
-            });
-        }
+    await updateBoardItem_withLogging(editingBoardTask.id, {
+        text: title,
+        subtasks
     });
 
-    item.subtasks = updatedSubtasks;
+    getEl("editBoardTaskModal").classList.add("hidden");
+    editingBoardTask = null;
+}
 
-    // ТУТ ТИ ВЖЕ МАЄШ ГОТОВУ ФУНКЦІЮ
-    updateBoardItem_withLogging(item);
-
-    document.getElementById('editBoardTaskModal').classList.add('hidden');
+getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
+getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
+    getEl("editBoardTaskModal").classList.add("hidden");
 });
-
-
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;
         const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

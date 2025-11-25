@@ -1499,48 +1499,69 @@ window.onload = function () {
     };
  let editingBoardTask = null;
 
+// --- Відкрити модалку ---
 function openEditBoardTask(item) {
     editingBoardTask = item;
 
     getEl("editBoardTaskTitle").value = item.text;
+
     const container = getEl("editSubtasksContainer");
     container.innerHTML = "";
 
     if (item.subtasks && item.subtasks.length > 0) {
-        item.subtasks.forEach((s, idx) => {
-            const row = document.createElement("div");
-            row.className = "flex items-center gap-2 mb-1";
-            row.innerHTML = `
-                <input type="text" class="edit-subtask-input w-full px-2 py-1 border rounded" value="${s.text}">
-                <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
-            `;
-
-            row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
-                row.remove();
-            });
-
-            container.appendChild(row);
+        item.subtasks.forEach((s) => {
+            addEditSubtaskRow(s.text);
         });
     }
 
+    // Показати модалку
     getEl("editBoardTaskModal").classList.remove("hidden");
 }
 
+// --- Додати рядок підзадачі в модалку ---
+function addEditSubtaskRow(text = "") {
+    const container = getEl("editSubtasksContainer");
+
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-2 mb-1";
+
+    row.innerHTML = `
+        <input type="text"
+               class="edit-subtask-input w-full px-2 py-1 border rounded"
+               value="${text}">
+        <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
+    `;
+
+    row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
+        row.remove();
+    });
+
+    container.appendChild(row);
+}
+
+// --- Обробник кнопки ДОДАТИ КРОК ---
+getEl("addEditSubtaskBtn").addEventListener("click", () => {
+    addEditSubtaskRow("");
+});
+
+// --- Зберегти оновлення ---
 async function updateBoardItem_withLogging(taskId, data) {
     await updateDoc(
         doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
         data
     );
 
-    // 🔥 Додаємо запис у звіт
-    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), {
-        boardId: currentBoardId,
-        type: "edit_task",
-        performedBy: currentUid,
-        itemId: taskId,
-        itemText: data.text,
-        timestamp: serverTimestamp()
-    });
+    await addDoc(
+        collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
+        {
+            boardId: currentBoardId,
+            type: "edit_task",
+            performedBy: currentUid,
+            itemId: taskId,
+            itemText: data.text,
+            timestamp: serverTimestamp()
+        }
+    );
 }
 
 async function saveEditBoardTask() {
@@ -1551,69 +1572,34 @@ async function saveEditBoardTask() {
 
     const subtasks = Array.from(
         document.querySelectorAll(".edit-subtask-input")
-    ).map(el => ({
-        text: el.value.trim(),
-        completed: false
-    })).filter(s => s.text !== "");
+    )
+        .map(el => ({
+            text: el.value.trim(),
+            completed: false
+        }))
+        .filter(s => s.text !== "");
 
     await updateBoardItem_withLogging(editingBoardTask.id, {
         text: title,
         subtasks
     });
 
+    // Закрити модалку
     getEl("editBoardTaskModal").classList.add("hidden");
+
     editingBoardTask = null;
+
+    // Перерендерити список
+    loadBoardTasks();
 }
 
+// --- Обробники кнопок ---
 getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
+
 getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
     getEl("editBoardTaskModal").classList.add("hidden");
+    editingBoardTask = null;
 });
-    const renderBoardTask = (item) => {
-        const total = item.subtasks ? item.subtasks.length : 0;
-        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-        const percent = total > 0 ? Math.round((done/total) * 100) : 0;
-
-        const el = document.createElement('div');
-        el.className = 'board-task-card p-3 mb-2 border rounded';
-
-        let subtasksHtml = '';
-        if(item.subtasks) {
-            subtasksHtml = item.subtasks.map((s, idx) => `
-                <div class="flex items-start gap-2 mt-1">
-                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
-                </div>
-            `).join('');
-        }
-
-        el.innerHTML = `
-            <div class="flex justify-between items-start mb-1">
-                <h4 class="font-bold text-gray-800">${item.text}</h4>
-                <div class="flex gap-2">
-                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
-                </div>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-            </div>
-            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-            <div class="pl-1 space-y-1">
-                ${subtasksHtml}
-            </div>
-        `;
-
-        const deleteBtn = el.querySelector('.delete-item-btn');
-        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        const editBtn = el.querySelector('.edit-item-btn');
-        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
-        });
-
-        boardTasksList.appendChild(el);
-    };
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');

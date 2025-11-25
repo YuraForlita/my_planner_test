@@ -128,7 +128,6 @@
             50% { opacity: 0.4; transform: scale(0.9); }
         }
         
-        /* Shelf Styles */
         .shelf-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(8px);
@@ -172,7 +171,6 @@
             background: #a0a0a0;
         }
         
-        /* Sticker Styles */
         .sticker {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
@@ -198,7 +196,6 @@
         .timeline-badge { display:inline-flex; align-items:center; gap:8px; background:#f8fafc; padding:6px 8px; border-radius:8px; font-weight:600; font-size:13px; }
         
         @media (max-width: 768px) {
-            /* Модалка */
             #board-report-modal .modal-content {
                 width: 100% !important;
                 height: 100% !important;
@@ -209,7 +206,6 @@
                 overflow-y: auto;
             }
 
-            /* Верхня панель */
             #board-report-header {
                 width: 100%;
                 display: flex;
@@ -228,14 +224,12 @@
                 flex-shrink: 0;
             }
 
-            /* Пошук */
             #board-report-search {
                 width: 100% !important;
                 margin-bottom: 10px;
                 font-size: 15px;
             }
 
-            /* Фільтри */
             .board-report-filters {
                 width: 100%;
                 display: flex;
@@ -250,7 +244,6 @@
                 font-size: 15px;
             }
 
-            /* Експорт */
             #board-report-export {
                 width: 100%;
                 margin-top: 20px;
@@ -258,7 +251,6 @@
                 font-size: 15px;
             }
 
-            /* Елементи таймлайну */
             .timeline-item {
                 flex-direction: row;
                 padding: 10px;
@@ -292,7 +284,6 @@
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center">
 
-    <!-- ГІРЛЯНДИ -->
     <div class="garland">
         <div class="garland-light red"></div>
         <div class="garland-light green"></div>
@@ -318,13 +309,10 @@
     
     <div id="snowfall"></div>
 
-
-    <!-- Спінер завантаження -->
     <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
     </div>
 
-    <!-- Модальні вікна -->
     <div id="notification-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
             <h3 id="notification-title" class="text-lg font-bold mb-2 text-gray-800"></h3>
@@ -406,7 +394,6 @@
             </div>
         </div>
     </div>
-    <!-- Модальне вікно для дій із завданням -->
     <div id="task-actions-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Дії із завданням</h3>
@@ -422,7 +409,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Shelf -->
     <div id="add-shelf-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Полиця</h3>
@@ -434,7 +420,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Resource Item (Links Only) -->
     <div id="add-resource-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Посилання</h3>
@@ -453,7 +438,6 @@
         </div>
     </div>
 
-    <!-- Modal: Create Board -->
     <div id="create-board-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Спільна Дошка</h3>
@@ -465,7 +449,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Board Member -->
     <div id="add-board-member-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Учасника</h3>
@@ -479,7 +462,6 @@
         </div>
     </div>
 
-    <!-- Modal: Add Sticker -->
     <div id="add-sticker-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Новий Стікер</h3>
@@ -497,7 +479,6 @@
         </div>
     </div>
     
-    <!-- Modal: Add Complex Task -->
     <div id="add-board-task-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold mb-4 text-gray-800">Нове Спільне Завдання</h3>
@@ -518,7 +499,6 @@
         </div>
     </div>
 
-    <!-- Основний контент -->
     <div id="main-content" class="max-w-xl w-full">
         <div class="bg-white p-6 rounded-2xl shadow-xl">
             <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">Мій Планувальник Завдань</h1>
@@ -617,7 +597,6 @@
         </div>
     </div>
     
-    <!-- Секція чату -->
     <div id="chat-section" class="max-w-4xl w-full hidden">
         <div class="bg-white p-6 rounded-2xl shadow-xl">
              <button id="back-to-tasks-btn" class="w-full text-center mb-4 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
@@ -652,7 +631,6 @@
         </div>
     </div>
 
-    <!-- Секція Звіту (Таблиця) -->
     <div id="report-section" class="max-w-7xl w-full hidden">
         <div class="bg-white p-6 rounded-2xl shadow-xl">
              <button id="back-to-tasks-from-report-btn" class="w-full md:w-auto text-center mb-6 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
@@ -669,14 +647,13 @@
                         </tr>
                     </thead>
                     <tbody id="report-table-body">
-                        <!-- Тіло таблиці буде згенеровано тут -->
+
                     </tbody>
                 </table>
              </div>
         </div>
     </div>
     
-    <!-- Секція Ресурсів -->
     <div id="resources-section" class="max-w-6xl w-full hidden">
         <div class="bg-white p-6 rounded-2xl shadow-xl min-h-[80vh]">
              <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -693,7 +670,6 @@
              </div>
              
              <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 <!-- Полки будуть тут -->
              </div>
         </div>
     </div>
@@ -745,7 +721,6 @@
             </div>
 
             <div class="flex-1 overflow-auto p-4" id="board-report-body" role="list">
-            <!-- timeline will be rendered here -->
             <div id="board-report-empty" class="text-center text-gray-400 py-12">Немає подій у звіті цієї дошки.</div>
             </div>
 
@@ -757,10 +732,8 @@
             <div id="board-report-empty" style="display:none;">Немає подій</div>
         </div>
         </div>
-    <!-- Секція Live Boards (Оновлена для мобільних) -->
     <div id="boards-section" class="max-w-7xl w-full hidden h-[90vh]">
         <div class="bg-white h-full p-6 rounded-2xl shadow-xl flex flex-col">
-            <!-- Boards List View -->
             <div id="boards-list-view" class="h-full flex flex-col">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <button id="back-to-tasks-from-boards-btn" class="text-center w-full md:w-auto px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
@@ -770,11 +743,9 @@
                     </button>
                 </div>
                 <div id="boards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto p-2">
-                    <!-- Список дошок -->
                 </div>
             </div>
 
-            <!-- Active Board View -->
             <div id="active-board-view" class="hidden h-full flex-col">
                  <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 gap-2">
                     <div class="flex items-center gap-4">
@@ -790,7 +761,6 @@
                     </button>
                 </div>
                 
-                <!-- Mobile Tab Switcher -->
                 <div class="md:hidden flex mb-2 bg-gray-100 rounded-lg p-1">
                     <button id="mobile-tab-tasks" class="flex-1 py-2 rounded-md bg-white shadow-sm text-indigo-600 font-semibold text-sm transition-all">
                         <i class="fas fa-list-ul mr-2"></i>Завдання
@@ -800,20 +770,16 @@
                     </button>
                 </div>
                 
-                <!-- Canvas Area -->
                 <div class="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden relative bg-slate-50 rounded-xl border border-slate-200">
-                    <!-- Tasks Column -->
                     <div id="board-tasks-column" class="w-full md:w-1/3 bg-white border-r flex flex-col h-full md:flex">
                         <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
                             <h3 class="font-bold text-gray-700">✅ Спільні Завдання</h3>
                             <button id="add-board-task-btn" class="text-indigo-600 hover:bg-indigo-50 p-1 rounded"><i class="fas fa-plus"></i></button>
                         </div>
                         <div id="board-tasks-list" class="flex-grow overflow-y-auto p-4 space-y-3">
-                            <!-- Tasks go here -->
                         </div>
                     </div>
                     
-                    <!-- Sticker Area -->
                     <div id="board-stickers-column" class="w-full md:w-2/3 p-6 relative overflow-y-auto h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] hidden md:block">
                         <div class="absolute top-4 right-4 z-20">
                             <button id="add-sticker-btn" class="px-4 py-2 rounded-full bg-yellow-400 text-yellow-900 font-bold shadow-lg hover:bg-yellow-300 hover:scale-105 transition-all transform">
@@ -821,7 +787,6 @@
                             </button>
                         </div>
                         <div id="board-stickers-area" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-12">
-                            <!-- Stickers go here -->
                         </div>
                     </div>
                 </div>
@@ -865,7 +830,6 @@ window.onload = function () {
 
     const getEl = (id) => document.getElementById(id);
 
-    // --- Elements (core) ---
     const mainContent = getEl('main-content'), taskInput = getEl('task-input'), addTaskButton = getEl('add-task-btn'),
           assignTaskOpenBtn = getEl('assign-task-open-btn'), userIdSpan = getEl('user-id-span'),
           loadingSpinner = getEl('loading-spinner'), authButtons = getEl('auth-buttons'),
@@ -947,7 +911,6 @@ window.onload = function () {
           mobileTabTasks = getEl('mobile-tab-tasks'), mobileTabStickers = getEl('mobile-tab-stickers'),
           boardTasksColumn = getEl('board-tasks-column'), boardStickersColumn = getEl('board-stickers-column');
 
-    // --- Edit board/task modals ---
     let currentEditingTask = null;
     const editBoardTaskModal = getEl('editBoardTaskModal');
     const editBoardTaskTitle = getEl('editBoardTaskTitle');
@@ -962,7 +925,6 @@ window.onload = function () {
     const cancelEditBoardBtn = getEl('cancelEditBoardBtn');
     const saveEditBoardBtn = getEl('saveEditBoardBtn');
 
-    // --- State ---
     let userId = null, currentAction = null, deferredDurationHours = 24, staleDurationHours = 72,
         currentTaskToEdit = null, selectedFriendForChat = null, unsubscribeFromChat = null,
         friendsCache = {}, shownNotifications = new Set(),
@@ -973,7 +935,6 @@ window.onload = function () {
         unsubscribeFromBoards = null, unsubscribeFromBoardItems = null, currentBoardId = null,
         selectedStickerColor = 'bg-yellow-200', currentMobileTab = 'tasks';
 
-    // --- Helper functions (generic) ---
     const signInWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { console.error("Sign-in error:", error); } };
     const signOutUser = async () => { try { await signOut(auth); } catch (error) { console.error("Sign-out error:", error); } };
     const showNotification = (title, message) => { notificationTitle.textContent = title; notificationMessage.textContent = message; notificationModal.classList.remove('hidden'); };
@@ -982,12 +943,10 @@ window.onload = function () {
 
     function debounce(fn, wait) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); }; }
 
-    // display name resolution per requirement: use friendsCache -> local name the user assigned
     const getDisplayNameFor = (uid) => {
         if (!uid) return 'Невідомий';
         if (uid === userId) return (auth.currentUser?.displayName || 'Ви');
         if (friendsCache[uid] && friendsCache[uid].name) return friendsCache[uid].name;
-        // fallback to short uid
         return uid.substring(0,6) + '...';
     };
 
@@ -1012,7 +971,6 @@ window.onload = function () {
         return d.toLocaleString();
     };
 
-    // --- Settings load ---
     const loadSettings = async () => {
         if (!userId) return;
         try {
@@ -1035,7 +993,6 @@ window.onload = function () {
         } catch (e) { console.error("Error loading settings:", e); }
     };
 
-    // --- Tasks subscription & rendering ---
     const subscribeToTasks = () => {
         if (!db || !userId) return;
         const q = query(collection(db, `artifacts/${appId}/users/${userId}/tasks`), orderBy("createdAt", "desc"));
@@ -1377,7 +1334,6 @@ window.onload = function () {
     const checkNotificationStatus = () => { if (!('Notification' in window)) { notificationsStatus.textContent = "Браузер не підтримує сповіщення."; enableNotificationsBtn.disabled = true; return; } const permission = Notification.permission; notificationsStatus.textContent = permission === 'granted' ? "Сповіщення увімкнено." : permission === 'denied' ? "Сповіщення заблоковано." : "Надайте дозвіл."; enableNotificationsBtn.disabled = permission !== 'default'; };
     const requestNotificationPermission = async () => { const permission = await Notification.requestPermission(); if (permission === 'granted') { new Notification("Дякуємо!", { body: "Тепер ви будете отримувати сповіщення." }); } checkNotificationStatus(); };
 
-    // --- Report (existing shared tasks report) ---
     const openReportView = () => { mainContent.classList.add('hidden'); reportSection.classList.remove('hidden'); subscribeToReport(); };
     const closeReportView = () => { reportSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromReport) unsubscribeFromReport(); unsubscribeFromReport = null; };
     const subscribeToReport = () => { if (!userId) return; if (unsubscribeFromReport) unsubscribeFromReport(); const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); const q = query(sharedTasksCollection, where("senderId", "==", userId)); unsubscribeFromReport = onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderReport(tasks); }, error => console.error("Error in report subscription:", error)); };
@@ -1411,7 +1367,6 @@ window.onload = function () {
     const showTaskActionsModal = (task) => { currentTaskForAction = task; actionDeferBtn.classList.toggle('hidden', task.status === 'deferred'); actionActivateBtn.classList.toggle('hidden', task.status !== 'deferred'); actionProlongBtn.classList.toggle('hidden', !task.isStale); taskActionsModal.classList.remove('hidden'); };
     const hideTaskActionsModal = () => { taskActionsModal.classList.add('hidden'); currentTaskForAction = null; };
 
-    // --- Resources ---
     const openResourcesView = () => { mainContent.classList.add('hidden'); resourcesSection.classList.remove('hidden'); subscribeToResources(); };
     const closeResourcesView = () => { resourcesSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromResources) unsubscribeFromResources(); unsubscribeFromResources = null; };
 
@@ -1474,7 +1429,6 @@ window.onload = function () {
     };
     const deleteResource = async (shelfId, itemId, currentItems) => { if (!userId) return; try { const updatedItems = currentItems.filter(item => item.id !== itemId); const shelfRef = doc(db, `artifacts/${appId}/users/${userId}/resources`, shelfId); await updateDoc(shelfRef, { items: updatedItems }); } catch (e) { console.error("Error deleting resource: ", e); } };
 
-    // --- Boards subscription & rendering ---
     const switchMobileTab = (tab) => {
         currentMobileTab = tab;
         if (tab === 'tasks') {
@@ -1499,7 +1453,6 @@ window.onload = function () {
     };
 let editingBoardTask = null;
 
-// --- Відкрити модалку ---
 function openEditBoardTask(item) {
     editingBoardTask = item;
 
@@ -1514,11 +1467,9 @@ function openEditBoardTask(item) {
         });
     }
 
-    // Показати модалку
     getEl("editBoardTaskModal").classList.remove("hidden");
 }
 
-// --- Додати рядок підзадачі в модалку ---
 function addEditSubtaskRow(text = "") {
     const container = getEl("editSubtasksContainer");
 
@@ -1539,23 +1490,19 @@ function addEditSubtaskRow(text = "") {
     container.appendChild(row);
 }
 
-// --- Обробник кнопки ДОДАТИ КРОК ---
 getEl("addEditSubtaskBtn").addEventListener("click", () => {
     addEditSubtaskRow("");
 });
 
-// --- Зберегти оновлення ---
 async function updateBoardItem_withLogging(taskId, data) {
-    // Оновлюємо завдання
+
     await updateDoc(
         doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
         data
     );
 
-    // Беремо UID користувача напряму з Firebase Auth
     const uid = auth?.currentUser?.uid || null;
 
-    // Логування
     await addDoc(
         collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
         {
@@ -1589,16 +1536,13 @@ async function saveEditBoardTask() {
         subtasks
     });
 
-    // Закрити модалку
     getEl("editBoardTaskModal").classList.add("hidden");
 
     editingBoardTask = null;
 
-    // Перерендерити список
     loadBoardTasks();
 }
 
-// --- Обробники кнопок ---
 getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
 
 getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
@@ -1664,7 +1608,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         boardStickersArea.appendChild(el);
     };
 
-    // --- Board items subscription ---
     const subscribeToBoardItems = (boardId) => {
         if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
@@ -1679,7 +1622,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         }, error => console.error("Board items subscription error:", error));
     };
 
-    // --- Logging activities to board_activities (new collection) ---
     const logBoardActivity = async (boardId, payload) => {
         try {
             if (!boardId || !userId) return;
@@ -1688,7 +1630,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         } catch (e) { console.error("Error logging board activity:", e); }
     };
 
-    // --- Report modal subscription & rendering ---
     const boardReportModal = getEl('board-report-modal');
     const boardReportBody = getEl('board-report-body');
     const boardReportTitle = getEl('board-report-title');
@@ -1834,8 +1775,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         URL.revokeObjectURL(url);
     });
 
-    // --- replace original functions with logging counterparts ---
-    // addBoardTask_withLogging
     const addBoardTask_withLogging = async () => {
         const title = boardTaskTitle.value.trim();
         if(!title || !currentBoardId) return;
@@ -1854,7 +1793,7 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
                 subtasks,
                 createdAt: serverTimestamp()
             });
-            // log activity
+
             await logBoardActivity(currentBoardId, {
                 type: 'task_added',
                 itemId: docRef.id,
@@ -1866,7 +1805,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         } catch(e) { console.error("Error adding board task", e); }
     };
 
-    // toggleSubtask_withLogging
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
         try {
             if (!item || !Array.isArray(item.subtasks)) return;
@@ -1885,7 +1823,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         } catch (e) { console.error("Error toggling subtask:", e); }
     };
 
-    // addSticker_withLogging
     const addSticker_withLogging = async () => {
         try {
             const text = stickerTextInput.value.trim();
@@ -1908,7 +1845,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         } catch(e) { console.error("Error adding sticker", e); }
     };
 
-    // deleteBoardItem_withLogging
     const deleteBoardItem_withLogging = async (itemId) => {
         try {
             if (!confirm('Видалити цей елемент?')) return;
@@ -1936,7 +1872,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         }
     };
 
-    // --- Board subscription & UI wiring ---
     const subscribeToBoards = () => {
         if(!userId) return;
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), where('members', 'array-contains', userId));
@@ -2039,7 +1974,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         });
         subscribeToBoardItems(board.id);
 
-        // also ensure "Звіт" button exists in header
         (function addBoardReportButton() {
             try {
                 const header = document.querySelector('#active-board-title')?.parentElement;
@@ -2054,20 +1988,12 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
             } catch (e) { console.error(e); }
         })();
 
-        // subscribe to board activities briefly so user sees recent actions quickly
         subscribeToBoardActivities(board.id);
     };
 
-    // --- Board items creation (wire to UI events) ---
-    // If original named functions exist in global scope, this script substitutes them,
-    // but we also wire event listeners below to our implementations.
-
-    // addSticker and addBoardTask and others are used by UI buttons -> ensure they use our logging variants
-    // Wiring event listeners:
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
 
-    // addBoardMember
     const addBoardMember = async () => {
         const friendId = boardFriendSelect.value;
         if(!friendId || !currentBoardId) return;
@@ -2079,7 +2005,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         } catch(e) { console.error("Error adding member", e); }
     };
 
-    // --- Event Listeners (existing ones + our additions) ---
     googleSignInButton.addEventListener('click', signInWithGoogle);
     signOutButton.addEventListener('click', signOutUser);
     addTaskButton.addEventListener('click', addTask);
@@ -2171,7 +2096,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         }
     });
 
-    // Resource Event Listeners
     resourcesBtn.addEventListener('click', openResourcesView);
     backToTasksFromResourcesBtn.addEventListener('click', closeResourcesView);
     addShelfBtn.addEventListener('click', () => { shelfNameInput.value = ''; addShelfModal.classList.remove('hidden'); });
@@ -2185,7 +2109,6 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
     sendChatMessageBtn.addEventListener('click', handleSendMessage);
     chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendMessage(); });
 
-    // Boards listeners
     boardsBtn.addEventListener('click', () => { mainContent.classList.add('hidden'); boardsSection.classList.remove('hidden'); subscribeToBoards(); });
     backToTasksFromBoardsBtn.addEventListener('click', () => { boardsSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if(unsubscribeFromBoards) unsubscribeFromBoards(); });
     createBoardBtn.addEventListener('click', () => { boardNameInput.value = ''; createBoardModal.classList.remove('hidden'); });
@@ -2225,11 +2148,9 @@ getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
         });
     });
 
-    // wire addBoardTask/saveSticker event names to our functions (some elements already wired above)
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
 
-    // --- Auth state ---
     onAuthStateChanged(auth, async (user) => {
         loadingSpinner.classList.add('hidden');
         if (user) {

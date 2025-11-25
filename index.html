@@ -1523,19 +1523,20 @@ async function saveEditBoardTask() {
     const title = getEl("editBoardTaskTitle").value.trim();
     if (!title) return;
 
-    const subtasks = Array.from(
-        document.querySelectorAll(".edit-subtask-input")
-    )
-        .map(el => ({
-            text: el.value.trim(),
-            completed: false
-        }))
-        .filter(s => s.text !== "");
+    const newSubtasks = Array.from(inputs).map((inp, index) => {
+        const old = oldSubtasks[index];
+        return {
+            text: inp.value.trim(),
+            completed: old ? old.completed : false     // ← ЗБЕРІГАЄМО completed
+        };
+    }).filter(s => s.text !== '');
 
-    await updateBoardItem_withLogging(editingBoardTask.id, {
-        text: title,
-        subtasks
-    });
+    const updatedData = {
+        text: editBoardTaskTitle.value.trim(),
+        subtasks: newSubtasks
+    };
+
+    await updateBoardItem_withLogging(editingTask.id, updatedData);
 
     getEl("editBoardTaskModal").classList.add("hidden");
 

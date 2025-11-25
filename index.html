@@ -1600,6 +1600,16 @@ function cancelEditBoard() {
 }
 getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
 
+function openEditBoardModal(board) {
+    editingBoard = board; 
+    
+    // Встановлюємо поточну назву дошки у поле введення
+    getEl("editBoardTitleInput").value = board.title;
+    
+    // Показуємо модальне вікно
+    getEl("editBoardModal").classList.remove("hidden"); 
+}
+
 // Прив'язка для кнопки Скасувати назву дошки
 getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
 

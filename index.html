@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
     <title>☃️ Зимовий Планувальник Завдань ☃️</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -285,519 +284,515 @@
 </head>
 <body class="min-h-screen p-4 flex flex-col items-center">
 
-  <div class="garland">
-    <div class="garland-light red"></div>
-    <div class="garland-light green"></div>
-    <div class="garland-light blue"></div>
-    <div class="garland-light yellow"></div>
-    <div class="garland-light purple"></div>
-    <div class="garland-light red"></div>
-    <div class="garland-light green"></div>
-    <div class="garland-light blue"></div>
-    <div class="garland-light yellow"></div>
-    <div class="garland-light purple"></div>
-    <div class="garland-light red"></div>
-    <div class="garland-light green"></div>
-    <div class="garland-light blue"></div>
-    <div class="garland-light yellow"></div>
-    <div class="garland-light purple"></div>
-    <div class="garland-light red"></div>
-    <div class="garland-light green"></div>
-    <div class="garland-light blue"></div>
-    <div class="garland-light yellow"></div>
-    <div class="garland-light purple"></div>
-  </div>
-
-  <div id="snowfall"></div>
-
-  <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
-  </div>
-
-  <div id="notification-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 id="notification-title" class="text-lg font-bold mb-2 text-gray-800"></h3>
-      <p id="notification-message" class="text-gray-700 mb-4 break-words"></p>
-      <div class="flex justify-end space-x-2">
-        <button id="close-notification-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">OK</button>
-      </div>
+    <div class="garland">
+        <div class="garland-light red"></div>
+        <div class="garland-light green"></div>
+        <div class="garland-light blue"></div>
+        <div class="garland-light yellow"></div>
+        <div class="garland-light purple"></div>
+        <div class="garland-light red"></div>
+        <div class="garland-light green"></div>
+        <div class="garland-light blue"></div>
+        <div class="garland-light yellow"></div>
+        <div class="garland-light purple"></div>
+        <div class="garland-light red"></div>
+        <div class="garland-light green"></div>
+        <div class="garland-light blue"></div>
+        <div class="garland-light yellow"></div>
+        <div class="garland-light purple"></div>
+        <div class="garland-light red"></div>
+        <div class="garland-light green"></div>
+        <div class="garland-light blue"></div>
+        <div class="garland-light yellow"></div>
+        <div class="garland-light purple"></div>
     </div>
-  </div>
-  <div id="view-edit-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
-      <h3 class="text-lg font-bold mb-2 text-gray-800">Переглянути/Редагувати завдання</h3>
-      <textarea id="edit-task-input" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none mb-4" rows="8"></textarea>
-      <div class="flex justify-end space-x-2">
-        <button id="save-edit-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Зберегти</button>
-        <button id="cancel-edit-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-  <div id="confirm-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-2 text-gray-800">Підтвердіть дію</h3>
-      <p id="confirm-modal-message" class="text-gray-700 mb-4 break-words">Ви впевнені?</p>
-      <div class="flex justify-end space-x-2">
-        <button class="cancel-btn px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-        <button class="confirm-btn px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Підтвердити</button>
-      </div>
-    </div>
-  </div>
-  <div id="add-friend-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-2 text-gray-800">Додати друга</h3>
-      <input type="text" id="friend-name-input" placeholder="Ім'я друга" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <input type="text" id="friend-id-input" placeholder="ID друга" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <div class="flex justify-end space-x-2">
-        <button id="save-friend-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Зберегти</button>
-        <button id="cancel-friend-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-  <div id="assign-task-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
-      <h3 class="text-lg font-bold mb-2 text-gray-800">Призначити завдання</h3>
-      <select id="friend-select" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <option value="">Виберіть друга</option>
-      </select>
-      <textarea id="assign-task-input" placeholder="Введіть завдання для друга..." rows="4" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none mb-4"></textarea>
-      <div class="flex justify-end space-x-2">
-        <button id="send-task-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Відправити</button>
-        <button id="cancel-assign-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-  <div id="image-viewer-modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden modal-overlay p-4">
-    <div class="bg-white p-2 rounded-lg shadow-xl max-w-4xl max-h-[90vh] w-full h-full relative flex flex-col">
-      <button id="close-image-viewer-btn" class="absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 leading-none text-2xl z-10">&times;</button>
-      <img id="full-image" src="" class="w-full h-full object-contain">
-    </div>
-  </div>
-  <div id="task-details-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Деталі завдання</h3>
-      <p id="task-details-content" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-md whitespace-pre-wrap break-words"></p>
-      <div class="flex justify-between items-center">
-        <button id="delete-from-report-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Видалити зі звіту</button>
-        <button id="close-task-details-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Закрити</button>
-      </div>
-    </div>
-  </div>
-  <div id="view-incoming-task-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Вхідне завдання</h3>
-      <p class="text-sm text-gray-500 mb-2">Від: <span id="incoming-task-sender" class="font-semibold"></span></p>
-      <p id="incoming-task-content" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-md whitespace-pre-wrap break-words"></p>
-      <div class="flex justify-end space-x-2">
-        <button id="incoming-task-decline-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Відхилити</button>
-        <button id="incoming-task-accept-btn" class="px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors btn-frosty">Прийняти</button>
-        <button id="incoming-task-close-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Закрити</button>
-      </div>
-    </div>
-  </div>
-  <div id="task-actions-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Дії із завданням</h3>
-      <div class="space-y-3">
-        <button id="action-activate-btn" class="w-full px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors btn-frosty">Перемістити в активні</button>
-        <button id="action-defer-btn" class="w-full px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors btn-frosty">В роботу</button>
-        <button id="action-prolong-btn" class="w-full px-4 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition-colors hidden btn-frosty">Продовжити</button>
-        <button id="action-delete-btn" class="w-full px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Видалити</button>
-      </div>
-      <div class="mt-6 text-right">
-        <button id="cancel-actions-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
+    
+    <div id="snowfall"></div>
 
-  <div id="add-shelf-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Полиця</h3>
-      <input type="text" id="shelf-name-input" placeholder="Назва полиці (напр. Робота)" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <div class="flex justify-end space-x-2">
-        <button id="save-shelf-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
-        <button id="cancel-shelf-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
+    <div id="loading-spinner" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-75">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-500"></div>
     </div>
-  </div>
 
-  <div id="add-resource-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Посилання</h3>
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Назва</label>
-        <input type="text" id="resource-title-input" placeholder="Назва сайту (напр. Google Таблиця)" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Посилання (URL)</label>
-        <input type="text" id="resource-content-input" placeholder="https://example.com" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button id="save-resource-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Додати</button>
-        <button id="cancel-resource-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="create-board-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Спільна Дошка</h3>
-      <input type="text" id="board-name-input" placeholder="Назва дошки (напр. Новий Рік)" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-      <div class="flex justify-end space-x-2">
-        <button id="save-board-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
-        <button id="cancel-board-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="add-board-member-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Учасника</h3>
-      <select id="board-friend-select" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-        <option value="">Виберіть друга</option>
-      </select>
-      <div class="flex justify-end space-x-2">
-        <button id="save-board-member-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Додати</button>
-        <button id="cancel-board-member-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="add-sticker-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Новий Стікер</h3>
-      <textarea id="sticker-text-input" placeholder="Текст нотатки..." rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
-      <div class="grid grid-cols-4 gap-2 mb-4">
-        <div class="h-8 w-8 rounded-full bg-yellow-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-yellow-200"></div>
-        <div class="h-8 w-8 rounded-full bg-blue-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-blue-200"></div>
-        <div class="h-8 w-8 rounded-full bg-green-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-green-200"></div>
-        <div class="h-8 w-8 rounded-full bg-pink-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-pink-200"></div>
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button id="save-sticker-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Приліпити</button>
-        <button id="cancel-sticker-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="add-board-task-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
-    <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative max-h-[90vh] overflow-y-auto">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Нове Спільне Завдання</h3>
-      <input type="text" id="board-task-title" placeholder="Назва завдання" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Етапи (підзавдання):</label>
-        <div id="subtasks-container" class="space-y-2 mb-2">
-          <input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">
-        </div>
-        <button id="add-subtask-field-btn" class="text-sm text-indigo-600 hover:underline">+ Додати крок</button>
-      </div>
-
-      <div class="flex justify-end space-x-2">
-        <button id="save-board-task-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
-        <button id="cancel-board-task-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="main-content" class="max-w-xl w-full">
-    <div class="bg-white p-6 rounded-2xl shadow-xl">
-      <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">Мій Планувальник Завдань</h1>
-      <p class="text-sm text-gray-500 mb-4 text-center">ID користувача: <span id="user-id-span" class="font-mono break-all">Немає</span></p>
-
-      <div id="error-message" class="hidden bg-red-100 text-red-700 p-4 rounded-lg mb-4">
-        Сталася помилка ініціалізації. Будь ласка, переконайтеся, що конфігурація Firebase додана.
-      </div>
-
-      <div id="auth-buttons" class="flex flex-col items-center space-y-4 mb-6 hidden">
-        <p class="text-gray-500">Будь ласка, увійдіть, щоб зберегти свої завдання.</p>
-        <button id="google-signin-btn" class="flex items-center justify-center px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors shadow-md space-x-2 btn-frosty">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12.24 10.232v3.098h5.364c-.183 1.258-1.554 3.738-5.364 3.738-3.21 0-5.815-2.61-5.815-5.82s2.605-5.82 5.815-5.82c1.724 0 2.872.716 3.518 1.346l2.365-2.285c-1.472-1.39-3.41-2.23-5.883-2.23-4.832 0-8.75 3.92-8.75 8.75s3.918 8.75 8.75 8.75c5.035 0 8.358-3.535 8.358-8.528 0-.583-.075-1.127-.183-1.638h-8.175z" />
-          </svg>
-          <span>Увійти через Google</span>
-        </button>
-      </div>
-
-      <div id="content-section" class="hidden">
-        <div class="grid grid-cols-2 gap-2 mb-4 md:grid-cols-4">
-          <button id="report-btn" class="w-full text-center px-2 py-2 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-colors shadow-md btn-frosty text-sm">Звіт</button>
-          <button id="chats-btn" class="relative w-full text-center px-2 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-md btn-frosty text-sm">
-            Чати
-            <span id="chat-notification-badge" class="absolute top-0 right-0 -mt-2 -mr-2 px-2 py-1 bg-red-600 text-white text-xs rounded-full hidden"></span>
-          </button>
-          <button id="resources-btn" class="w-full text-center px-2 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors shadow-md btn-frosty text-sm">Ресурси</button>
-          <button id="boards-btn" class="w-full text-center px-2 py-2 rounded-lg bg-orange-400 text-white font-semibold hover:bg-orange-500 transition-colors shadow-md btn-frosty text-sm">Дошки</button>
-          <button id="signout-btn" class="col-span-2 md:col-span-4 w-full text-center px-2 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors shadow-md btn-frosty text-sm mt-2 md:mt-0">Вийти</button>
-        </div>
-        <div class="mb-8">
-          <textarea id="task-input" placeholder="Опишіть ваше завдання тут..." rows="6" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
-          <div class="flex justify-end space-x-2 mt-2">
-            <button id="add-task-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Додати</button>
-            <button id="assign-task-open-btn" class="px-6 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 shadow-md btn-frosty">Призначити</button>
-          </div>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6 hidden" id="incoming-tasks-section">
-          <h2 class="text-xl font-bold mb-4 text-gray-700">Вхідні завдання (в очікуванні)</h2>
-          <div id="incoming-tasks-list" class="space-y-3"></div>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
-          <h2 class="text-xl font-bold mb-4 text-gray-700">Активні завдання</h2>
-          <div id="active-tasks-list" class="space-y-3 task-list-container"></div>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-700">В роботі</h2>
-            <button id="deferred-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
-          </div>
-          <div id="deferred-tasks-list" class="space-y-3 hidden task-list-container"></div>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-700">Виконані завдання</h2>
-            <button id="completed-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
-          </div>
-          <div id="completed-tasks-list" class="space-y-3 hidden task-list-container"></div>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-700">Налаштування</h2>
-            <button id="settings-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
-          </div>
-          <div id="settings-content" class="hidden space-y-6">
-            <div class="space-y-4">
-              <div>
-                <label for="deferred-duration" class="block text-sm font-medium text-gray-700">В роботі (годин)</label>
-                <input type="number" step="0.01" id="deferred-duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="24">
-              </div>
-              <div>
-                <label for="stale-duration" class="block text-sm font-medium text-gray-700">Застаріле після (годин)</label>
-                <input type="number" step="0.01" id="stale-duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="72">
-              </div>
-              <button id="save-settings-btn" class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Зберегти</button>
-              <p id="settings-message" class="text-sm text-center text-green-600 hidden"></p>
+    <div id="notification-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 id="notification-title" class="text-lg font-bold mb-2 text-gray-800"></h3>
+            <p id="notification-message" class="text-gray-700 mb-4 break-words"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="close-notification-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">OK</button>
             </div>
-            <div class="border-t pt-4">
-              <h3 class="text-lg font-medium text-gray-800 mb-2">Сповіщення</h3>
-              <button id="enable-notifications-btn" class="w-full px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 shadow-md btn-frosty">Увімкнути сповіщення</button>
-              <p id="notifications-status" class="text-sm text-center text-gray-500 mt-2"></p>
-            </div>
-          </div>
         </div>
-        <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-700">Друзі</h2>
-            <button id="friends-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
-          </div>
-          <div id="friends-content" class="hidden">
-            <div class="flex justify-end mb-4">
-              <button id="add-friend-open-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 btn-frosty">Додати друга</button>
-            </div>
-            <div id="friends-list" class="space-y-3"></div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-
-  <div id="chat-section" class="max-w-4xl w-full hidden">
-    <div class="bg-white p-6 rounded-2xl shadow-xl">
-      <button id="back-to-tasks-btn" class="w-full text-center mb-4 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
-      <div class="flex flex-col md:flex-row h-[80vh] border rounded-lg">
-        <div class="w-full md:w-1/3 border-r bg-gray-50 rounded-l-lg overflow-y-auto">
-          <h2 class="text-xl font-bold p-4 border-b text-gray-700">Друзі</h2>
-          <div id="chat-friends-list" class="space-y-1 p-2"></div>
-        </div>
-        <div class="w-full md:w-2/3 flex flex-col min-h-0">
-          <div id="chat-window-placeholder" class="flex-grow flex items-center justify-center">
-            <p class="text-gray-500">Виберіть чат, щоб почати спілкування</p>
-          </div>
-          <div id="chat-window" class="hidden flex-grow flex flex-col overflow-hidden min-h-0">
-            <div id="chat-header" class="p-4 border-b font-bold text-gray-800"></div>
-            <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-100"></div>
-            <div id="upload-progress-container" class="p-4 bg-white border-t hidden">
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
-                <div id="upload-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-              </div>
+    <div id="view-edit-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
+            <h3 class="text-lg font-bold mb-2 text-gray-800">Переглянути/Редагувати завдання</h3>
+            <textarea id="edit-task-input" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none mb-4" rows="8"></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="save-edit-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Зберегти</button>
+                <button id="cancel-edit-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
             </div>
-            <div class="p-4 bg-white border-t flex items-center space-x-2">
-              <input type="file" id="image-upload-input" class="hidden" accept="image/*">
-              <button id="attach-file-btn" class="p-2 rounded-full hover:bg-gray-200">
-                <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                </svg>
-              </button>
-              <input type="text" id="chat-message-input" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Напишіть повідомлення...">
-              <button id="send-chat-message-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 btn-frosty">Надіслати</button>
+        </div>
+    </div>
+    <div id="confirm-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-2 text-gray-800">Підтвердіть дію</h3>
+            <p id="confirm-modal-message" class="text-gray-700 mb-4 break-words">Ви впевнені?</p>
+            <div class="flex justify-end space-x-2">
+                <button class="cancel-btn px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+                <button class="confirm-btn px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Підтвердити</button>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
-
-  <div id="report-section" class="max-w-7xl w-full hidden">
-    <div class="bg-white p-6 rounded-2xl shadow-xl">
-      <button id="back-to-tasks-from-report-btn" class="w-full md:w-auto text-center mb-6 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
-      <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Звіт по призначених завданнях</h2>
-      <div id="report-content" class="overflow-x-auto">
-        <table class="report-table min-w-[800px] md:min-w-full">
-          <thead>
-            <tr>
-              <th class="w-[20%]">Користувач</th>
-              <th class="w-[20%]">⏳ Очікує</th>
-              <th class="w-[20%]">🕐 В роботі</th>
-              <th class="w-[20%]">✅ Виконано</th>
-              <th class="w-[20%]">❌ Відхилено</th>
-            </tr>
-          </thead>
-          <tbody id="report-table-body">
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div id="resources-section" class="max-w-6xl w-full hidden">
-    <div class="bg-white p-6 rounded-2xl shadow-xl min-h-[80vh]">
-      <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <button id="back-to-tasks-from-resources-btn" class="w-full md:w-auto text-center px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
-        <h2 class="text-2xl font-bold text-gray-800">📚 Мої Ресурси</h2>
-        <button id="add-shelf-btn" class="w-full md:w-auto text-center px-6 py-2 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 shadow-md btn-frosty">
-          <i class="fas fa-plus mr-2"></i>Нова Полиця
-        </button>
-      </div>
-
-      <div class="mb-6 relative">
-        <input type="text" id="resources-search-input" placeholder="Пошук посилань..." class="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-      </div>
-
-      <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      </div>
-    </div>
-  </div>
-  <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-xl w-96">
-      <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
-      <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-2 border rounded" placeholder="Назва завдання">
-      <div id="editSubtasksContainer" class="mb-2"></div>
-      <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
-      <div class="flex justify-end gap-2">
-        <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
-        <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
-      </div>
-    </div>
-  </div>
-  <div id="editBoardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-xl w-96">
-      <h3 class="font-bold mb-2 text-lg">Редагувати дошку</h3>
-      <input type="text" id="editBoardTitleInput" class="w-full mb-4 p-2 border rounded" placeholder="Назва дошки">
-      <div class="flex justify-end gap-2">
-        <button id="cancelEditBoardBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
-        <button id="saveEditBoardBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
-      </div>
-    </div>
-  </div>
-  <div id="board-report-modal" class="hidden fixed inset-0 z-[95] flex items-start md:items-center justify-center p-4">
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-      <div class="flex items-center justify-between p-4 border-b">
-        <div class="flex items-center gap-3">
-          <h3 id="board-report-title" class="text-lg font-bold">Звіт дошки</h3>
-          <span id="board-report-subtitle" class="text-sm text-gray-500"></span>
-        </div>
-        <div class="flex items-center gap-2">
-          <input id="board-report-search" placeholder="Пошук у звіті..." class="px-3 py-2 border rounded-md text-sm" />
-          <select id="board-report-filter-user" class="px-3 py-2 border rounded-md text-sm">
-            <option value="">Усі користувачі</option>
-          </select>
-          <select id="board-report-filter-type" class="px-3 py-2 border rounded-md text-sm">
-            <option value="">Усі типи</option>
-            <option value="task_added">Додав завдання</option>
-            <option value="subtask_checked">Викреслив пункт</option>
-            <option value="subtask_unchecked">Відновив пункт</option>
-            <option value="sticker_added">Прикріпив стікер</option>
-            <option value="sticker_removed">Зняв/видалив стікер</option>
-            <option value="task_deleted">Видалив елемент</option>
-          </select>
-          <button id="board-report-close" class="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200">Закрити</button>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-auto p-4" id="board-report-body" role="list">
-        <div id="board-report-empty" class="text-center text-gray-400 py-12">Немає подій у звіті цієї дошки.</div>
-      </div>
-
-      <div class="p-3 border-t text-right">
-        <button id="board-report-download" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">Експорт (JSON)</button>
-      </div>
-    </div>
-    <div id="boardReportBody">
-      <div id="board-report-empty" style="display:none;">Немає подій</div>
-    </div>
-  </div>
-  <div id="boards-section" class="max-w-7xl w-full hidden h-[90vh]">
-    <div class="bg-white h-full p-6 rounded-2xl shadow-xl flex flex-col">
-      <div id="boards-list-view" class="h-full flex flex-col">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <button id="back-to-tasks-from-boards-btn" class="text-center w-full md:w-auto px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
-          <h2 class="text-2xl font-bold text-gray-800">📋 Спільні Дошки</h2>
-          <button id="create-board-btn" class="text-center w-full md:w-auto px-6 py-2 rounded-lg bg-orange-400 text-white font-semibold hover:bg-orange-500 shadow-md btn-frosty">
-            <i class="fas fa-plus mr-2"></i>Створити
-          </button>
-        </div>
-        <div id="boards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto p-2">
-        </div>
-      </div>
-
-      <div id="active-board-view" class="hidden h-full flex-col">
-        <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 gap-2">
-          <div class="flex items-center gap-4">
-            <button id="back-to-boards-list-btn" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left text-xl"></i></button>
-            <h2 id="active-board-title" class="text-xl md:text-2xl font-bold text-gray-800 truncate max-w-[200px] md:max-w-full"></h2>
-            <div class="text-sm text-gray-500 flex items-center gap-2">
-              <i class="fas fa-users"></i>
-              <span id="board-member-count">0</span>
+    <div id="add-friend-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-2 text-gray-800">Додати друга</h3>
+            <input type="text" id="friend-name-input" placeholder="Ім'я друга" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <input type="text" id="friend-id-input" placeholder="ID друга" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end space-x-2">
+                <button id="save-friend-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Зберегти</button>
+                <button id="cancel-friend-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
             </div>
-          </div>
-          <button id="add-board-member-btn" class="px-3 py-1 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 text-sm font-medium transition-colors">
-            <i class="fas fa-user-plus mr-1"></i> <span class="hidden md:inline">Додати друга</span>
-          </button>
         </div>
-
-        <div class="md:hidden flex mb-2 bg-gray-100 rounded-lg p-1">
-          <button id="mobile-tab-tasks" class="flex-1 py-2 rounded-md bg-white shadow-sm text-indigo-600 font-semibold text-sm transition-all">
-            <i class="fas fa-list-ul mr-2"></i>Завдання
-          </button>
-          <button id="mobile-tab-stickers" class="flex-1 py-2 rounded-md text-gray-500 font-medium text-sm hover:bg-white/50 transition-all">
-            <i class="fas fa-sticky-note mr-2"></i>Стікери
-          </button>
-        </div>
-
-        <div class="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden relative bg-slate-50 rounded-xl border border-slate-200">
-          <div id="board-tasks-column" class="w-full md:w-1/3 bg-white border-r flex flex-col h-full md:flex">
-            <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-              <h3 class="font-bold text-gray-700">✅ Спільні Завдання</h3>
-              <button id="add-board-task-btn" class="text-indigo-600 hover:bg-indigo-50 p-1 rounded"><i class="fas fa-plus"></i></button>
-            </div>
-            <div id="board-tasks-list" class="flex-grow overflow-y-auto p-4 space-y-3">
-            </div>
-          </div>
-
-          <div id="board-stickers-column" class="w-full md:w-2/3 p-6 relative overflow-y-auto h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] hidden md:block">
-            <div class="absolute top-4 right-4 z-20">
-              <button id="add-sticker-btn" class="px-4 py-2 rounded-full bg-yellow-400 text-yellow-900 font-bold shadow-lg hover:bg-yellow-300 hover:scale-105 transition-all transform">
-                <i class="fas fa-sticky-note mr-2"></i>Стікер
-              </button>
-            </div>
-            <div id="board-stickers-area" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-12">
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+    <div id="assign-task-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
+            <h3 class="text-lg font-bold mb-2 text-gray-800">Призначити завдання</h3>
+            <select id="friend-select" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Виберіть друга</option>
+            </select>
+            <textarea id="assign-task-input" placeholder="Введіть завдання для друга..." rows="4" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all resize-none mb-4"></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="send-task-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Відправити</button>
+                <button id="cancel-assign-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+    <div id="image-viewer-modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden modal-overlay p-4">
+        <div class="bg-white p-2 rounded-lg shadow-xl max-w-4xl max-h-[90vh] w-full h-full relative flex flex-col">
+            <button id="close-image-viewer-btn" class="absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full p-1 leading-none text-2xl z-10">&times;</button>
+            <img id="full-image" src="" class="w-full h-full object-contain">
+        </div>
+    </div>
+    <div id="task-details-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Деталі завдання</h3>
+            <p id="task-details-content" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-md whitespace-pre-wrap break-words"></p>
+            <div class="flex justify-between items-center">
+                <button id="delete-from-report-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Видалити зі звіту</button>
+                <button id="close-task-details-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Закрити</button>
+            </div>
+        </div>
+    </div>
+    <div id="view-incoming-task-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Вхідне завдання</h3>
+            <p class="text-sm text-gray-500 mb-2">Від: <span id="incoming-task-sender" class="font-semibold"></span></p>
+            <p id="incoming-task-content" class="text-gray-700 mb-6 bg-gray-50 p-4 rounded-md whitespace-pre-wrap break-words"></p>
+            <div class="flex justify-end space-x-2">
+                <button id="incoming-task-decline-btn" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Відхилити</button>
+                <button id="incoming-task-accept-btn" class="px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors btn-frosty">Прийняти</button>
+                <button id="incoming-task-close-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Закрити</button>
+            </div>
+        </div>
+    </div>
+    <div id="task-actions-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Дії із завданням</h3>
+            <div class="space-y-3">
+                <button id="action-activate-btn" class="w-full px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors btn-frosty">Перемістити в активні</button>
+                <button id="action-defer-btn" class="w-full px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors btn-frosty">В роботу</button>
+                <button id="action-prolong-btn" class="w-full px-4 py-2 rounded-lg bg-purple-500 text-white font-semibold hover:bg-purple-600 transition-colors hidden btn-frosty">Продовжити</button>
+                <button id="action-delete-btn" class="w-full px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors btn-frosty">Видалити</button>
+            </div>
+            <div class="mt-6 text-right">
+                <button id="cancel-actions-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-shelf-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Полиця</h3>
+            <input type="text" id="shelf-name-input" placeholder="Назва полиці (напр. Робота)" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end space-x-2">
+                <button id="save-shelf-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
+                <button id="cancel-shelf-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-resource-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Посилання</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Назва</label>
+                <input type="text" id="resource-title-input" placeholder="Назва сайту (напр. Google Таблиця)" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Посилання (URL)</label>
+                <input type="text" id="resource-content-input" placeholder="https://example.com" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="save-resource-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Додати</button>
+                <button id="cancel-resource-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="create-board-modal" class="fixed inset-0 z-[85] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Нова Спільна Дошка</h3>
+            <input type="text" id="board-name-input" placeholder="Назва дошки (напр. Новий Рік)" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="flex justify-end space-x-2">
+                <button id="save-board-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
+                <button id="cancel-board-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-board-member-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Додати Учасника</h3>
+            <select id="board-friend-select" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Виберіть друга</option>
+            </select>
+            <div class="flex justify-end space-x-2">
+                <button id="save-board-member-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Додати</button>
+                <button id="cancel-board-member-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-sticker-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Новий Стікер</h3>
+            <textarea id="sticker-text-input" placeholder="Текст нотатки..." rows="3" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+            <div class="grid grid-cols-4 gap-2 mb-4">
+                <div class="h-8 w-8 rounded-full bg-yellow-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-yellow-200"></div>
+                <div class="h-8 w-8 rounded-full bg-blue-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-blue-200"></div>
+                <div class="h-8 w-8 rounded-full bg-green-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-green-200"></div>
+                <div class="h-8 w-8 rounded-full bg-pink-200 cursor-pointer border-2 border-transparent hover:border-gray-400 color-option" data-color="bg-pink-200"></div>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button id="save-sticker-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Приліпити</button>
+                <button id="cancel-sticker-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="add-board-task-modal" class="fixed inset-0 z-[95] flex items-center justify-center hidden modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full relative max-h-[90vh] overflow-y-auto">
+            <h3 class="text-lg font-bold mb-4 text-gray-800">Нове Спільне Завдання</h3>
+            <input type="text" id="board-task-title" placeholder="Назва завдання" class="w-full px-4 py-2 rounded-lg border border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Етапи (підзавдання):</label>
+                <div id="subtasks-container" class="space-y-2 mb-2">
+                    <input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">
+                </div>
+                <button id="add-subtask-field-btn" class="text-sm text-indigo-600 hover:underline">+ Додати крок</button>
+            </div>
+
+            <div class="flex justify-end space-x-2">
+                <button id="save-board-task-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors btn-frosty">Створити</button>
+                <button id="cancel-board-task-btn" class="px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors">Скасувати</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" class="max-w-xl w-full">
+        <div class="bg-white p-6 rounded-2xl shadow-xl">
+            <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">Мій Планувальник Завдань</h1>
+            <p class="text-sm text-gray-500 mb-4 text-center">ID користувача: <span id="user-id-span" class="font-mono break-all">Немає</span></p>
+
+            <div id="error-message" class="hidden bg-red-100 text-red-700 p-4 rounded-lg mb-4">
+                Сталася помилка ініціалізації. Будь ласка, переконайтеся, що конфігурація Firebase додана.
+            </div>
+
+            <div id="auth-buttons" class="flex flex-col items-center space-y-4 mb-6 hidden">
+                <p class="text-gray-500">Будь ласка, увійдіть, щоб зберегти свої завдання.</p>
+                <button id="google-signin-btn" class="flex items-center justify-center px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-colors shadow-md space-x-2 btn-frosty">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.24 10.232v3.098h5.364c-.183 1.258-1.554 3.738-5.364 3.738-3.21 0-5.815-2.61-5.815-5.82s2.605-5.82 5.815-5.82c1.724 0 2.872.716 3.518 1.346l2.365-2.285c-1.472-1.39-3.41-2.23-5.883-2.23-4.832 0-8.75 3.92-8.75 8.75s3.918 8.75 8.75 8.75c5.035 0 8.358-3.535 8.358-8.528 0-.583-.075-1.127-.183-1.638h-8.175z"/></svg>
+                    <span>Увійти через Google</span>
+                </button>
+            </div>
+
+            <div id="content-section" class="hidden">
+                <div class="grid grid-cols-2 gap-2 mb-4 md:grid-cols-4">
+                    <button id="report-btn" class="w-full text-center px-2 py-2 rounded-lg bg-teal-500 text-white font-semibold hover:bg-teal-600 transition-colors shadow-md btn-frosty text-sm">Звіт</button>
+                    <button id="chats-btn" class="relative w-full text-center px-2 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors shadow-md btn-frosty text-sm">
+                        Чати
+                        <span id="chat-notification-badge" class="absolute top-0 right-0 -mt-2 -mr-2 px-2 py-1 bg-red-600 text-white text-xs rounded-full hidden"></span>
+                    </button>
+                    <button id="resources-btn" class="w-full text-center px-2 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition-colors shadow-md btn-frosty text-sm">Ресурси</button>
+                    <button id="boards-btn" class="w-full text-center px-2 py-2 rounded-lg bg-orange-400 text-white font-semibold hover:bg-orange-500 transition-colors shadow-md btn-frosty text-sm">Дошки</button>
+                    <button id="signout-btn" class="col-span-2 md:col-span-4 w-full text-center px-2 py-2 rounded-lg bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400 transition-colors shadow-md btn-frosty text-sm mt-2 md:mt-0">Вийти</button>
+                </div>
+                <div class="mb-8">
+                    <textarea id="task-input" placeholder="Опишіть ваше завдання тут..." rows="6" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+                    <div class="flex justify-end space-x-2 mt-2">
+                         <button id="add-task-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Додати</button>
+                        <button id="assign-task-open-btn" class="px-6 py-2 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 shadow-md btn-frosty">Призначити</button>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6 hidden" id="incoming-tasks-section">
+                    <h2 class="text-xl font-bold mb-4 text-gray-700">Вхідні завдання (в очікуванні)</h2>
+                    <div id="incoming-tasks-list" class="space-y-3"></div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
+                    <h2 class="text-xl font-bold mb-4 text-gray-700">Активні завдання</h2>
+                    <div id="active-tasks-list" class="space-y-3 task-list-container"></div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-700">В роботі</h2>
+                        <button id="deferred-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
+                    </div>
+                    <div id="deferred-tasks-list" class="space-y-3 hidden task-list-container"></div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-700">Виконані завдання</h2>
+                        <button id="completed-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
+                    </div>
+                    <div id="completed-tasks-list" class="space-y-3 hidden task-list-container"></div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-700">Налаштування</h2>
+                        <button id="settings-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
+                    </div>
+                    <div id="settings-content" class="hidden space-y-6">
+                         <div class="space-y-4">
+                             <div>
+                                 <label for="deferred-duration" class="block text-sm font-medium text-gray-700">В роботі (годин)</label>
+                                 <input type="number" step="0.01" id="deferred-duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="24">
+                             </div>
+                             <div>
+                                 <label for="stale-duration" class="block text-sm font-medium text-gray-700">Застаріле після (годин)</label>
+                                 <input type="number" step="0.01" id="stale-duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="72">
+                             </div>
+                             <button id="save-settings-btn" class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Зберегти</button>
+                             <p id="settings-message" class="text-sm text-center text-green-600 hidden"></p>
+                         </div>
+                         <div class="border-t pt-4">
+                            <h3 class="text-lg font-medium text-gray-800 mb-2">Сповіщення</h3>
+                            <button id="enable-notifications-btn" class="w-full px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 shadow-md btn-frosty">Увімкнути сповіщення</button>
+                            <p id="notifications-status" class="text-sm text-center text-gray-500 mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-6 rounded-2xl shadow-inner mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-700">Друзі</h2>
+                        <button id="friends-toggle-btn" class="text-indigo-600 font-semibold hover:underline">Розгорнути</button>
+                    </div>
+                    <div id="friends-content" class="hidden">
+                        <div class="flex justify-end mb-4">
+                            <button id="add-friend-open-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 btn-frosty">Додати друга</button>
+                        </div>
+                        <div id="friends-list" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="chat-section" class="max-w-4xl w-full hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl">
+             <button id="back-to-tasks-btn" class="w-full text-center mb-4 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
+             <div class="flex flex-col md:flex-row h-[80vh] border rounded-lg">
+                <div class="w-full md:w-1/3 border-r bg-gray-50 rounded-l-lg overflow-y-auto">
+                    <h2 class="text-xl font-bold p-4 border-b text-gray-700">Друзі</h2>
+                    <div id="chat-friends-list" class="space-y-1 p-2"></div>
+                </div>
+                <div class="w-full md:w-2/3 flex flex-col min-h-0">
+                    <div id="chat-window-placeholder" class="flex-grow flex items-center justify-center">
+                        <p class="text-gray-500">Виберіть чат, щоб почати спілкування</p>
+                    </div>
+                    <div id="chat-window" class="hidden flex-grow flex flex-col overflow-hidden min-h-0">
+                         <div id="chat-header" class="p-4 border-b font-bold text-gray-800"></div>
+                         <div id="chat-messages" class="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-100"></div>
+                         <div id="upload-progress-container" class="p-4 bg-white border-t hidden">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="upload-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                         </div>
+                         <div class="p-4 bg-white border-t flex items-center space-x-2">
+                            <input type="file" id="image-upload-input" class="hidden" accept="image/*">
+                            <button id="attach-file-btn" class="p-2 rounded-full hover:bg-gray-200">
+                                <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                            </button>
+                            <input type="text" id="chat-message-input" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Напишіть повідомлення...">
+                            <button id="send-chat-message-btn" class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 btn-frosty">Надіслати</button>
+                         </div>
+                    </div>
+                </div>
+             </div>
+        </div>
+    </div>
+
+    <div id="report-section" class="max-w-7xl w-full hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl">
+             <button id="back-to-tasks-from-report-btn" class="w-full md:w-auto text-center mb-6 px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
+             <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Звіт по призначених завданнях</h2>
+             <div id="report-content" class="overflow-x-auto">
+                <table class="report-table min-w-[800px] md:min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="w-[20%]">Користувач</th>
+                            <th class="w-[20%]">⏳ Очікує</th>
+                            <th class="w-[20%]">🕐 В роботі</th>
+                            <th class="w-[20%]">✅ Виконано</th>
+                            <th class="w-[20%]">❌ Відхилено</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-table-body">
+
+                    </tbody>
+                </table>
+             </div>
+        </div>
+    </div>
+    
+    <div id="resources-section" class="max-w-6xl w-full hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl min-h-[80vh]">
+             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                 <button id="back-to-tasks-from-resources-btn" class="w-full md:w-auto text-center px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
+                 <h2 class="text-2xl font-bold text-gray-800">📚 Мої Ресурси</h2>
+                 <button id="add-shelf-btn" class="w-full md:w-auto text-center px-6 py-2 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 shadow-md btn-frosty">
+                     <i class="fas fa-plus mr-2"></i>Нова Полиця
+                 </button>
+             </div>
+
+             <div class="mb-6 relative">
+                <input type="text" id="resources-search-input" placeholder="Пошук посилань..." class="w-full px-4 py-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+             </div>
+             
+             <div id="resources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             </div>
+        </div>
+    </div>
+    <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl w-96">
+            <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
+            <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-2 border rounded" placeholder="Назва завдання">
+            <div id="editSubtasksContainer" class="mb-2"></div>
+            <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
+            <div class="flex justify-end gap-2">
+                <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
+                <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+            </div>
+        </div>
+    </div>
+    <div id="editBoardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-xl w-96">
+            <h3 class="font-bold mb-2 text-lg">Редагувати дошку</h3>
+            <input type="text" id="editBoardTitleInput" class="w-full mb-4 p-2 border rounded" placeholder="Назва дошки">
+            <div class="flex justify-end gap-2">
+                <button id="cancelEditBoardBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
+                <button id="saveEditBoardBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+            </div>
+        </div>
+    </div>
+    <div id="board-report-modal" class="hidden fixed inset-0 z-[95] flex items-start md:items-center justify-center p-4">
+        <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between p-4 border-b">
+            <div class="flex items-center gap-3">
+                <h3 id="board-report-title" class="text-lg font-bold">Звіт дошки</h3>
+                <span id="board-report-subtitle" class="text-sm text-gray-500"></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <input id="board-report-search" placeholder="Пошук у звіті..." class="px-3 py-2 border rounded-md text-sm" />
+                <select id="board-report-filter-user" class="px-3 py-2 border rounded-md text-sm">
+                <option value="">Усі користувачі</option>
+                </select>
+                <select id="board-report-filter-type" class="px-3 py-2 border rounded-md text-sm">
+                <option value="">Усі типи</option>
+                <option value="task_added">Додав завдання</option>
+                <option value="subtask_checked">Викреслив пункт</option>
+                <option value="subtask_unchecked">Відновив пункт</option>
+                <option value="sticker_added">Прикріпив стікер</option>
+                <option value="sticker_removed">Зняв/видалив стікер</option>
+                <option value="task_deleted">Видалив елемент</option>
+                </select>
+                <button id="board-report-close" class="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200">Закрити</button>
+            </div>
+            </div>
+
+            <div class="flex-1 overflow-auto p-4" id="board-report-body" role="list">
+            <div id="board-report-empty" class="text-center text-gray-400 py-12">Немає подій у звіті цієї дошки.</div>
+            </div>
+
+            <div class="p-3 border-t text-right">
+            <button id="board-report-download" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">Експорт (JSON)</button>
+            </div>
+        </div>
+        <div id="boardReportBody">
+            <div id="board-report-empty" style="display:none;">Немає подій</div>
+        </div>
+        </div>
+    <div id="boards-section" class="max-w-7xl w-full hidden h-[90vh]">
+        <div class="bg-white h-full p-6 rounded-2xl shadow-xl flex flex-col">
+            <div id="boards-list-view" class="h-full flex flex-col">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <button id="back-to-tasks-from-boards-btn" class="text-center w-full md:w-auto px-6 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-md btn-frosty">Назад до завдань</button>
+                    <h2 class="text-2xl font-bold text-gray-800">📋 Спільні Дошки</h2>
+                    <button id="create-board-btn" class="text-center w-full md:w-auto px-6 py-2 rounded-lg bg-orange-400 text-white font-semibold hover:bg-orange-500 shadow-md btn-frosty">
+                        <i class="fas fa-plus mr-2"></i>Створити
+                    </button>
+                </div>
+                <div id="boards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto p-2">
+                </div>
+            </div>
+
+            <div id="active-board-view" class="hidden h-full flex-col">
+                 <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 gap-2">
+                    <div class="flex items-center gap-4">
+                        <button id="back-to-boards-list-btn" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left text-xl"></i></button>
+                        <h2 id="active-board-title" class="text-xl md:text-2xl font-bold text-gray-800 truncate max-w-[200px] md:max-w-full"></h2>
+                        <div class="text-sm text-gray-500 flex items-center gap-2">
+                            <i class="fas fa-users"></i>
+                            <span id="board-member-count">0</span>
+                        </div>
+                    </div>
+                    <button id="add-board-member-btn" class="px-3 py-1 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 text-sm font-medium transition-colors">
+                        <i class="fas fa-user-plus mr-1"></i> <span class="hidden md:inline">Додати друга</span>
+                    </button>
+                </div>
+                
+                <div class="md:hidden flex mb-2 bg-gray-100 rounded-lg p-1">
+                    <button id="mobile-tab-tasks" class="flex-1 py-2 rounded-md bg-white shadow-sm text-indigo-600 font-semibold text-sm transition-all">
+                        <i class="fas fa-list-ul mr-2"></i>Завдання
+                    </button>
+                    <button id="mobile-tab-stickers" class="flex-1 py-2 rounded-md text-gray-500 font-medium text-sm hover:bg-white/50 transition-all">
+                        <i class="fas fa-sticky-note mr-2"></i>Стікери
+                    </button>
+                </div>
+                
+                <div class="flex-grow flex flex-col md:flex-row gap-4 overflow-hidden relative bg-slate-50 rounded-xl border border-slate-200">
+                    <div id="board-tasks-column" class="w-full md:w-1/3 bg-white border-r flex flex-col h-full md:flex">
+                        <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-700">✅ Спільні Завдання</h3>
+                            <button id="add-board-task-btn" class="text-indigo-600 hover:bg-indigo-50 p-1 rounded"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <div id="board-tasks-list" class="flex-grow overflow-y-auto p-4 space-y-3">
+                        </div>
+                    </div>
+                    
+                    <div id="board-stickers-column" class="w-full md:w-2/3 p-6 relative overflow-y-auto h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] hidden md:block">
+                        <div class="absolute top-4 right-4 z-20">
+                            <button id="add-sticker-btn" class="px-4 py-2 rounded-full bg-yellow-400 text-yellow-900 font-bold shadow-lg hover:bg-yellow-300 hover:scale-105 transition-all transform">
+                                <i class="fas fa-sticky-note mr-2"></i>Стікер
+                            </button>
+                        </div>
+                        <div id="board-stickers-area" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-12">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
     <script type="module">

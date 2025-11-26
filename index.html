@@ -689,8 +689,11 @@
     <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-xl w-96">
             <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
-            <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-2 border rounded" placeholder="Назва завдання">
-            <div id="editSubtasksContainer" class="mb-2"></div>
+            <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання">
+            <!-- кожен крок тепер textarea -->
+            <div id="editSubtasksContainer" class="mb-2">
+            <textarea class="w-full mb-1 p-2 border rounded text-sm resize-none" rows="2" placeholder="Крок 1"></textarea>
+            </div>
             <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
             <div class="flex justify-end gap-2">
                 <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
@@ -708,7 +711,7 @@
             </div>
         </div>
     </div>
-    <div id="board-report-modal" class="hidden fixed inset-0 z-[95] flex items-start md:items-center justify-center p-4">
+    <div id="board-report-modal" class="hidden fixed inset-0 z-[95] flex items-center justify-center p-4 overflow-auto">
         <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="flex items-center justify-between p-4 border-b">
             <div class="flex items-center gap-3">
@@ -1485,27 +1488,28 @@ window.onload = function () {
     }
 
     function addEditSubtaskRow(text = "") {
-        const container = getEl("editSubtasksContainer");
+    const container = getEl("editSubtasksContainer");
 
-        const row = document.createElement("div");
-        row.className = "flex items-center gap-2 mb-1";
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-2 mb-1";
 
-        row.innerHTML = `
-            <input type="text"
-                class="edit-subtask-input w-full px-2 py-1 border rounded"
-                value="${text}">
+    row.innerHTML = `
+            <textarea
+                class="edit-subtask-input w-full px-2 py-1 border rounded text-sm resize-none"
+                rows="2"
+            >${text}</textarea>
             <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
         `;
 
-        row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
-            row.remove();
-        });
+    row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
+        row.remove();
+    });
 
-        container.appendChild(row);
+    container.appendChild(row);
     }
 
     getEl("addEditSubtaskBtn").addEventListener("click", () => {
-        addEditSubtaskRow("");
+    addEditSubtaskRow("");
     });
 
     async function updateBoardItem_withLogging(taskId, data) {
@@ -1637,14 +1641,14 @@ window.onload = function () {
             subtasksHtml = item.subtasks.map((s, idx) => `
                 <div class="flex items-start gap-2 mt-1">
                     <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">${s.text}</span>
+                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words whitespace-normal">${s.text}</span>
                 </div>
             `).join('');
         }
 
         el.innerHTML = `
             <div class="flex justify-between items-start mb-1">
-                <h4 class="font-bold text-gray-800">${item.text}</h4>
+                <h4 class="font-bold text-gray-800 break-words whitespace-normal">${item.text}</h4>
                 <div class="flex gap-2">
                     <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
                     <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
@@ -1658,7 +1662,7 @@ window.onload = function () {
                 ${subtasksHtml}
             </div>
         `;
-
+            
         const deleteBtn = el.querySelector('.delete-item-btn');
         if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
         const editBtn = el.querySelector('.edit-item-btn');

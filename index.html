@@ -291,7 +291,7 @@
                 }
 
                 .timeline-card {
-                    width: calc(100% - 56px); /* Змінено для врахування нового min-width аватара + gap */
+                    width: calc(100% - 56px);
                 }
 
                 .timeline-card .timeline-badge {
@@ -1504,7 +1504,7 @@ window.onload = function () {
         row.className = "flex items-start gap-2 mb-1";
 
         row.innerHTML = `
-            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="2">${text}</textarea>
+            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="5">${text}</textarea>
             <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
         `;
 

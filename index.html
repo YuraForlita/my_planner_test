@@ -700,12 +700,19 @@
         </div>
     </div>
     <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl w-96 max-h-[90vh] overflow-auto">
-            <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
-            <textarea id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання" rows="2"></textarea>
-            <div id="editSubtasksContainer" class="mb-2"></div>
-            <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
-            <div class="flex justify-end gap-2">
+        <div class="bg-white p-6 rounded-xl w-96 flex flex-col max-h-[90vh]">
+            <h3 class="font-bold mb-2 text-lg flex-shrink-0">Редагувати завдання</h3>
+            
+            <div class="overflow-y-auto flex-grow"> 
+                
+                <textarea id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання" rows="2"></textarea>
+                
+                <div id="editSubtasksContainer" class="mb-2"></div> 
+                
+            </div>
+            <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm flex-shrink-0">Додати крок</button>
+            
+            <div class="flex justify-end gap-2 flex-shrink-0"> 
                 <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
                 <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
             </div>
@@ -1513,25 +1520,26 @@ window.onload = function () {
         <textarea 
             class="edit-subtask-input 
                 w-full 
-                p-2               border 
+                p-2            border 
                 rounded 
                 text-sm 
-                resize-y"  
-            rows="2"               placeholder="Опис кроку">${text}</textarea>
+                resize-y"       
+            rows="2"           placeholder="Опис кроку">${text}</textarea>
         <button class="remove-subtask-btn text-red-500 text-lg mt-1">&times;</button>
     `;
 
-        const textarea = row.querySelector(".edit-subtask-input");
-        
-        // 1. Автоматичне налаштування висоти при створенні/завантаженні
-        autoResizeTextarea(textarea);
+    const textarea = row.querySelector(".edit-subtask-input");
+    
+    // ⚠️ ВИДАЛЯЄМО: autoResizeTextarea(textarea); при створенні,
+    // щоб атрибут rows="2" спрацював і встановив мінімальну висоту.
 
-        // 2. Автоматичне налаштування висоти при введенні тексту
-        textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+    // 2. Автоматичне налаштування висоти при введенні тексту
+    // ЗАЛИШАЄМО, щоб поле збільшувалося, коли користувач вводить багато тексту
+    textarea.addEventListener("input", () => autoResizeTextarea(textarea));
 
-        row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
-        container.appendChild(row);
-    }
+    row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
+    container.appendChild(row);
+}
 
     getEl("addEditSubtaskBtn").addEventListener("click", () => addEditSubtaskRow(""));
 

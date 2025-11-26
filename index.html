@@ -700,16 +700,16 @@
         </div>
     </div>
     <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-xl w-96 max-h-[90vh] overflow-auto">
-        <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
-        <textarea id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання" rows="2"></textarea>
-        <div id="editSubtasksContainer" class="mb-2"></div>
-        <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
-        <div class="flex justify-end gap-2">
-            <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
-            <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+        <div class="bg-white p-6 rounded-xl w-96 max-h-[90vh] overflow-auto">
+            <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
+            <textarea id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання" rows="2"></textarea>
+            <div id="editSubtasksContainer" class="mb-2"></div>
+            <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
+            <div class="flex justify-end gap-2">
+                <button id="cancelEditBoardTaskBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
+                <button id="saveEditBoardTaskBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>
+            </div>
         </div>
-    </div>
     </div>
     <div id="editBoardModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-xl w-96">
@@ -1497,6 +1497,12 @@ window.onload = function () {
         getEl("editBoardTaskModal").classList.remove("hidden");
     }
 
+    function autoResizeTextarea(element) {
+    element.style.height = "auto";
+    element.style.height = (element.scrollHeight) + "px";
+}
+
+// Оновлена функція створення кроку
     function addEditSubtaskRow(text = "") {
         const container = getEl("editSubtasksContainer");
 
@@ -1504,9 +1510,17 @@ window.onload = function () {
         row.className = "flex items-start gap-2 mb-1";
 
         row.innerHTML = `
-            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="3">${text}</textarea>
+            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="1">${text}</textarea>
             <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
         `;
+
+        const textarea = row.querySelector(".edit-subtask-input");
+        
+        // 1. Автоматичне налаштування висоти при створенні/завантаженні
+        autoResizeTextarea(textarea);
+
+        // 2. Автоматичне налаштування висоти при введенні тексту
+        textarea.addEventListener("input", () => autoResizeTextarea(textarea));
 
         row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
         container.appendChild(row);

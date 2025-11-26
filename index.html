@@ -702,7 +702,7 @@
     <div id="editBoardTaskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded-xl w-96 max-h-[90vh] overflow-auto">
         <h3 class="font-bold mb-2 text-lg">Редагувати завдання</h3>
-        <input type="text" id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання">
+        <textarea id="editBoardTaskTitle" class="w-full mb-2 p-3 border rounded text-base" placeholder="Назва завдання" rows="2"></textarea>
         <div id="editSubtasksContainer" class="mb-2"></div>
         <button id="addEditSubtaskBtn" class="mb-2 px-3 py-1 bg-gray-200 rounded text-sm">Додати крок</button>
         <div class="flex justify-end gap-2">
@@ -1504,7 +1504,7 @@ window.onload = function () {
         row.className = "flex items-start gap-2 mb-1";
 
         row.innerHTML = `
-            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="5">${text}</textarea>
+            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="3">${text}</textarea>
             <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
         `;
 
@@ -1638,8 +1638,8 @@ window.onload = function () {
 
         const el = document.createElement('div');
         el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
-        el.style.minHeight = "80px"; // мінімальна висота картки
-        el.style.wordBreak = "break-word"; // перенос слів
+        el.style.minHeight = "80px";
+        el.style.wordBreak = "break-word";
         el.style.overflowWrap = "break-word"; 
         el.style.whiteSpace = "normal";
 

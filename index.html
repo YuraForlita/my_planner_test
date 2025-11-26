@@ -188,6 +188,19 @@
             border-left: 4px solid #6366f1;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .board-task-card {
+            min-height: 80px;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+
+        .board-task-card h4,
+        .board-task-card span {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
 
         .timeline-item { display: flex; gap: 12px; padding: 12px; border-radius: 10px; transition: transform .12s; }
         .timeline-item:hover { transform: translateY(-4px); box-shadow: 0 6px 18px rgba(0,0,0,0.06); }
@@ -1485,29 +1498,21 @@ window.onload = function () {
     }
 
     function addEditSubtaskRow(text = "") {
-    const container = getEl("editSubtasksContainer");
+        const container = getEl("editSubtasksContainer");
 
-    const row = document.createElement("div");
-    row.className = "flex items-center gap-2 mb-1";
+        const row = document.createElement("div");
+        row.className = "flex items-start gap-2 mb-1";
 
-    row.innerHTML = `
-            <textarea
-                class="edit-subtask-input w-full px-2 py-1 border rounded text-sm resize-none"
-                rows="2"
-            >${text}</textarea>
+        row.innerHTML = `
+            <textarea class="edit-subtask-input w-full px-2 py-1 border rounded resize-none" rows="2">${text}</textarea>
             <button class="remove-subtask-btn text-red-500 text-lg">&times;</button>
         `;
 
-    row.querySelector(".remove-subtask-btn").addEventListener("click", () => {
-        row.remove();
-    });
-
-    container.appendChild(row);
+        row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
+        container.appendChild(row);
     }
 
-    getEl("addEditSubtaskBtn").addEventListener("click", () => {
-    addEditSubtaskRow("");
-    });
+    getEl("addEditSubtaskBtn").addEventListener("click", () => addEditSubtaskRow(""));
 
     async function updateBoardItem_withLogging(taskId, data) {
 
@@ -1627,53 +1632,53 @@ window.onload = function () {
     });
 
     const renderBoardTask = (item) => {
-    const total = item.subtasks ? item.subtasks.length : 0;
-    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        const total = item.subtasks ? item.subtasks.length : 0;
+        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
-    const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-2 border rounded min-h-[60px] break-words'; // мінімальна висота + перенос тексту
+        const el = document.createElement('div');
+        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
+        el.style.minHeight = "80px"; // мінімальна висота картки
+        el.style.wordBreak = "break-word"; // перенос слів
+        el.style.overflowWrap = "break-word"; 
+        el.style.whiteSpace = "normal";
 
-    let subtasksHtml = '';
-    if (item.subtasks) {
-        subtasksHtml = item.subtasks.map((s, idx) => `
-            <div class="flex items-start gap-2 mt-1">
-                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                <span class="text-sm break-words whitespace-pre-wrap ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'}">
-                    ${s.text}
-                </span>
+        let subtasksHtml = '';
+        if(item.subtasks) {
+            subtasksHtml = item.subtasks.map((s, idx) => `
+                <div class="flex items-start gap-2 mt-1">
+                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
+                </div>
+            `).join('');
+        }
+
+        el.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+                </div>
             </div>
-        `).join('');
-    }
-
-    el.innerHTML = `
-        <div class="flex justify-between items-start mb-1">
-            <h4 class="font-bold text-gray-800 break-words whitespace-pre-wrap">${item.text}</h4>
-            <div class="flex gap-2">
-                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
             </div>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-        </div>
-        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-        <div class="pl-1 space-y-1">
-            ${subtasksHtml}
-        </div>
-    `;
+            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+            <div class="pl-1 space-y-1">
+                ${subtasksHtml}
+            </div>
+        `;
 
-    const deleteBtn = el.querySelector('.delete-item-btn');
-    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const deleteBtn = el.querySelector('.delete-item-btn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const editBtn = el.querySelector('.edit-item-btn');
+        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+        });
 
-    const editBtn = el.querySelector('.edit-item-btn');
-    if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-
-    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
-    });
-
-    boardTasksList.appendChild(el);
+        boardTasksList.appendChild(el);
     };
 
     const renderBoardSticker = (item) => {

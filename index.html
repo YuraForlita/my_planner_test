@@ -1509,7 +1509,6 @@ window.onload = function () {
     element.style.height = (element.scrollHeight) + "px";
 }
 
-// Оновлена функція створення кроку
     function addEditSubtaskRow(text = "") {
     const container = getEl("editSubtasksContainer");
 
@@ -1530,11 +1529,6 @@ window.onload = function () {
 
     const textarea = row.querySelector(".edit-subtask-input");
     
-    // ⚠️ ВИДАЛЯЄМО: autoResizeTextarea(textarea); при створенні,
-    // щоб атрибут rows="2" спрацював і встановив мінімальну висоту.
-
-    // 2. Автоматичне налаштування висоти при введенні тексту
-    // ЗАЛИШАЄМО, щоб поле збільшувалося, коли користувач вводить багато тексту
     textarea.addEventListener("input", () => autoResizeTextarea(textarea));
 
     row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());

@@ -424,6 +424,13 @@
         <div class="bg-white p-6 rounded-xl w-96">
             <h3 class="font-bold mb-2 text-lg">Редагувати дошку</h3>
             <input type="text" id="editBoardTitleInput" class="w-full mb-4 p-2 border rounded" placeholder="Назва дошки">
+            <label class="block text-sm mt-3 mb-1 text-gray-700">Статус дошки:</label>
+            <select id="editBoardStatus" class="w-full p-2 border rounded">
+                <option value="active">Активна</option>
+                <option value="updated">Є зміни</option>
+                <option value="needs_review">Потребує перегляду</option>
+                <option value="done">Завершено</option>
+            </select>
             <div class="flex justify-end gap-2">
                 <button id="cancelEditBoardBtn" class="px-3 py-1 bg-gray-200 rounded">Скасувати</button>
                 <button id="saveEditBoardBtn" class="px-3 py-1 bg-indigo-600 text-white rounded">Зберегти</button>

@@ -1606,36 +1606,38 @@ window.onload = function () {
   }
 
   async function saveEditedBoard() {
-  if (!editingBoard) return;
+    if (!editingBoard) return;
 
-  const newTitle = getEl("editBoardTitleInput").value.trim();
-  const newStatus = getEl("editBoardStatus").value.trim();
-
-  if (!newTitle) {
-    cancelEditBoard();
-    return;
-  }
-
-  try {
-    await updateDoc(
-      doc(db, "artifacts", appId, "public", "data", "boards", editingBoard.id),
-      {
-        title: newTitle,
-        status: newStatus
-      }
-    );
-
-    // Якщо ми редагували активну дошку — оновлюємо назву у хедері
-    if (editingBoard.id === currentBoardId) {
-      const titleEl = getEl("activeBoardTitle");
-      if (titleEl) titleEl.textContent = newTitle;
+    const newTitle = getEl("editBoardTitleInput").value.trim();
+    if (!newTitle) {
+      cancelEditBoard();
+      return;
     }
 
-    cancelEditBoard();
-  } catch (e) {
-    console.error("Помилка оновлення дошки:", e);
+    try {
+      await updateDoc(
+        doc(
+          db,
+          "artifacts",
+          appId,
+          "public",
+          "data",
+          "boards",
+          editingBoard.id
+        ),
+        { title: newTitle }
+      );
+
+      if (editingBoard.id === currentBoardId) {
+        const activeBoardTitleEl = getEl("activeBoardTitle");
+        if (activeBoardTitleEl) activeBoardTitleEl.textContent = newTitle;
+      }
+
+      cancelEditBoard();
+    } catch (e) {
+      console.error("Помилка оновлення назви дошки:", e);
+    }
   }
-}
 
   function cancelEditBoard() {
     getEl("editBoardModal").classList.add("hidden");
@@ -1643,13 +1645,10 @@ window.onload = function () {
   }
   getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
 
-
   function openEditBoardModal(board) {
     editingBoard = board;
 
     getEl("editBoardTitleInput").value = board.title;
-
-    getEl("editBoardStatus").value = board.status ?? "active";
 
     getEl("editBoardModal").classList.remove("hidden");
   }
@@ -1784,17 +1783,19 @@ window.onload = function () {
         timestamp: serverTimestamp()
       };
       await addDoc(
-      collection(db, "artifacts", appId, "public", "data", "board_activities"),
-      {
-        boardId,
-        performedBy: userId,
-        timestamp: serverTimestamp(),
-        ...data
-      }
-    );
-  } catch (e) {
-    console.error("Error logging board activity:", e);
-  }
+        collection(
+          db,
+          "artifacts",
+          appId,
+          "public",
+          "data",
+          "board_activities"
+        ),
+        data
+      );
+    } catch (e) {
+      console.error("Error logging board activity:", e);
+    }
   };
 
   const boardReportModal = getEl("board-report-modal");
@@ -1953,11 +1954,6 @@ window.onload = function () {
             const meta = document.createElement("div");
             meta.className = "timeline-meta";
             meta.textContent = `${fmtTime(act.timestamp)} • ${act.type}`;
-            const fmtTime = (ts) => {
-              if (!ts) return "";
-              const d = ts.toDate ? ts.toDate() : new Date(ts);
-              return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            };
             const detail = document.createElement("div");
             detail.className = "text-sm text-gray-700 mt-2";
             const pieces = [];

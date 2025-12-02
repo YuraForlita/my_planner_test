@@ -776,6 +776,7 @@ window.onload = function () {
         if (!editingBoard) return;
 
         const newTitle = getEl("editBoardTitleInput").value.trim();
+        const newStatus = getEl("editBoardStatusSelect").value;
         if (!newTitle) {
             cancelEditBoard(); 
             return;
@@ -785,7 +786,7 @@ window.onload = function () {
 
             await updateDoc(
                 doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
-                { title: newTitle }
+                { title: newTitle, status: newStatus } // Оновлено
             );
 
             if (editingBoard.id === currentBoardId) {
@@ -810,6 +811,13 @@ window.onload = function () {
         editingBoard = board; 
         
         getEl("editBoardTitleInput").value = board.title;
+        
+        // --- ДОДАНО ЛОГІКУ СТАТУСУ ---
+        const statusSelect = getEl("editBoardStatusSelect");
+        statusSelect.innerHTML = Object.keys(BOARD_STATUSES).map(key => 
+            `<option value="${key}" ${board.status === key ? 'selected' : ''}>${BOARD_STATUSES[key].title}</option>`
+        ).join('');
+        // ------------------------------
         
         getEl("editBoardModal").classList.remove("hidden"); 
     }
@@ -918,10 +926,6 @@ async function updateBoardItem_withLogging(taskId, data) {
             });
         } catch (e) { console.error("Error toggling subtask:", e); }
     };
-Б. Оновлений Блок: Рендеринг Завдання (renderBoardTask)
-Ця функція тепер додає клас completed-task-card для світло-зеленого забарвлення та сортує завдання, переносячи виконані в кінець.
-
-JavaScript
 
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;
@@ -1337,9 +1341,25 @@ JavaScript
         }
     };
 
+    const BOARD_STATUSES = {
+        'New': { title: 'Нове', color: 'bg-indigo-500', text: 'text-white' },
+        'Question': { title: 'Питання', color: 'bg-yellow-500', text: 'text-gray-800' },
+        'Completed': { title: 'Виконано', color: 'bg-green-500', text: 'text-white' }
+    };
+
+    const getBoardStatusTag = (statusKey) => {
+        const status = BOARD_STATUSES[statusKey] || BOARD_STATUSES.New;
+        return `<span class="board-status-tag text-xs font-semibold px-2 py-0.5 rounded-full ${status.color} ${status.text} absolute top-1 right-1/2 translate-x-1/2">${status.title}</span>`;
+    };
+
     const subscribeToBoards = () => {
         if(!userId) return;
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), where('members', 'array-contains', userId));
+        // Сортуємо: Completed дошки йдуть в кінець
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'boards'), 
+            where('members', 'array-contains', userId),
+            orderBy('status', 'asc') 
+        );
         unsubscribeFromBoards = onSnapshot(q, (snapshot) => {
             boardsGrid.innerHTML = '';
             if(snapshot.empty) {
@@ -1349,9 +1369,11 @@ JavaScript
             snapshot.forEach(docSnap => {
                 const board = { id: docSnap.id, ...docSnap.data() };
                 const isOwner = board.ownerId === userId;
+                const status = board.status || 'New';
+                const isCompleted = status === 'Completed';
 
                 const el = document.createElement('div');
-                el.className = 'bg-white p-6 rounded-xl shadow-lg border border-orange-100 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group';
+                el.className = `bg-white p-6 rounded-xl shadow-lg border cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group ${isCompleted ? 'border-green-300 bg-green-50' : 'border-orange-100'}`;
 
                 const deleteBtnHtml = isOwner 
                     ? `<button class="delete-board-btn absolute top-2 right-2 text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Видалити дошку"><i class="fas fa-trash-alt"></i></button>`
@@ -1360,12 +1382,17 @@ JavaScript
                 const editBtnHtml = isOwner
                     ? `<button class="edit-board-btn absolute top-2 left-2 text-gray-300 hover:text-blue-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Редагувати назву"><i class="fas fa-edit"></i></button>`
                     : '';
+                
+                // --- ДОДАНО ВИКЛИК СТАТУСУ ---
+                const statusTagHtml = getBoardStatusTag(status);
+                // ------------------------------
 
                 el.innerHTML = `
                     <h3 class="font-bold text-xl text-gray-800 mb-2 pr-6">${board.title}</h3>
                     <p class="text-sm text-gray-500"><i class="fas fa-user-friends"></i> ${board.members ? board.members.length : 0} учасників</p>
                     ${deleteBtnHtml}
                     ${editBtnHtml}
+                    ${statusTagHtml}
                 `;
 
                 el.addEventListener('click', (e) => {
@@ -1400,6 +1427,7 @@ JavaScript
                 title,
                 ownerId: userId,
                 members: [userId],
+                status: 'New', // Встановлюємо початковий статус
                 createdAt: serverTimestamp()
             });
             createBoardModal.classList.add('hidden');
@@ -1426,6 +1454,10 @@ JavaScript
     const openActiveBoard = (board) => {
         currentBoardId = board.id;
         activeBoardTitle.textContent = board.title;
+        // Можна також відобразити статус тут
+        // const status = BOARD_STATUSES[board.status || 'New'].title;
+        // activeBoardTitle.insertAdjacentHTML('afterend', ` <span class="text-sm">(${status})</span>`);
+        
         getEl('board-member-count').textContent = board.members.length;
         boardsListView.classList.add('hidden');
         activeBoardView.classList.remove('hidden');
@@ -1438,6 +1470,26 @@ JavaScript
             }
         });
         subscribeToBoardItems(board.id);
+
+        (function addBoardReportButton() {
+            try {
+                const header = document.querySelector('#active-board-title')?.parentElement;
+                if (!header) return;
+                // Прибираємо старий звіт, якщо він був
+                const oldReportBtn = getEl('open-board-report-btn');
+                if (oldReportBtn) oldReportBtn.remove();
+                
+                const btn = document.createElement('button');
+                btn.id = 'open-board-report-btn';
+                btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
+                btn.textContent = 'Звіт';
+                btn.addEventListener('click', openBoardReport);
+                header.appendChild(btn);
+            } catch (e) { console.error(e); }
+        })();
+
+        subscribeToBoardActivities(board.id);
+    };
 
         (function addBoardReportButton() {
             try {
@@ -1629,6 +1681,7 @@ JavaScript
             subscribeToIncomingTasks();
             subscribeToUnreadCounts();
             checkNotificationStatus();
+            subscribeToBoards(); // ДОДАНО
         } else {
             userId = null;
             userIdSpan.textContent = 'Немає';

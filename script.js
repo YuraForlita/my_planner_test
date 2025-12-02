@@ -823,13 +823,115 @@ window.onload = function () {
         editingBoardTask = null;
     });
 
+async function updateBoardItem_withLogging(taskId, data) {
+
+        await updateDoc(
+            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
+            data
+        );
+
+        const uid = auth?.currentUser?.uid || null;
+
+        await addDoc(
+            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
+            {
+                boardId: currentBoardId,
+                type: "edit_task",
+                performedBy: uid,
+                itemId: taskId,
+                itemText: data.text,
+                timestamp: serverTimestamp()
+            }
+        );
+    }
+
+    async function saveEditBoardTask() {
+        if (!editingBoardTask) return;
+
+        const title = getEl("editBoardTaskTitle").value.trim();
+        if (!title) return;
+
+        const originalSubtasks = editingBoardTask.subtasks || [];
+        
+        const originalSubtaskMap = new Map();
+        originalSubtasks.forEach(s => {
+
+            originalSubtaskMap.set(s.text, s.completed); 
+        });
+
+        const subtasks = Array.from(
+            document.querySelectorAll(".edit-subtask-input")
+        )
+        .map(el => {
+            const text = el.value.trim();
+            let completed = false;
+
+            if (originalSubtaskMap.has(text)) {
+                completed = originalSubtaskMap.get(text);
+            } 
+
+            return {
+                text: text,
+                completed: completed
+            };
+        })
+        .filter(s => s.text !== "");
+
+        // --- ДОДАНО ЛОГІКУ ПЕРЕВІРКИ ЗАВЕРШЕННЯ ---
+        const allCompleted = subtasks.length > 0 && subtasks.every(s => s.completed);
+        // ------------------------------------------
+
+        await updateBoardItem_withLogging(editingBoardTask.id, {
+            text: title,
+            subtasks,
+            isCompleted: allCompleted, // Оновлюємо статус завершення
+        });
+
+        getEl("editBoardTaskModal").classList.add("hidden");
+
+        editingBoardTask = null;
+
+        loadBoardTasks();
+    }
+
+    // --- ОНОВЛЕНА ФУНКЦІЯ toggleSubtask_withLogging ---
+    const toggleSubtask_withLogging = async (item, idx, isChecked) => {
+        try {
+            if (!item || !Array.isArray(item.subtasks)) return;
+            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
+            const oldText = newSubtasks[idx]?.text || '';
+            newSubtasks[idx].completed = isChecked;
+
+            // Перевіряємо, чи всі підзавдання виконані
+            const allCompleted = newSubtasks.length > 0 && newSubtasks.every(s => s.completed);
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+                subtasks: newSubtasks,
+                isCompleted: allCompleted, // Оновлюємо статус завершення
+            });
+
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+                itemId: item.id,
+                subtaskIdx: idx,
+                subtaskText: oldText
+            });
+        } catch (e) { console.error("Error toggling subtask:", e); }
+    };
+Б. Оновлений Блок: Рендеринг Завдання (renderBoardTask)
+Ця функція тепер додає клас completed-task-card для світло-зеленого забарвлення та сортує завдання, переносячи виконані в кінець.
+
+JavaScript
+
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;
         const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
         const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
+        const isCompleted = item.isCompleted === true; // Нове поле
+
         const el = document.createElement('div');
-        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
+        el.className = `board-task-card p-3 mb-3 border rounded flex flex-col ${isCompleted ? 'completed-task-card bg-green-100 border-green-300 opacity-75' : 'bg-white'}`;
         el.style.minHeight = "80px";
         el.style.wordBreak = "break-word";
         el.style.overflowWrap = "break-word"; 
@@ -847,16 +949,18 @@ window.onload = function () {
 
         el.innerHTML = `
             <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
+                <h4 class="font-bold text-gray-800 break-words ${isCompleted ? 'text-green-700' : ''}">${item.text}</h4>
                 <div class="flex gap-2 flex-shrink-0">
                     <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
                     <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
                 </div>
             </div>
+            ${total > 0 ? `
             <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
                 <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
             </div>
             <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+            ` : ''}
             <div class="pl-1 space-y-1">
                 ${subtasksHtml}
             </div>
@@ -870,7 +974,12 @@ window.onload = function () {
             cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
         });
 
-        boardTasksList.appendChild(el);
+        // Сортування: виконані завдання в кінець списку
+        if (isCompleted) {
+            boardTasksList.appendChild(el);
+        } else {
+            boardTasksList.prepend(el);
+        }
     };
 
     const renderBoardSticker = (item) => {
@@ -1083,15 +1192,93 @@ window.onload = function () {
         } catch(e) { console.error("Error adding board task", e); }
     };
 
+    async function updateBoardItem_withLogging(taskId, data) {
+
+        await updateDoc(
+            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
+            data
+        );
+
+        const uid = auth?.currentUser?.uid || null;
+
+        await addDoc(
+            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
+            {
+                boardId: currentBoardId,
+                type: "edit_task",
+                performedBy: uid,
+                itemId: taskId,
+                itemText: data.text,
+                timestamp: serverTimestamp()
+            }
+        );
+    }
+
+    async function saveEditBoardTask() {
+        if (!editingBoardTask) return;
+
+        const title = getEl("editBoardTaskTitle").value.trim();
+        if (!title) return;
+
+        const originalSubtasks = editingBoardTask.subtasks || [];
+        
+        const originalSubtaskMap = new Map();
+        originalSubtasks.forEach(s => {
+
+            originalSubtaskMap.set(s.text, s.completed); 
+        });
+
+        const subtasks = Array.from(
+            document.querySelectorAll(".edit-subtask-input")
+        )
+        .map(el => {
+            const text = el.value.trim();
+            let completed = false;
+
+            if (originalSubtaskMap.has(text)) {
+                completed = originalSubtaskMap.get(text);
+            } 
+
+            return {
+                text: text,
+                completed: completed
+            };
+        })
+        .filter(s => s.text !== "");
+
+        // --- ДОДАНО ЛОГІКУ ПЕРЕВІРКИ ЗАВЕРШЕННЯ ---
+        const allCompleted = subtasks.length > 0 && subtasks.every(s => s.completed);
+        // ------------------------------------------
+
+        await updateBoardItem_withLogging(editingBoardTask.id, {
+            text: title,
+            subtasks,
+            isCompleted: allCompleted, // Оновлюємо статус завершення
+        });
+
+        getEl("editBoardTaskModal").classList.add("hidden");
+
+        editingBoardTask = null;
+
+        loadBoardTasks();
+    }
+
+    // --- ОНОВЛЕНА ФУНКЦІЯ toggleSubtask_withLogging ---
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
         try {
             if (!item || !Array.isArray(item.subtasks)) return;
             const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
             const oldText = newSubtasks[idx]?.text || '';
             newSubtasks[idx].completed = isChecked;
+
+            // Перевіряємо, чи всі підзавдання виконані
+            const allCompleted = newSubtasks.length > 0 && newSubtasks.every(s => s.completed);
+
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-                subtasks: newSubtasks
+                subtasks: newSubtasks,
+                isCompleted: allCompleted, // Оновлюємо статус завершення
             });
+
             await logBoardActivity(item.boardId || currentBoardId, {
                 type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
                 itemId: item.id,

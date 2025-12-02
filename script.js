@@ -18,888 +18,1162 @@ window.onload = function () {
     };
 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    const provider = new GoogleAuthProvider();
 
-    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("YOUR_")) {
-        document.getElementById('loading-spinner').classList.add('hidden');
-        document.getElementById('error-message').classList.remove('hidden');
-        return;
+    // --- КОНСТАНТИ ТА ЗМІННІ СТАНУ ---
+
+    let userId = null;
+    let currentBoardId = null;
+    let unsubscribeFromBoards = null;
+    let unsubscribeFromBoardActivities = null;
+    let latestBoardActivities = [];
+    let selectedStickerColor = 'yellow';
+    let editingBoard = null; // Для модального вікна редагування дошки
+    let editingBoardTask = null; // Для модального вікна редагування завдання
+    let currentTaskForAction = null;
+    let currentIncomingTask = null;
+    let currentAction = null;
+    let selectedFriendForChat = null;
+    let unsubscribeFromBoardItems = null;
+
+    const BOARD_STATUSES = {
+        'New': { title: 'Нове', color: 'bg-indigo-500', text: 'text-white' },
+        'Question': { title: 'Питання', color: 'bg-yellow-500', text: 'text-gray-800' },
+        'Completed': { title: 'Виконано', color: 'bg-green-500', text: 'text-white' }
+    };
+
+    // --- ДОПОМІЖНА ФУНКЦІЯ ---
+    function getEl(id) {
+        return document.getElementById(id);
     }
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
+    // --- ОГОЛОШЕННЯ ЕЛЕМЕНТІВ DOM (Уніфікований блок) ---
+    const loadingSpinner = getEl('loading-spinner'),
+        userIdSpan = getEl('user-id-span'),
+        authButtons = getEl('auth-buttons'),
+        googleSignInButton = getEl('google-sign-in-button'),
+        signOutButton = getEl('sign-out-button'),
+        contentSection = getEl('content-section'),
+        mainContent = getEl('main-content'),
+        addTaskButton = getEl('add-task-button'),
+        confirmDeleteButton = getEl('confirm-delete-button'),
+        cancelDeleteButton = getEl('cancel-delete-button'),
+        confirmModal = getEl('confirm-modal'),
+        notificationModal = getEl('notification-modal'),
+        notificationTitle = getEl('notification-title'),
+        notificationMessage = getEl('notification-message'),
+        closeNotificationBtn = getEl('close-notification-btn'),
+        tasksList = getEl('tasks-list'),
+        deferredTasksList = getEl('deferred-tasks-list'),
+        completedTasksList = getEl('completed-tasks-list'),
+        deferredToggleBtn = getEl('deferred-toggle-btn'),
+        completedToggleBtn = getEl('completed-toggle-btn'),
+        viewEditTaskModal = getEl('view-edit-task-modal'),
+        editTaskTitle = getEl('edit-task-title'),
+        editTaskNotes = getEl('edit-task-notes'),
+        editTaskDueDate = getEl('edit-task-due-date'),
+        editTaskReminderDate = getEl('edit-task-reminder-date'),
+        editTaskStatus = getEl('edit-task-status'),
+        editTaskPriority = getEl('edit-task-priority'),
+        saveEditBtn = getEl('save-edit-btn'),
+        cancelEditBtn = getEl('cancel-edit-btn'),
+        settingsToggleBtn = getEl('settings-toggle-btn'),
+        settingsContent = getEl('settings-content'),
+        enableNotificationsBtn = getEl('enable-notifications-btn'),
+        settingsTimezone = getEl('settings-timezone'),
+        saveSettingsBtn = getEl('save-settings-btn'),
+        friendsToggleBtn = getEl('friends-toggle-btn'),
+        friendsContent = getEl('friends-content'),
+        friendsList = getEl('friends-list'),
+        addFriendOpenBtn = getEl('add-friend-open-btn'),
+        addFriendModal = getEl('add-friend-modal'),
+        friendEmailInput = getEl('friend-email-input'),
+        saveFriendBtn = getEl('save-friend-btn'),
+        cancelFriendBtn = getEl('cancel-friend-btn'),
+        assignTaskOpenBtn = getEl('assign-task-open-btn'),
+        assignTaskModal = getEl('assign-task-modal'),
+        assignTaskTitle = getEl('assign-task-title'),
+        assignFriendSelect = getEl('assign-friend-select'),
+        sendTaskBtn = getEl('send-task-btn'),
+        cancelAssignBtn = getEl('cancel-assign-btn'),
+        incomingTasksList = getEl('incoming-tasks-list'),
+        incomingTasksCount = getEl('incoming-tasks-count'),
+        viewIncomingTaskModal = getEl('view-incoming-task-modal'),
+        incomingTaskTitle = getEl('incoming-task-title'),
+        incomingTaskDetails = getEl('incoming-task-details'),
+        incomingTaskAcceptBtn = getEl('incoming-task-accept-btn'),
+        incomingTaskDeclineBtn = getEl('incoming-task-decline-btn'),
+        incomingTaskCloseBtn = getEl('incoming-task-close-btn'),
+        chatsBtn = getEl('chats-btn'),
+        chatSection = getEl('chat-section'),
+        backToTasksBtn = getEl('back-to-tasks-btn'),
+        friendsChatList = getEl('friends-chat-list'),
+        chatBox = getEl('chat-box'),
+        chatMessages = getEl('chat-messages'),
+        chatHeader = getEl('chat-header'),
+        chatMessageInput = getEl('chat-message-input'),
+        sendChatMessageBtn = getEl('send-chat-message-btn'),
+        imageUploadInput = getEl('image-upload-input'),
+        attachFileBtn = getEl('attach-file-btn'),
+        imageViewerModal = getEl('image-viewer-modal'),
+        imageViewerContent = getEl('image-viewer-content'),
+        closeImageViewerBtn = getEl('close-image-viewer-btn'),
+        reportBtn = getEl('report-btn'),
+        reportSection = getEl('report-section'),
+        backToTasksFromReportBtn = getEl('back-to-tasks-from-report-btn'),
+        reportTableBody = getEl('report-table-body'),
+        taskDetailsModal = getEl('task-details-modal'),
+        taskDetailsText = getEl('task-details-text'),
+        taskDetailsStatus = getEl('task-details-status'),
+        taskDetailsOwner = getEl('task-details-owner'),
+        deleteFromReportBtn = getEl('delete-from-report-btn'),
+        closeTaskDetailsBtn = getEl('close-task-details-btn'),
+        taskActionsModal = getEl('task-actions-modal'),
+        actionDeferBtn = getEl('action-defer-btn'),
+        actionActivateBtn = getEl('action-activate-btn'),
+        actionProlongBtn = getEl('action-prolong-btn'),
+        actionDeleteBtn = getEl('action-delete-btn'),
+        cancelActionsBtn = getEl('cancel-actions-btn'),
+        resourcesBtn = getEl('resources-btn'),
+        resourcesSection = getEl('resources-section'),
+        backToTasksFromResourcesBtn = getEl('back-to-tasks-from-resources-btn'),
+        shelvesList = getEl('shelves-list'),
+        resourcesContainer = getEl('resources-container'),
+        addShelfBtn = getEl('add-shelf-btn'),
+        addShelfModal = getEl('add-shelf-modal'),
+        shelfNameInput = getEl('shelf-name-input'),
+        saveShelfBtn = getEl('save-shelf-btn'),
+        cancelShelfBtn = getEl('cancel-shelf-btn'),
+        addResourceModal = getEl('add-resource-modal'),
+        resourceTitleInput = getEl('resource-title-input'),
+        resourceLinkInput = getEl('resource-link-input'),
+        resourceShelfSelect = getEl('resource-shelf-select'),
+        saveResourceBtn = getEl('save-resource-btn'),
+        cancelResourceBtn = getEl('cancel-resource-btn'),
+        resourcesSearchInput = getEl('resources-search-input'),
+        boardsBtn = getEl('boards-btn'),
+        boardsSection = getEl('boards-section'),
+        backToTasksFromBoardsBtn = getEl('back-to-tasks-from-boards-btn'),
+        boardsGrid = getEl('boards-grid'),
+        createBoardBtn = getEl('create-board-btn'),
+        createBoardModal = getEl('create-board-modal'),
+        boardNameInput = getEl('board-name-input'),
+        saveBoardBtn = getEl('save-board-btn'),
+        cancelBoardBtn = getEl('cancel-board-btn'),
+        boardsListView = getEl('boards-list-view'),
+        activeBoardView = getEl('active-board-view'),
+        activeBoardTitle = getEl('active-board-title'),
+        backToBoardsListBtn = getEl('back-to-boards-list-btn'),
+        addBoardMemberBtn = getEl('add-board-member-btn'),
+        addBoardMemberModal = getEl('add-board-member-modal'),
+        boardFriendSelect = getEl('board-friend-select'),
+        saveBoardMemberBtn = getEl('save-board-member-btn'),
+        cancelBoardMemberBtn = getEl('cancel-board-member-btn'),
+        boardTasksList = getEl('board-tasks-list'),
+        addBoardTaskBtn = getEl('add-board-task-btn'),
+        addBoardTaskModal = getEl('add-board-task-modal'),
+        boardTaskTitle = getEl('board-task-title'),
+        subtasksContainer = getEl('subtasks-container'),
+        addSubtaskFieldBtn = getEl('add-subtask-field-btn'),
+        saveBoardTaskBtn = getEl('save-board-task-btn'), 
+        cancelBoardTaskBtn = getEl('cancel-board-task-btn'),
+        boardStickersArea = getEl('board-stickers-area'),
+        addStickerBtn = getEl('add-sticker-btn'),
+        addStickerModal = getEl('add-sticker-modal'),
+        stickerTextInput = getEl('sticker-text-input'),
+        saveStickerBtn = getEl('save-sticker-btn'),
+        cancelStickerBtn = getEl('cancel-sticker-btn'),
+        mobileTabTasks = getEl('mobile-tab-tasks'),
+        mobileTabStickers = getEl('mobile-tab-stickers'),
+        boardTasksColumn = getEl('board-tasks-column'),
+        boardStickersColumn = getEl('board-stickers-column'),
+        boardReportModal = getEl('board-report-modal'),
+        boardReportBody = getEl('board-report-body'),
+        boardReportTitle = getEl('board-report-title'),
+        boardReportSubtitle = getEl('board-report-subtitle'),
+        boardReportClose = getEl('board-report-close'),
+        boardReportFilterUser = getEl('board-report-filter-user'),
+        boardReportFilterType = getEl('board-report-filter-type'),
+        boardReportSearch = getEl('board-report-search'),
+        boardReportDownload = getEl('board-report-download'),
+        editBoardModal = getEl('edit-board-modal'), // Доданий елемент для редагування дошки
+        editBoardTitleInput = getEl('editBoardTitleInput'), // Доданий елемент
+        editBoardStatusSelect = getEl('editBoardStatusSelect'), // Доданий елемент
+        saveEditBoardBtn = getEl('saveEditBoardBtn'), // Доданий елемент
+        cancelEditBoardBtn = getEl('cancelEditBoardBtn'); // Доданий елемент
+    
 
-    const getEl = (id) => document.getElementById(id);
+    // --- ФУНКЦІЇ АУТЕНТИФІКАЦІЇ ---
 
-    const mainContent = getEl('main-content'), taskInput = getEl('task-input'), addTaskButton = getEl('add-task-btn'),
-          assignTaskOpenBtn = getEl('assign-task-open-btn'), userIdSpan = getEl('user-id-span'),
-          loadingSpinner = getEl('loading-spinner'), authButtons = getEl('auth-buttons'),
-          contentSection = getEl('content-section'), googleSignInButton = getEl('google-signin-btn'),
-          signOutButton = getEl('signout-btn'), confirmModal = getEl('confirm-modal'),
-          confirmModalMessage = getEl('confirm-modal-message'), confirmDeleteButton = confirmModal.querySelector('.confirm-btn'),
-          cancelDeleteButton = confirmModal.querySelector('.cancel-btn'), notificationModal = getEl('notification-modal'),
-          notificationTitle = getEl('notification-title'), notificationMessage = getEl('notification-message'),
-          closeNotificationBtn = getEl('close-notification-btn'), viewEditModal = getEl('view-edit-modal'),
-          editTaskInput = getEl('edit-task-input'), saveEditBtn = getEl('save-edit-btn'),
-          cancelEditBtn = getEl('cancel-edit-btn'), activeTasksList = getEl('active-tasks-list'),
-          deferredTasksList = getEl('deferred-tasks-list'), completedTasksList = getEl('completed-tasks-list'),
-          deferredToggleBtn = getEl('deferred-toggle-btn'), completedToggleBtn = getEl('completed-toggle-btn'),
-          settingsToggleBtn = getEl('settings-toggle-btn'), settingsContent = getEl('settings-content'),
-          deferredDurationInput = getEl('deferred-duration'), staleDurationInput = getEl('stale-duration'),
-          saveSettingsBtn = getEl('save-settings-btn'), settingsMessage = getEl('settings-message'),
-          incomingTasksSection = getEl('incoming-tasks-section'), incomingTasksList = getEl('incoming-tasks-list'),
-          friendsToggleBtn = getEl('friends-toggle-btn'), friendsContent = getEl('friends-content'),
-          addFriendOpenBtn = getEl('add-friend-open-btn'), friendsList = getEl('friends-list'),
-          addFriendModal = getEl('add-friend-modal'), friendNameInput = getEl('friend-name-input'),
-          friendIdInput = getEl('friend-id-input'), saveFriendBtn = getEl('save-friend-btn'),
-          cancelFriendBtn = getEl('cancel-friend-btn'), assignTaskModal = getEl('assign-task-modal'),
-          friendSelect = getEl('friend-select'), assignTaskInput = getEl('assign-task-input'),
-          sendTaskBtn = getEl('send-task-btn'), cancelAssignBtn = getEl('cancel-assign-btn'),
-          chatsBtn = getEl('chats-btn'), chatNotificationBadge = getEl('chat-notification-badge'),
-          chatSection = getEl('chat-section'), backToTasksBtn = getEl('back-to-tasks-btn'),
-          chatFriendsList = getEl('chat-friends-list'), chatWindow = getEl('chat-window'),
-          chatWindowPlaceholder = getEl('chat-window-placeholder'), chatHeader = getEl('chat-header'),
-          chatMessages = getEl('chat-messages'), chatMessageInput = getEl('chat-message-input'),
-          sendChatMessageBtn = getEl('send-chat-message-btn'), enableNotificationsBtn = getEl('enable-notifications-btn'),
-          notificationsStatus = getEl('notifications-status'), imageViewerModal = getEl('image-viewer-modal'),
-          fullImage = getEl('full-image'), closeImageViewerBtn = getEl('close-image-viewer-btn'),
-          attachFileBtn = getEl('attach-file-btn'), imageUploadInput = getEl('image-upload-input'),
-          uploadProgressContainer = getEl('upload-progress-container'), uploadProgressBar = getEl('upload-progress-bar'),
-          reportBtn = getEl('report-btn'), reportSection = getEl('report-section'),
-          backToTasksFromReportBtn = getEl('back-to-tasks-from-report-btn'), reportTableBody = getEl('report-table-body'),
-          taskDetailsModal = getEl('task-details-modal'), taskDetailsContent = getEl('task-details-content'),
-          closeTaskDetailsBtn = getEl('close-task-details-btn'),
-          deleteFromReportBtn = getEl('delete-from-report-btn'),
-          viewIncomingTaskModal = getEl('view-incoming-task-modal'),
-          incomingTaskSender = getEl('incoming-task-sender'),
-          incomingTaskContent = getEl('incoming-task-content'),
-          incomingTaskAcceptBtn = getEl('incoming-task-accept-btn'),
-          incomingTaskDeclineBtn = getEl('incoming-task-decline-btn'),
-          incomingTaskCloseBtn = getEl('incoming-task-close-btn'),
-          taskActionsModal = getEl('task-actions-modal'),
-          actionDeferBtn = getEl('action-defer-btn'),
-          actionActivateBtn = getEl('action-activate-btn'),
-          actionProlongBtn = getEl('action-prolong-btn'),
-          actionDeleteBtn = getEl('action-delete-btn'),
-          cancelActionsBtn = getEl('cancel-actions-btn'),
-          resourcesBtn = getEl('resources-btn'), resourcesSection = getEl('resources-section'),
-          backToTasksFromResourcesBtn = getEl('back-to-tasks-from-resources-btn'),
-          resourcesGrid = getEl('resources-grid'), addShelfBtn = getEl('add-shelf-btn'),
-          addShelfModal = getEl('add-shelf-modal'), shelfNameInput = getEl('shelf-name-input'),
-          saveShelfBtn = getEl('save-shelf-btn'), cancelShelfBtn = getEl('cancel-shelf-btn'),
-          addResourceModal = getEl('add-resource-modal'), resourceTitleInput = getEl('resource-title-input'),
-          resourceContentInput = getEl('resource-content-input'),
-          saveResourceBtn = getEl('save-resource-btn'), cancelResourceBtn = getEl('cancel-resource-btn'),
-          resourcesSearchInput = getEl('resources-search-input');
+    async function signInWithGoogle() {
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Помилка входу через Google:", error);
+            showNotification('Помилка', 'Не вдалося увійти через Google. Спробуйте пізніше.');
+        }
+    }
 
-    const boardsBtn = getEl('boards-btn'), boardsSection = getEl('boards-section'),
-          backToTasksFromBoardsBtn = getEl('back-to-tasks-from-boards-btn'),
-          boardsGrid = getEl('boards-grid'), createBoardBtn = getEl('create-board-btn'),
-          createBoardModal = getEl('create-board-modal'), boardNameInput = getEl('board-name-input'),
-          saveBoardBtn = getEl('save-board-btn'), cancelBoardBtn = getEl('cancel-board-btn'),
-          boardsListView = getEl('boards-list-view'), activeBoardView = getEl('active-board-view'),
-          activeBoardTitle = getEl('active-board-title'), backToBoardsListBtn = getEl('back-to-boards-list-btn'),
-          addBoardMemberBtn = getEl('add-board-member-btn'), addBoardMemberModal = getEl('add-board-member-modal'),
-          boardFriendSelect = getEl('board-friend-select'), saveBoardMemberBtn = getEl('save-board-member-btn'),
-          cancelBoardMemberBtn = getEl('cancel-board-member-btn'),
-          boardTasksList = getEl('board-tasks-list'), addBoardTaskBtn = getEl('add-board-task-btn'),
-          addBoardTaskModal = getEl('add-board-task-modal'), boardTaskTitle = getEl('board-task-title'),
-          subtasksContainer = getEl('subtasks-container'), addSubtaskFieldBtn = getEl('add-subtask-field-btn'),
-          saveBoardTaskBtn = getEl('save-board-task-btn'), cancelBoardTaskBtn = getEl('cancel-board-task-btn'),
-          boardStickersArea = getEl('board-stickers-area'), addStickerBtn = getEl('add-sticker-btn'),
-          addStickerModal = getEl('add-sticker-modal'), stickerTextInput = getEl('sticker-text-input'),
-          saveStickerBtn = getEl('save-sticker-btn'), cancelStickerBtn = getEl('cancel-sticker-btn'),
-          mobileTabTasks = getEl('mobile-tab-tasks'), mobileTabStickers = getEl('mobile-tab-stickers'),
-          boardTasksColumn = getEl('board-tasks-column'), boardStickersColumn = getEl('board-stickers-column');
+    async function signOutUser() {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error("Помилка виходу:", error);
+            showNotification('Помилка', 'Не вдалося вийти. Спробуйте пізніше.');
+        }
+    }
 
-    let currentEditingTask = null;
-    const editBoardTaskModal = getEl('editBoardTaskModal');
-    const editBoardTaskTitle = getEl('editBoardTaskTitle');
-    const editSubtasksContainer = getEl('editSubtasksContainer');
-    const addEditSubtaskBtn = getEl('addEditSubtaskBtn');
-    const cancelEditBoardTaskBtn = getEl('cancelEditBoardTaskBtn');
-    const saveEditBoardTaskBtn = getEl('saveEditBoardTaskBtn');
+    // --- ФУНКЦІЇ МОДАЛЬНИХ ВІКОН ТА СПОВІЩЕНЬ ---
 
-    let currentEditingBoard = null;
-    const editBoardModal = getEl('editBoardModal');
-    const editBoardTitleInput = getEl('editBoardTitleInput');
-    const cancelEditBoardBtn = getEl('cancelEditBoardBtn');
-    const saveEditBoardBtn = getEl('saveEditBoardBtn');
+    function showNotification(title, message) {
+        notificationTitle.textContent = title;
+        notificationMessage.textContent = message;
+        notificationModal.classList.remove('hidden');
+    }
 
-    let userId = null, currentAction = null, deferredDurationHours = 24, staleDurationHours = 72,
-        currentTaskToEdit = null, selectedFriendForChat = null, unsubscribeFromChat = null,
-        friendsCache = {}, shownNotifications = new Set(),
-        unsubscribeFromReport = null, currentReportTaskIdToDelete = null,
-        currentIncomingTask = null, currentTaskForAction = null,
-        unsubscribeFromResources = null, currentShelfIdForResource = null,
-        currentShelvesData = [],
-        unsubscribeFromBoards = null, unsubscribeFromBoardItems = null, currentBoardId = null,
-        selectedStickerColor = 'bg-yellow-200', currentMobileTab = 'tasks';
+    function hideNotification() {
+        notificationModal.classList.add('hidden');
+    }
 
-    const signInWithGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { console.error("Sign-in error:", error); } };
-    const signOutUser = async () => { try { await signOut(auth); } catch (error) { console.error("Sign-out error:", error); } };
-    const showNotification = (title, message) => { notificationTitle.textContent = title; notificationMessage.textContent = message; notificationModal.classList.remove('hidden'); };
-    const hideNotification = () => notificationModal.classList.add('hidden');
-    const showPushNotification = (title, options) => { if (document.hidden && Notification.permission === 'granted') { new Notification(title, options); } };
+    function showConfirmModal(action, message, buttonText = "Підтвердити") {
+        currentAction = action;
+        getEl('confirm-message').textContent = message;
+        confirmDeleteButton.textContent = buttonText;
+        confirmModal.classList.remove('hidden');
+    }
 
-    function debounce(fn, wait) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); }; }
+    function hideConfirmModal() {
+        currentAction = null;
+        confirmModal.classList.add('hidden');
+    }
 
-    const getDisplayNameFor = (uid) => {
-        if (!uid) return 'Невідомий';
-        if (uid === userId) return (auth.currentUser?.displayName || 'Ви');
-        if (friendsCache[uid] && friendsCache[uid].name) return friendsCache[uid].name;
-        return uid.substring(0,6) + '...';
-    };
+    function hideViewEditModal() {
+        viewEditTaskModal.classList.add('hidden');
+    }
 
-    const getInitials = (uid) => {
-        const name = getDisplayNameFor(uid);
-        const parts = name.split(/\s+/).filter(Boolean);
-        if (parts.length === 0) return name.slice(0,2).toUpperCase();
-        if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-    };
+    function hideAddFriendModal() {
+        addFriendModal.classList.add('hidden');
+        friendEmailInput.value = '';
+    }
 
-    const colorForUid = (uid) => {
-        const colors = ['#6366f1','#ef4444','#f97316','#059669','#0ea5e9','#8b5cf6','#db2777','#eab308'];
-        let hash = 0;
-        for (let i=0;i<uid.length;i++) hash = (hash<<5)-hash + uid.charCodeAt(i);
-        return colors[Math.abs(hash) % colors.length];
-    };
+    function showAddFriendModal() {
+        addFriendModal.classList.remove('hidden');
+    }
 
-    const fmtTime = (ts) => {
-        if (!ts) return '';
-        const d = ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-        return d.toLocaleString();
-    };
+    function hideAssignTaskModal() {
+        assignTaskModal.classList.add('hidden');
+    }
 
-    const loadSettings = async () => {
+    function hideViewIncomingTaskModal() {
+        viewIncomingTaskModal.classList.add('hidden');
+    }
+
+    function hideTaskDetailsModal() {
+        taskDetailsModal.classList.add('hidden');
+    }
+
+    function hideTaskActionsModal() {
+        taskActionsModal.classList.add('hidden');
+        currentTaskForAction = null;
+    }
+
+    // --- ФУНКЦІЇ ЗБЕРІГАННЯ ---
+
+    function saveExpansionState() {
+        if (!userId) return;
+        const state = {
+            deferred: !deferredTasksList.classList.contains('hidden'),
+            completed: !completedTasksList.classList.contains('hidden'),
+            settings: !settingsContent.classList.contains('hidden'),
+            friends: !friendsContent.classList.contains('hidden'),
+        };
+        localStorage.setItem(`expansionState_${userId}`, JSON.stringify(state));
+    }
+
+    function loadExpansionState() {
+        if (!userId) return;
+        const state = JSON.parse(localStorage.getItem(`expansionState_${userId}`));
+        if (state) {
+            if (state.deferred === false) toggleSection(deferredTasksList, deferredToggleBtn, true);
+            if (state.completed === false) toggleSection(completedTasksList, completedToggleBtn, true);
+            if (state.settings === false) toggleSection(settingsContent, settingsToggleBtn, true);
+            if (state.friends === false) toggleSection(friendsContent, friendsToggleBtn, true);
+        }
+    }
+
+    // --- ФУНКЦІЇ ЗАВДАНЬ ---
+
+    function addTask() {
+        const text = prompt("Введіть нове завдання:");
+        if (text && userId) {
+            addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), {
+                text,
+                status: 'active',
+                isCompleted: false,
+                createdAt: serverTimestamp(),
+                notes: '',
+                dueDate: null,
+                reminderDate: null,
+                priority: 'medium',
+                ownerId: userId // Додано власника
+            }).catch(e => console.error("Помилка додавання завдання:", e));
+        }
+    }
+
+    function updateTask(id, data) {
+        if (!userId) return;
+        updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), data)
+            .catch(e => console.error("Помилка оновлення завдання:", e));
+    }
+
+    function deleteTask(task) {
+        if (!userId) return;
+        const taskRef = doc(db, 'artifacts', appId, 'users', userId, 'tasks', task.id);
+        deleteDoc(taskRef).catch(e => console.error("Помилка видалення завдання:", e));
+
+        if (task.originalSharedTaskId) {
+            updateSharedTaskStatus(task.originalSharedTaskId, 'completed');
+        }
+    }
+
+    function toggleTaskCompleted(id, isCompleted) {
+        if (!userId) return;
+        updateTask(id, { isCompleted, completedAt: isCompleted ? serverTimestamp() : null });
+    }
+
+    function renderTask(task) {
+        const el = document.createElement('div');
+        const isDeferred = task.status === 'deferred';
+        const isCompleted = task.isCompleted;
+
+        el.className = `task-card flex items-center justify-between p-3 mb-2 rounded shadow-sm cursor-pointer transition-all ${isCompleted ? 'bg-green-100 opacity-70' : isDeferred ? 'bg-yellow-100' : 'bg-white hover:shadow-md'}`;
+        el.innerHTML = `
+            <div class="flex items-center space-x-3 w-11/12">
+                <input type="checkbox" class="task-checkbox h-4 w-4" ${isCompleted ? 'checked' : ''} data-id="${task.id}">
+                <span class="task-text flex-grow ${isCompleted ? 'line-through text-gray-500' : 'text-gray-800'}">${task.text}</span>
+            </div>
+            <button class="text-gray-400 hover:text-gray-600 action-menu-btn" data-id="${task.id}"><i class="fas fa-ellipsis-v"></i></button>
+        `;
+
+        el.querySelector('.task-checkbox').addEventListener('change', (e) => toggleTaskCompleted(task.id, e.target.checked));
+        el.querySelector('.task-text').addEventListener('click', () => openViewEditModal(task));
+        el.querySelector('.action-menu-btn').addEventListener('click', (e) => showTaskActionsModal(task, e));
+
+        if (isCompleted) {
+            completedTasksList.appendChild(el);
+        } else if (isDeferred) {
+            deferredTasksList.appendChild(el);
+        } else {
+            tasksList.appendChild(el);
+        }
+    }
+
+    function subscribeToTasks() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', userId, 'tasks')
+        );
+
+        onSnapshot(q, (snapshot) => {
+            tasksList.innerHTML = '';
+            deferredTasksList.innerHTML = '';
+            completedTasksList.innerHTML = '';
+
+            const allTasks = [];
+            snapshot.forEach(doc => allTasks.push({ id: doc.id, ...doc.data() }));
+
+            // Сортуємо: активні, відкладені, завершені. Всередині групи - за пріоритетом/датою.
+            allTasks.sort((a, b) => {
+                // Completed завжди в кінці
+                if (a.isCompleted !== b.isCompleted) {
+                    return a.isCompleted ? 1 : -1;
+                }
+                // Deferred після Active
+                if (a.status !== b.status) {
+                    if (a.status === 'active' && b.status === 'deferred') return -1;
+                    if (a.status === 'deferred' && b.status === 'active') return 1;
+                }
+
+                // Внутрішнє сортування: пріоритет (високий > середній > низький)
+                const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            });
+
+            allTasks.forEach(renderTask);
+
+            // Оновлення тексту кнопок
+            getEl('deferred-count').textContent = `(${deferredTasksList.children.length})`;
+            getEl('completed-count').textContent = `(${completedTasksList.children.length})`;
+        });
+
+        loadExpansionState();
+    }
+
+    function openViewEditModal(task) {
+        currentTaskForAction = task;
+        editTaskTitle.value = task.text || '';
+        editTaskNotes.value = task.notes || '';
+        editTaskDueDate.value = task.dueDate || '';
+        editTaskReminderDate.value = task.reminderDate || '';
+        editTaskStatus.value = task.status || 'active';
+        editTaskPriority.value = task.priority || 'medium';
+        viewEditTaskModal.classList.remove('hidden');
+    }
+
+    function saveEditedTask() {
+        if (!currentTaskForAction || !userId) return;
+
+        const updatedData = {
+            text: editTaskTitle.value.trim(),
+            notes: editTaskNotes.value.trim(),
+            dueDate: editTaskDueDate.value || null,
+            reminderDate: editTaskReminderDate.value || null,
+            status: editTaskStatus.value,
+            priority: editTaskPriority.value
+        };
+
+        updateTask(currentTaskForAction.id, updatedData);
+        hideViewEditModal();
+    }
+
+    function showTaskActionsModal(task, e) {
+        currentTaskForAction = task;
+        const isDeferred = task.status === 'deferred';
+
+        actionDeferBtn.classList.toggle('hidden', isDeferred || task.isCompleted);
+        actionActivateBtn.classList.toggle('hidden', !isDeferred || task.isCompleted);
+        actionProlongBtn.classList.toggle('hidden', task.isCompleted);
+        actionDeleteBtn.classList.toggle('hidden', false);
+
+        taskActionsModal.classList.remove('hidden');
+
+        // Позиціонування модального вікна біля кнопки
+        const rect = e.target.getBoundingClientRect();
+        taskActionsModal.style.top = `${rect.bottom + 5}px`;
+        taskActionsModal.style.left = `${rect.left - taskActionsModal.offsetWidth + rect.width}px`;
+    }
+
+    function updateTaskStatus(taskId, newStatus, sharedTaskId) {
+        if (!userId) return;
+        updateTask(taskId, { status: newStatus });
+        if (sharedTaskId) {
+            updateSharedTaskStatus(sharedTaskId, newStatus === 'deferred' ? 'deferred' : 'active');
+        }
+    }
+
+    function prolongTask(taskId) {
+        if (!userId) return;
+        // Продовження на 7 днів
+        const date = new Date();
+        date.setDate(date.getDate() + 7);
+        const newDueDate = date.toISOString().split('T')[0];
+        updateTask(taskId, { dueDate: newDueDate });
+    }
+
+    // --- ФУНКЦІЇ НАЛАШТУВАНЬ ---
+
+    async function saveSettings() {
+        if (!userId) return;
+        const timezone = settingsTimezone.value;
+
+        try {
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'settings'), {
+                timezone: timezone,
+                lastUpdated: serverTimestamp()
+            });
+            showNotification('Успіх', 'Налаштування збережено.');
+        } catch (e) {
+            console.error("Помилка збереження налаштувань:", e);
+        }
+    }
+
+    async function loadSettings() {
         if (!userId) return;
         try {
-            const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`);
-            const docSnap = await getDoc(settingsRef);
+            const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'settings'));
             if (docSnap.exists()) {
                 const settings = docSnap.data();
-                deferredDurationHours = settings.deferredDurationHours || 24;
-                staleDurationHours = settings.staleDurationHours || 72;
-                if (settings.expandedSections) {
-                    Object.entries(settings.expandedSections).forEach(([key, isExpanded]) => {
-                        const list = getEl(`${key}-tasks-list`) || getEl(`${key}-content`);
-                        const btn = getEl(`${key}-toggle-btn`);
-                        if (list && btn) { list.classList.toggle('hidden', !isExpanded); btn.textContent = isExpanded ? 'Згорнути' : 'Розгорнути'; }
-                    });
-                }
+                settingsTimezone.value = settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } else {
+                settingsTimezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
             }
-            deferredDurationInput.value = deferredDurationHours;
-            staleDurationInput.value = staleDurationHours;
-        } catch (e) { console.error("Error loading settings:", e); }
-    };
+        } catch (e) {
+            console.error("Помилка завантаження налаштувань:", e);
+        }
+    }
 
-    const subscribeToTasks = () => {
-        if (!db || !userId) return;
-        const q = query(collection(db, `artifacts/${appId}/users/${userId}/tasks`), orderBy("createdAt", "desc"));
-        onSnapshot(q, (querySnapshot) => {
-            const tasks = { active: [], deferred: [], completed: [] };
-            querySnapshot.forEach(async (docSnap) => {
-                const task = { id: docSnap.id, ...docSnap.data(), ref: docSnap.ref };
-                if (task.status === 'deferred' && task.deferredAt) {
-                    if (Date.now() - task.deferredAt.toMillis() >= deferredDurationHours * 3600000) {
-                        await updateTaskStatus(task.id, 'active', task.originalSharedTaskId);
-                        showPushNotification('Завдання повернуто до активних', { body: `Завдання: "${task.text}"` });
-                        return;
-                    }
-                }
-                if (task.status === 'active' && task.lastUpdatedAt) {
-                   if (Date.now() - task.lastUpdatedAt.toMillis() >= staleDurationHours * 3600000 && !task.isStale) {
-                        await updateDoc(task.ref, { isStale: true });
-                        task.isStale = true;
-                        showPushNotification('Завдання стало застарілим', { body: `Зверніть увагу на завдання: "${task.text}"` });
-                    }
-                }
-                (tasks[task.status] || tasks.active).push(task);
-            });
-            renderTasks(tasks.active, activeTasksList, 'active');
-            renderTasks(tasks.deferred, deferredTasksList, 'deferred');
-            renderTasks(tasks.completed, completedTasksList, 'completed');
-        }, error => console.error("Error in tasks subscription: ", error));
-    };
+    // --- ФУНКЦІЇ СПОВІЩЕНЬ ---
 
-    const renderTasks = (tasks, listElement, status) => {
-        listElement.innerHTML = '';
-        if (!tasks || tasks.length === 0) {
-            const messages = { active: 'Немає активних завдань.', deferred: 'Немає завдань в роботі.', completed: 'Немає виконаних завдань.' };
-            listElement.innerHTML = `<p class="text-gray-500 text-center italic">${messages[status]}</p>`;
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) {
+            showNotification('Помилка', 'Цей браузер не підтримує сповіщення.');
             return;
         }
-        tasks.forEach(task => {
-            const taskItem = document.createElement('div');
-            taskItem.className = `p-4 rounded-xl shadow-md flex items-start justify-between ${task.isStale ? 'bg-red-100' : 'bg-white'} space-x-2`;
-            let buttonsHTML = status === 'completed' 
-                ? `<button class="active-btn px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 btn-frosty">Активувати</button>`
-                : `<button class="complete-btn px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 btn-frosty">Виконано</button>
-                   <button class="more-options-btn p-2 rounded-full hover:bg-gray-200">...</button>`;
-            
-            taskItem.innerHTML = `
-                <div class="flex-grow min-w-0">
-                    <p class="text-gray-800 cursor-pointer text-truncate-2 break-words">${task.text}</p>
-                </div>
-                <div class="flex-shrink-0 flex items-center space-x-2">${buttonsHTML}</div>`;
-            
-            if (status !== 'completed') {
-                const moreBtn = taskItem.querySelector('.more-options-btn');
-                if (moreBtn) moreBtn.addEventListener('click', (e) => { e.stopPropagation(); showTaskActionsModal(task); });
-            }
-            taskItem.querySelector('p').addEventListener('click', () => showViewEditModal(task));
-            if (taskItem.querySelector('.complete-btn')) taskItem.querySelector('.complete-btn').addEventListener('click', () => updateTaskStatus(task.id, 'completed', task.originalSharedTaskId));
-            if (taskItem.querySelector('.active-btn')) taskItem.querySelector('.active-btn').addEventListener('click', () => updateTaskStatus(task.id, 'active', task.originalSharedTaskId));
-            listElement.appendChild(taskItem);
-        });
-    };
 
-    const addTask = async () => {
-        const taskText = taskInput.value.trim();
-        if (taskText === '' || !userId) return;
-        try {
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), { text: taskText, status: 'active', createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), isStale: false });
-            taskInput.value = '';
-        } catch (e) { console.error("Error adding task: ", e); }
-    };
-
-    const updateTaskStatus = async (id, newStatus, originalSharedTaskId = null) => {
-        if (!userId) return;
-        try {
-            let updateData = { status: newStatus, lastUpdatedAt: serverTimestamp(), isStale: false };
-            if (newStatus === 'deferred') updateData.deferredAt = serverTimestamp();
-            await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, id), updateData);
-
-            if (originalSharedTaskId) {
-                const publicTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', originalSharedTaskId);
-                let publicStatus = (newStatus === 'active' || newStatus === 'deferred') ? 'accepted' : newStatus;
-                await updateDoc(publicTaskRef, { status: publicStatus });
-            }
-        } catch (e) { console.error("Error updating task status: ", e); }
-    };
-
-    const prolongTask = async (id) => { if (!userId) return; try { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, id), { lastUpdatedAt: serverTimestamp(), isStale: false }); } catch (e) { console.error("Error prolonging task:", e); } };
-
-    const saveSettings = async () => { 
-        if (!userId) return; 
-        const newDeferred = parseFloat(deferredDurationInput.value); 
-        const newStale = parseFloat(staleDurationInput.value); 
-        if (isNaN(newDeferred) || newDeferred < 0 || isNaN(newStale) || newStale < 0) { settingsMessage.textContent = "Будь ласка, введіть дійсні числа."; settingsMessage.className = 'text-sm text-center text-red-600'; return; } 
-        try { 
-            await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`), { deferredDurationHours: newDeferred, staleDurationHours: newStale }, { merge: true }); 
-            deferredDurationHours = newDeferred; staleDurationHours = newStale; 
-            settingsMessage.textContent = "Налаштування збережено."; settingsMessage.className = 'text-sm text-center text-green-600 visible'; 
-            setTimeout(() => settingsMessage.classList.remove('visible'), 3000); 
-        } catch (e) { console.error("Error saving settings:", e); } 
-    };
-
-    const saveExpansionState = async () => { 
-        if (!userId) return; 
-        const sections = { deferred: !deferredTasksList.classList.contains('hidden'), completed: !completedTasksList.classList.contains('hidden'), settings: !settingsContent.classList.contains('hidden'), friends: !friendsContent.classList.contains('hidden') }; 
-        try { const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`); await setDoc(settingsRef, { expandedSections: sections }, { merge: true }); } catch (e) { console.error("Error saving expansion state:", e); } 
-    };
-
-    const showConfirmModal = (action, message, buttonText) => { currentAction = action; confirmModalMessage.textContent = message; confirmDeleteButton.textContent = buttonText; confirmModal.classList.remove('hidden'); };
-    const hideConfirmModal = () => { confirmModal.classList.add('hidden'); currentAction = null; };
-
-    const deleteTask = async (task) => { 
-        if (!userId || !task || !task.id) return; 
-        try { 
-            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, task.id)); 
-            if (task.originalSharedTaskId) { 
-                const publicTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', task.originalSharedTaskId); 
-                await updateDoc(publicTaskRef, { status: 'declined' }); 
-            } 
-        } catch (e) { console.error("Error processing task deletion: ", e); showNotification('Помилка', 'Не вдалося повністю видалити завдання. Спробуйте ще раз.'); } 
-    };
-
-    const deleteChatMessage = async (msg) => { 
-        if (!userId || !msg.id || msg.senderId !== userId) return; 
-        try { 
-            const publicDataRef = doc(db, 'artifacts', appId, 'public', 'data'); 
-            await deleteDoc(doc(collection(publicDataRef, 'chat_messages'), msg.id)); 
-            if (msg.type === 'image' && msg.imageUrl) { 
-                const imageRef = ref(storage, msg.imageUrl); 
-                await deleteObject(imageRef); 
-            } 
-        } catch (e) { console.error("Error deleting chat message:", e); } 
-    };
-
-    const showViewEditModal = (task) => { currentTaskToEdit = task; editTaskInput.value = task.text; viewEditModal.classList.remove('hidden'); };
-    const hideViewEditModal = () => { viewEditModal.classList.add('hidden'); currentTaskToEdit = null; };
-    const saveEditedTask = async () => { 
-        if (!userId || !currentTaskToEdit) return; 
-        const newText = editTaskInput.value.trim(); 
-        if (newText === '') { showNotification('Помилка', 'Текст завдання не може бути порожнім.'); return; } 
-        try { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, currentTaskToEdit.id), { text: newText, lastUpdatedAt: serverTimestamp() }); hideViewEditModal(); } catch (e) { console.error("Error updating task:", e); } 
-    };
-
-    const showAddFriendModal = () => { friendNameInput.value = ''; friendIdInput.value = ''; addFriendModal.classList.remove('hidden'); };
-    const hideAddFriendModal = () => { addFriendModal.classList.add('hidden'); };
-    const saveFriend = async () => { 
-        const name = friendNameInput.value.trim(); 
-        const friendId = friendIdInput.value.trim(); 
-        if (name === '' || friendId === '' || friendId === userId) return; 
-        try { await setDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId), { name, userId: friendId }); hideAddFriendModal(); } catch (e) { console.error("Error adding friend:", e); } 
-    };
-    const deleteFriend = async (friendId) => { 
-        if (!userId || !friendId) return; 
-        try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId)); } catch (e) { console.error("Error deleting friend:", e); showNotification('Помилка', 'Не вдалося видалити друга.'); } 
-    };
-
-    const subscribeToFriends = () => { 
-        if (!userId) return; 
-        try { onSnapshot(collection(db, `artifacts/${appId}/users/${userId}/friends`), (snapshot) => { friendsCache = {}; snapshot.docs.forEach(d => friendsCache[d.id] = d.data()); renderFriends(Object.values(friendsCache)); renderChatFriends(Object.values(friendsCache)); }, error => console.error("Error in friends subscription:", error)); } catch (e) { console.error("Error subscribing to friends:", e); } 
-    };
-
-    const renderFriends = (friends) => { 
-        friendsList.innerHTML = ''; friendSelect.innerHTML = '<option value="">Виберіть друга</option>'; 
-        if (friends.length === 0) { friendsList.innerHTML = `<p class="text-gray-500 text-center italic">Немає друзів.</p>`; return; } 
-        friends.forEach(friend => { 
-            const friendItem = document.createElement('div'); friendItem.className = 'p-3 rounded-lg bg-white shadow-md flex justify-between items-center'; 
-            friendItem.innerHTML = `<div><p class="font-semibold text-gray-800">${friend.name}</p><p class="text-sm text-gray-500 break-all">${friend.userId}</p></div><button class="delete-friend-btn p-2 rounded-full hover:bg-red-100 text-red-500"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`; 
-            friendItem.querySelector('.delete-friend-btn').addEventListener('click', () => { showConfirmModal(() => deleteFriend(friend.userId), `Ви впевнені, що хочете видалити ${friend.name} зі списку друзів?`, "Так, видалити"); }); 
-            friendsList.appendChild(friendItem); friendSelect.innerHTML += `<option value="${friend.userId}">${friend.name}</option>`; 
-        }); 
-    };
-
-    const renderChatFriends = (friends) => { chatFriendsList.innerHTML = friends.length === 0 ? `<p class="text-gray-500 text-center italic p-4">Немає друзів для чату.</p>` : ''; friends.forEach(friend => { const friendItem = document.createElement('div'); friendItem.className = 'p-3 rounded-lg hover:bg-indigo-100 cursor-pointer flex items-center justify-between'; friendItem.innerHTML = `<div class="font-semibold text-gray-800 flex-grow">${friend.name}</div><span id="unread-count-${friend.userId}" class="px-2 py-1 bg-red-600 text-white text-xs rounded-full hidden"></span>`; friendItem.addEventListener('click', () => selectFriendForChat(friend)); chatFriendsList.appendChild(friendItem); }); };
-
-    const showAssignTaskModal = () => { assignTaskInput.value = ''; friendSelect.value = ''; assignTaskModal.classList.remove('hidden'); };
-    const hideAssignTaskModal = () => { assignTaskModal.classList.add('hidden'); };
-    const sendAssignedTask = async () => { 
-        const recipientId = friendSelect.value; const taskText = assignTaskInput.value.trim(); 
-        if (recipientId === '' || taskText === '') return; 
-        try { 
-            const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); 
-            await addDoc(sharedTasksCollection, { text: taskText, senderId: userId, senderName: auth.currentUser.displayName || 'Анонім', recipientId, createdAt: serverTimestamp(), status: 'pending' }); 
-            const selectedFriend = { userId: recipientId, name: friendSelect.options[friendSelect.selectedIndex].text }; 
-            await sendChatMessage({ text: `Я призначив вам завдання: "${taskText}"`, recipient: selectedFriend, isTask: true }); 
-            hideAssignTaskModal(); 
-        } catch (e) { console.error("Error sending assigned task:", e); } 
-    };
-
-    const subscribeToIncomingTasks = () => { 
-        if (!userId) return; 
-        const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); 
-        const q = query(sharedTasksCollection, where("recipientId", "==", userId), where("status", "==", "pending")); 
-        onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderIncomingTasks(tasks); }, error => console.error("Error in incoming tasks subscription:", error)); 
-    };
-
-    const renderIncomingTasks = (tasks) => { 
-        incomingTasksList.innerHTML = ''; 
-        if (tasks.length === 0) { incomingTasksSection.style.display = 'none'; return; } 
-        incomingTasksSection.style.display = 'block'; 
-        tasks.forEach(task => { 
-            const taskItem = document.createElement('div'); taskItem.className = 'p-4 rounded-xl shadow-md bg-white flex items-center justify-between space-x-2'; taskItem.innerHTML = `<div class="flex-grow cursor-pointer min-w-0"><p class="text-sm text-gray-500">Від: <span class="font-semibold">${task.senderName}</span></p><p class="text-gray-800 break-words">${task.text}</p></div><div class="flex-shrink-0"><button class="view-incoming-task-btn px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold btn-frosty">Переглянути</button></div>`; taskItem.querySelector('.view-incoming-task-btn').addEventListener('click', () => showViewIncomingTaskModal(task)); taskItem.querySelector('.flex-grow').addEventListener('click', () => showViewIncomingTaskModal(task)); incomingTasksList.appendChild(taskItem); }); 
-    };
-
-    const acceptIncomingTask = async (task) => { 
-        if (!userId) return; 
-        try { 
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), { text: task.text, status: 'active', createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), isStale: false, assignedBy: task.senderName, originalSharedTaskId: task.id }); 
-            await updateSharedTaskStatus(task.id, 'accepted'); 
-        } catch (e) { console.error("Error accepting task:", e); } 
-    };
-
-    const updateSharedTaskStatus = async (taskId, status) => { try { const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', taskId); await updateDoc(taskRef, { status }); } catch (e) { console.error(`Error updating shared task to ${status}:`, e); } };
-
-    const openChatView = () => { mainContent.classList.add('hidden'); chatSection.classList.remove('hidden'); };
-    const closeChatView = () => { chatSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromChat) unsubscribeFromChat(); unsubscribeFromChat = null; selectedFriendForChat = null; chatWindow.classList.add('hidden'); chatWindowPlaceholder.classList.remove('hidden'); };
-
-    const selectFriendForChat = async (friend) => {
-        selectedFriendForChat = friend;
-        chatWindowPlaceholder.classList.add('hidden');
-        chatWindow.classList.remove('hidden');
-        chatHeader.textContent = `Чат з ${friend.name}`;
-        chatMessages.innerHTML = '';
-        if (unsubscribeFromChat) unsubscribeFromChat();
-        const participants = [userId, friend.userId].sort();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'chat_messages'), where("participants", "==", participants), orderBy("timestamp"));
-        unsubscribeFromChat = onSnapshot(q, (snapshot) => {
-            chatMessages.innerHTML = '';
-            snapshot.docs.forEach(d => renderChatMessage({ id: d.id, ...d.data() }));
-            setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 0);
-        }, error => console.error("Chat subscription error:", error));
-        await markMessagesAsRead(friend.userId);
-    };
-
-    const markMessagesAsRead = async (friendId) => {
-        if (!userId || !friendId) return;
-        const participants = [userId, friendId].sort();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'chat_messages'), where("participants", "==", participants));
-        try {
-            const snapshot = await getDocs(q);
-            const batch = writeBatch(db);
-            snapshot.docs.forEach(docSnapshot => {
-                const message = docSnapshot.data();
-                if (message.readBy && !message.readBy.includes(userId)) {
-                    batch.update(docSnapshot.ref, { readBy: arrayUnion(userId) });
-                }
-            });
-            await batch.commit();
-        } catch (e) { console.error("Error marking messages as read:", e); }
-    };
-
-    const subscribeToUnreadCounts = () => {
-        if (!userId) return;
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'chat_messages'), where("participants", "array-contains", userId));
-        onSnapshot(q, (snapshot) => {
-            const unreadCounts = {}, unreadSenders = new Set();
-            snapshot.docs.forEach(d => {
-                const message = { id: d.id, ...d.data() };
-                if (message.readBy && !message.readBy.includes(userId)) {
-                    const friendId = message.participants.find(id => id !== userId);
-                    if (friendId) {
-                        unreadCounts[friendId] = (unreadCounts[friendId] || 0) + 1;
-                        unreadSenders.add(friendId);
-                        if (!shownNotifications.has(message.id)) {
-                            const friendName = friendsCache[friendId]?.name || 'Друг';
-                            showPushNotification(`Нове повідомлення від ${friendName}`, { body: message.text || '[Зображення]' });
-                            shownNotifications.add(message.id);
-                        }
-                    }
-                }
-            });
-            updateUnreadBadges(unreadCounts, unreadSenders.size);
-        }, error => console.error("Unread counts subscription error:", error));
-    };
-
-    const updateUnreadBadges = (counts, totalSenders) => {
-        chatNotificationBadge.textContent = totalSenders;
-        chatNotificationBadge.classList.toggle('hidden', totalSenders === 0);
-        Object.values(friendsCache).forEach(friend => {
-            const badge = document.getElementById(`unread-count-${friend.userId}`);
-            if (badge) {
-                const count = counts[friend.userId];
-                badge.textContent = count;
-                badge.classList.toggle('hidden', !count);
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                showNotification('Успіх', 'Сповіщення дозволено!');
+            } else {
+                showNotification('Попередження', 'Сповіщення заблоковано. Ви не будете отримувати нагадування.');
             }
         });
-    };
+    }
 
-    const renderChatMessage = (message) => {
-        const msgDiv = document.createElement('div');
-        const isSentByMe = message.senderId === userId;
-        msgDiv.className = `flex ${isSentByMe ? 'justify-end' : 'justify-start'}`;
-        const bubble = document.createElement('div');
-        bubble.className = `message-bubble p-3 rounded-lg max-w-xs md:max-w-md break-words relative group ${isSentByMe ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-800'}`;
-        if (message.isTask) {
-            bubble.className = 'message-bubble p-3 rounded-lg max-w-xs md:max-w-md break-words relative bg-yellow-200 text-yellow-800 border border-yellow-300 text-sm italic mx-auto';
-            msgDiv.className = 'flex justify-center';
-            bubble.textContent = message.text;
-        } else if (message.type === 'image' && message.imageUrl) {
-            const img = document.createElement('img');
-            img.src = message.imageUrl;
-            img.className = "max-w-[200px] rounded-lg cursor-pointer max-h-48";
-            img.addEventListener('click', () => showImageViewer(message.imageUrl));
-            bubble.appendChild(img);
+    function checkNotificationStatus() {
+        if ("Notification" in window && Notification.permission === "granted") {
+            enableNotificationsBtn.textContent = "Сповіщення дозволені";
+            enableNotificationsBtn.disabled = true;
         } else {
-            bubble.textContent = message.text;
+            enableNotificationsBtn.textContent = "Увімкнути сповіщення";
+            enableNotificationsBtn.disabled = false;
         }
-        if (isSentByMe && !message.isTask) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-msg-btn absolute top-1/2 -left-8 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full bg-gray-300 hover:bg-red-500 text-white';
-            deleteBtn.innerHTML = '<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
-            deleteBtn.addEventListener('click', () => showConfirmModal(() => deleteChatMessage(message), "Видалити це повідомлення?", "Видалити"));
-            bubble.appendChild(deleteBtn);
-        }
-        msgDiv.appendChild(bubble);
-        chatMessages.appendChild(msgDiv);
-    };
-
-    const showImageViewer = (url) => { fullImage.src = url; imageViewerModal.classList.remove('hidden'); };
-
-    const sendChatMessage = async (options) => {
-        const { text, recipient, isTask = false, imageUrl = null } = options;
-        const messageText = text ? text.trim() : '';
-        if (messageText === '' && !imageUrl) return;
-        try {
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chat_messages'), { participants: [userId, recipient.userId].sort(), text: messageText, senderId: userId, timestamp: serverTimestamp(), isTask, readBy: [userId], type: imageUrl ? 'image' : 'text', imageUrl });
-            if (!isTask) chatMessageInput.value = '';
-        } catch (e) { console.error("Error sending chat message: ", e); }
-    };
-
-    const uploadImageAndSendMessage = (file) => {
-        if (!file || !selectedFriendForChat) return;
-        const participants = [userId, selectedFriendForChat.userId].sort();
-        const storageRef = ref(storage, `chats/${participants.join('_')}/${Date.now()}-${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
-        uploadProgressContainer.classList.remove('hidden');
-        uploadTask.on('state_changed', (snapshot) => { uploadProgressBar.style.width = `${(snapshot.bytesTransferred / snapshot.totalBytes) * 100}%`; }, (error) => { console.error("Upload error:", error); uploadProgressContainer.classList.add('hidden'); }, () => {
-            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => { sendChatMessage({ recipient: selectedFriendForChat, imageUrl: downloadURL }); uploadProgressContainer.classList.add('hidden'); });
-        });
-    };
-
-    const checkNotificationStatus = () => { if (!('Notification' in window)) { notificationsStatus.textContent = "Браузер не підтримує сповіщення."; enableNotificationsBtn.disabled = true; return; } const permission = Notification.permission; notificationsStatus.textContent = permission === 'granted' ? "Сповіщення увімкнено." : permission === 'denied' ? "Сповіщення заблоковано." : "Надайте дозвіл."; enableNotificationsBtn.disabled = permission !== 'default'; };
-    const requestNotificationPermission = async () => { const permission = await Notification.requestPermission(); if (permission === 'granted') { new Notification("Дякуємо!", { body: "Тепер ви будете отримувати сповіщення." }); } checkNotificationStatus(); };
-
-    const openReportView = () => { mainContent.classList.add('hidden'); reportSection.classList.remove('hidden'); subscribeToReport(); };
-    const closeReportView = () => { reportSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromReport) unsubscribeFromReport(); unsubscribeFromReport = null; };
-    const subscribeToReport = () => { if (!userId) return; if (unsubscribeFromReport) unsubscribeFromReport(); const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); const q = query(sharedTasksCollection, where("senderId", "==", userId)); unsubscribeFromReport = onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderReport(tasks); }, error => console.error("Error in report subscription:", error)); };
-    const renderReport = (tasks) => {
-        reportTableBody.innerHTML = '';
-        if (Object.keys(friendsCache).length === 0 && tasks.length > 0) { setTimeout(() => renderReport(tasks), 100); return; }
-        const tasksByRecipient = {};
-        tasks.forEach(task => { if (!tasksByRecipient[task.recipientId]) tasksByRecipient[task.recipientId] = []; tasksByRecipient[task.recipientId].push(task); });
-        if (Object.keys(tasksByRecipient).length === 0) { reportTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 italic py-8">Ви ще не призначили жодного завдання.</td></tr>`; return; }
-        for (const recipientId in tasksByRecipient) {
-            const userTasks = tasksByRecipient[recipientId];
-            const friendName = friendsCache[recipientId]?.name || `Невідомий (${recipientId.substring(0,5)}...)`;
-            const row = document.createElement('tr');
-            const statuses = ['pending', 'accepted', 'completed', 'declined'];
-            let cellsHTML = statuses.map(status => {
-                const tasksInStatus = userTasks.filter(t => t.status === status);
-                const cardsHTML = tasksInStatus.map(task => `<div class="report-task-card p-2 mb-2 bg-white rounded-md shadow-sm border" data-task-text="${escape(task.text)}" data-task-id="${task.id}"><p class="text-sm break-words">${task.text}</p></div>`).join('');
-                return `<td class="align-top">${cardsHTML || ''}</td>`;
-            }).join('');
-            row.innerHTML = `<td>${friendName}</td>${cellsHTML}`;
-            reportTableBody.appendChild(row);
-        }
-    };
-
-    const showTaskDetailsModal = (taskText, taskId) => { taskDetailsContent.textContent = unescape(taskText); currentReportTaskIdToDelete = taskId; taskDetailsModal.classList.remove('hidden'); };
-    const hideTaskDetailsModal = () => { taskDetailsModal.classList.add('hidden'); currentReportTaskIdToDelete = null; };
-    const deleteSharedTaskFromReport = async () => { if (!currentReportTaskIdToDelete) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', currentReportTaskIdToDelete)); hideTaskDetailsModal(); } catch (e) { console.error("Error deleting task from report: ", e); } };
-
-    const showViewIncomingTaskModal = (task) => { currentIncomingTask = task; incomingTaskSender.textContent = task.senderName; incomingTaskContent.textContent = task.text; viewIncomingTaskModal.classList.remove('hidden'); };
-    const hideViewIncomingTaskModal = () => { viewIncomingTaskModal.classList.add('hidden'); currentIncomingTask = null; };
-    const showTaskActionsModal = (task) => { currentTaskForAction = task; actionDeferBtn.classList.toggle('hidden', task.status === 'deferred'); actionActivateBtn.classList.toggle('hidden', task.status !== 'deferred'); actionProlongBtn.classList.toggle('hidden', !task.isStale); taskActionsModal.classList.remove('hidden'); };
-    const hideTaskActionsModal = () => { taskActionsModal.classList.add('hidden'); currentTaskForAction = null; };
-
-    const openResourcesView = () => { mainContent.classList.add('hidden'); resourcesSection.classList.remove('hidden'); subscribeToResources(); };
-    const closeResourcesView = () => { resourcesSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromResources) unsubscribeFromResources(); unsubscribeFromResources = null; };
-
-    const subscribeToResources = () => { if (!userId) return; const q = query(collection(db, `artifacts/${appId}/users/${userId}/resources`), orderBy("createdAt", "desc")); unsubscribeFromResources = onSnapshot(q, (snapshot) => { currentShelvesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); filterAndRenderResources(); }, error => console.error("Error in resources subscription:", error)); };
-
-    const getFaviconUrl = (url) => { try { const domain = new URL(url).hostname; return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; } catch (e) { return 'https://www.google.com/s2/favicons?domain=google.com'; } };
-
-    const filterAndRenderResources = () => {
-        const searchTerm = resourcesSearchInput.value.toLowerCase();
-        const filteredShelves = currentShelvesData.map(shelf => {
-            const items = (shelf.items || []).filter(item => { return (item.type === 'link') && (item.title.toLowerCase().includes(searchTerm) || item.url.toLowerCase().includes(searchTerm)); });
-            return { ...shelf, items };
-        }).filter(shelf => shelf.items.length > 0 || searchTerm === '');
-        renderResources(filteredShelves);
-    };
-
-    const renderResources = (shelves) => {
-        resourcesGrid.innerHTML = '';
-        if (shelves.length === 0) {
-            const emptyMessage = resourcesSearchInput.value ? "Нічого не знайдено за вашим запитом." : `<div class="col-span-full text-center py-12 text-gray-500"><div class="text-4xl mb-2">📚</div><p>У вас поки немає полиць з ресурсами.</p><p class="text-sm">Створіть першу, натиснувши "Нова Полиця"!</p></div>`;
-            resourcesGrid.innerHTML = emptyMessage;
-            return;
-        }
-        shelves.forEach(shelf => {
-            const shelfDiv = document.createElement('div');
-            shelfDiv.className = 'shelf-card rounded-xl p-4 flex flex-col h-full';
-            const itemsHTML = (shelf.items || []).map(item => {
-                if(item.type !== 'link') return '';
-                const faviconUrl = getFaviconUrl(item.url);
-                return `<div class="resource-item flex items-center justify-between p-2 rounded mb-1 group relative cursor-pointer" onclick="window.open('${item.url}', '_blank')"><div class="flex items-center space-x-3 overflow-hidden w-full"><img src="${faviconUrl}" alt="icon" class="resource-favicon flex-shrink-0" onerror="this.src='https://www.google.com/s2/favicons?domain=google.com'"><span class="text-gray-800 font-medium truncate text-sm">${item.title}</span></div><div class="flex space-x-1 absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded shadow-sm backdrop-blur-sm" onclick="event.stopPropagation()"><button class="copy-link-btn text-gray-500 hover:text-indigo-600 p-1.5" data-url="${item.url}" title="Копіювати"><i class="fas fa-copy"></i></button><button class="delete-resource-btn text-gray-500 hover:text-red-600 p-1.5" data-shelf-id="${shelf.id}" data-item-id="${item.id}" title="Видалити"><i class="fas fa-times"></i></button></div></div>`;
-            }).join('');
-            shelfDiv.innerHTML = `<div class="flex justify-between items-center mb-4 border-b pb-2 border-blue-200"><h3 class="font-bold text-lg text-gray-800 truncate" title="${shelf.title}">${shelf.title}</h3><button class="delete-shelf-btn text-gray-400 hover:text-red-500 transition-colors" data-id="${shelf.id}"><i class="fas fa-trash-alt"></i></button></div><div class="flex-grow overflow-y-auto max-h-64 mb-4 space-y-1 pr-1 custom-scrollbar">${itemsHTML || '<p class="text-sm text-gray-400 italic text-center mt-4">Порожньо</p>'}</div><button class="add-item-btn w-full py-2 rounded-lg border-2 border-dashed border-indigo-300 text-indigo-500 hover:bg-indigo-50 hover:border-indigo-500 transition-all font-medium text-sm" data-id="${shelf.id}">+ Додати посилання</button>`;
-            shelfDiv.querySelector('.delete-shelf-btn').addEventListener('click', () => showConfirmModal(() => deleteShelf(shelf.id), `Видалити полицю "${shelf.title}" та всі її ресурси?`, "Видалити"));
-            shelfDiv.querySelector('.add-item-btn').addEventListener('click', () => openAddResourceModal(shelf.id));
-            shelfDiv.querySelectorAll('.delete-resource-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const itemId = e.currentTarget.dataset.itemId;
-                    const originalShelf = currentShelvesData.find(s => s.id === shelf.id);
-                    if(originalShelf) deleteResource(shelf.id, itemId, originalShelf.items);
-                });
-            });
-            shelfDiv.querySelectorAll('.copy-link-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => { navigator.clipboard.writeText(e.currentTarget.dataset.url); showNotification("Скопійовано!", "Посилання скопійовано в буфер обміну."); });
-            });
-            resourcesGrid.appendChild(shelfDiv);
-        });
-    };
-
-    const addShelf = async () => { const title = shelfNameInput.value.trim(); if (!title || !userId) return; try { await addDoc(collection(db, `artifacts/${appId}/users/${userId}/resources`), { title: title, createdAt: serverTimestamp(), items: [] }); addShelfModal.classList.add('hidden'); shelfNameInput.value = ''; } catch (e) { console.error("Error adding shelf: ", e); } };
-    const deleteShelf = async (shelfId) => { if (!userId || !shelfId) return; try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/resources`, shelfId)); } catch (e) { console.error("Error deleting shelf: ", e); } };
-    const openAddResourceModal = (shelfId) => { currentShelfIdForResource = shelfId; resourceTitleInput.value = ''; resourceContentInput.value = ''; addResourceModal.classList.remove('hidden'); };
-    const addResource = async () => {
-        if (!userId || !currentShelfIdForResource) return;
-        const title = resourceTitleInput.value.trim();
-        let content = resourceContentInput.value.trim();
-        if (!title || !content) { showNotification("Помилка", "Всі поля повинні бути заповнені"); return; }
-        if (!content.startsWith('http')) { content = 'https://' + content; }
-        const newItem = { id: Date.now().toString() + Math.random().toString(36).substr(2, 5), title: title, type: 'link', url: content };
-        try { const shelfRef = doc(db, `artifacts/${appId}/users/${userId}/resources`, currentShelfIdForResource); await updateDoc(shelfRef, { items: arrayUnion(newItem) }); addResourceModal.classList.add('hidden'); } catch (e) { console.error("Error adding resource: ", e); }
-    };
-    const deleteResource = async (shelfId, itemId, currentItems) => { if (!userId) return; try { const updatedItems = currentItems.filter(item => item.id !== itemId); const shelfRef = doc(db, `artifacts/${appId}/users/${userId}/resources`, shelfId); await updateDoc(shelfRef, { items: updatedItems }); } catch (e) { console.error("Error deleting resource: ", e); } };
-
-    const switchMobileTab = (tab) => {
-        currentMobileTab = tab;
-        if (tab === 'tasks') {
-            mobileTabTasks.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
-            mobileTabTasks.classList.remove('text-gray-500');
-            mobileTabStickers.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
-            mobileTabStickers.classList.add('text-gray-500');
-            boardTasksColumn.classList.remove('hidden');
-            boardStickersColumn.classList.add('hidden');
-            boardTasksColumn.classList.add('md:flex');
-            boardStickersColumn.classList.add('md:block');
-        } else {
-            mobileTabStickers.classList.add('bg-white', 'shadow-sm', 'text-indigo-600');
-            mobileTabStickers.classList.remove('text-gray-500');
-            mobileTabTasks.classList.remove('bg-white', 'shadow-sm', 'text-indigo-600');
-            mobileTabTasks.classList.add('text-gray-500');
-            boardStickersColumn.classList.remove('hidden');
-            boardTasksColumn.classList.add('hidden');
-            boardStickersColumn.classList.add('md:block');
-            boardTasksColumn.classList.add('md:flex');
-        }
-    };
-    let editingBoardTask = null;
-    let editingBoard = null;
-
-    function openEditBoardTask(item) {
-        editingBoardTask = item;
-
-        getEl("editBoardTaskTitle").value = item.text;
-
-        const container = getEl("editSubtasksContainer");
-        container.innerHTML = "";
-
-        if (item.subtasks && item.subtasks.length > 0) {
-            item.subtasks.forEach((s) => {
-                addEditSubtaskRow(s.text);
-            });
-        }
-
-        getEl("editBoardTaskModal").classList.remove("hidden");
     }
 
-    function autoResizeTextarea(element) {
-    element.style.height = "auto";
-    element.style.height = (element.scrollHeight) + "px";
-}
+    // --- ФУНКЦІЇ ДРУЗІВ ---
 
-    function addEditSubtaskRow(text = "") {
-    const container = getEl("editSubtasksContainer");
-
-    const row = document.createElement("div");
-    row.className = "flex items-start gap-2 mb-1";
-
-    row.innerHTML = `
-        <textarea 
-            class="edit-subtask-input 
-                w-full 
-                p-2            border 
-                rounded 
-                text-sm 
-                resize-y"       
-            rows="2"           placeholder="Опис кроку">${text}</textarea>
-        <button class="remove-subtask-btn text-red-500 text-lg mt-1">&times;</button>
-    `;
-
-    const textarea = row.querySelector(".edit-subtask-input");
-    
-    textarea.addEventListener("input", () => autoResizeTextarea(textarea));
-
-    row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
-    container.appendChild(row);
-}
-
-    getEl("addEditSubtaskBtn").addEventListener("click", () => addEditSubtaskRow(""));
-
-    async function updateBoardItem_withLogging(taskId, data) {
-
-        await updateDoc(
-            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
-            data
-        );
-
-        const uid = auth?.currentUser?.uid || null;
-
-        await addDoc(
-            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
-            {
-                boardId: currentBoardId,
-                type: "edit_task",
-                performedBy: uid,
-                itemId: taskId,
-                itemText: data.text,
-                timestamp: serverTimestamp()
-            }
-        );
-    }
-
-    async function saveEditBoardTask() {
-        if (!editingBoardTask) return;
-
-        const title = getEl("editBoardTaskTitle").value.trim();
-        if (!title) return;
-
-        const originalSubtasks = editingBoardTask.subtasks || [];
-        
-        const originalSubtaskMap = new Map();
-        originalSubtasks.forEach(s => {
-
-            originalSubtaskMap.set(s.text, s.completed); 
-        });
-
-        const subtasks = Array.from(
-            document.querySelectorAll(".edit-subtask-input")
-        )
-        .map(el => {
-            const text = el.value.trim();
-            let completed = false;
-
-            if (originalSubtaskMap.has(text)) {
-                completed = originalSubtaskMap.get(text);
-            } 
-
-            return {
-                text: text,
-                completed: completed
-            };
-        })
-        .filter(s => s.text !== "");
-
-        await updateBoardItem_withLogging(editingBoardTask.id, {
-            text: title,
-            subtasks
-        });
-
-        getEl("editBoardTaskModal").classList.add("hidden");
-
-        editingBoardTask = null;
-
-        loadBoardTasks();
-    }
-
-    async function saveEditedBoard() {
-        if (!editingBoard) return;
-
-        const newTitle = getEl("editBoardTitleInput").value.trim();
-        const newStatus = getEl("editBoardStatusSelect").value;
-        if (!newTitle) {
-            cancelEditBoard(); 
-            return;
-        }
+    async function saveFriend() {
+        const friendEmail = friendEmailInput.value.trim();
+        if (!friendEmail || !userId) return;
 
         try {
+            const usersRef = collection(db, 'artifacts', appId, 'users');
+            const q = query(usersRef, where('profile.email', '==', friendEmail));
+            const querySnapshot = await getDocs(q);
 
-            await updateDoc(
-                doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
-                { title: newTitle, status: newStatus } // Оновлено
-            );
-
-            if (editingBoard.id === currentBoardId) {
-                const activeBoardTitleEl = getEl('activeBoardTitle');
-                if (activeBoardTitleEl) activeBoardTitleEl.textContent = newTitle;
+            if (querySnapshot.empty) {
+                showNotification('Помилка', `Користувача з email ${friendEmail} не знайдено.`);
+                return;
             }
 
-            cancelEditBoard();
+            const friendDoc = querySnapshot.docs[0];
+            const friendId = friendDoc.id;
+
+            if (friendId === userId) {
+                showNotification('Помилка', 'Ви не можете додати себе в друзі.');
+                return;
+            }
+
+            // Додавання друга
+            await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'friends', friendId), {
+                email: friendEmail,
+                addedAt: serverTimestamp()
+            });
+
+            showNotification('Успіх', `Користувача ${friendEmail} додано в друзі.`);
+            hideAddFriendModal();
 
         } catch (e) {
-            console.error("Помилка оновлення назви дошки:", e);
+            console.error("Помилка додавання друга:", e);
         }
     }
 
-    function cancelEditBoard() {
-        getEl("editBoardModal").classList.add("hidden"); 
-        editingBoard = null;
-    }
-    getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
-
-    function openEditBoardModal(board) {
-        editingBoard = board; 
-        
-        getEl("editBoardTitleInput").value = board.title;
-        
-        // --- ДОДАНО ЛОГІКУ СТАТУСУ ---
-        const statusSelect = getEl("editBoardStatusSelect");
-        statusSelect.innerHTML = Object.keys(BOARD_STATUSES).map(key => 
-            `<option value="${key}" ${board.status === key ? 'selected' : ''}>${BOARD_STATUSES[key].title}</option>`
-        ).join('');
-        // ------------------------------
-        
-        getEl("editBoardModal").classList.remove("hidden"); 
-    }
-
-    getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
-
-    getEl("saveEditBoardTaskBtn").addEventListener("click", saveEditBoardTask);
-
-    getEl("cancelEditBoardTaskBtn").addEventListener("click", () => {
-        getEl("editBoardTaskModal").classList.add("hidden");
-        editingBoardTask = null;
-    });
-
-async function updateBoardItem_withLogging(taskId, data) {
-
-        await updateDoc(
-            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
-            data
+    function subscribeToFriends() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', userId, 'friends'),
+            orderBy('email', 'asc')
         );
 
-        const uid = auth?.currentUser?.uid || null;
+        onSnapshot(q, async (snapshot) => {
+            friendsList.innerHTML = '';
+            assignFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+            boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+            friendsChatList.innerHTML = '';
+            const friendPromises = [];
 
-        await addDoc(
-            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
-            {
-                boardId: currentBoardId,
-                type: "edit_task",
-                performedBy: uid,
-                itemId: taskId,
-                itemText: data.text,
-                timestamp: serverTimestamp()
+            snapshot.forEach(doc => {
+                const friendId = doc.id;
+                const friendData = doc.data();
+                friendPromises.push(
+                    getDoc(doc(db, 'artifacts', appId, 'users', friendId, 'profile', 'settings'))
+                        .then(profileSnap => {
+                            const friendEmail = profileSnap.data()?.email || friendData.email;
+                            return { id: friendId, email: friendEmail };
+                        })
+                );
+            });
+
+            const friends = await Promise.all(friendPromises);
+
+            friends.forEach(friend => {
+                // Рендеринг списку друзів
+                const friendEl = document.createElement('div');
+                friendEl.className = 'flex justify-between items-center p-2 hover:bg-gray-50 rounded';
+                friendEl.innerHTML = `
+                    <span>${friend.email} (${friend.id.substring(0, 8)}...)</span>
+                    <div class="flex space-x-2">
+                        <button class="text-blue-500 hover:text-blue-700 chat-friend-btn" data-friend-id="${friend.id}" data-friend-email="${friend.email}" title="Чат"><i class="fas fa-comment"></i></button>
+                    </div>
+                `;
+                friendsList.appendChild(friendEl);
+                
+                // Рендеринг для вибору
+                assignFriendSelect.innerHTML += `<option value="${friend.id}">${friend.email} (${friend.id.substring(0, 4)}...)</option>`;
+                boardFriendSelect.innerHTML += `<option value="${friend.id}">${friend.email} (${friend.id.substring(0, 4)}...)</option>`;
+
+                // Рендеринг для чату
+                const chatEl = document.createElement('div');
+                chatEl.className = 'friend-chat-item p-3 border-b cursor-pointer hover:bg-indigo-50 transition-colors';
+                chatEl.dataset.friendId = friend.id;
+                chatEl.dataset.friendEmail = friend.email;
+                chatEl.innerHTML = `
+                    <p class="font-semibold">${friend.email}</p>
+                    <span class="text-xs text-gray-500 unread-count-badge" id="unread-count-${friend.id}"></span>
+                `;
+                friendsChatList.appendChild(chatEl);
+            });
+
+            document.querySelectorAll('.chat-friend-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.friendId;
+                    const email = e.currentTarget.dataset.friendEmail;
+                    openChatBox(id, email);
+                });
+            });
+
+            document.querySelectorAll('.friend-chat-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const id = e.currentTarget.dataset.friendId;
+                    const email = e.currentTarget.dataset.friendEmail;
+                    openChatBox(id, email);
+                });
+            });
+        });
+    }
+
+    // --- ФУНКЦІЇ ДІЙ З ЗАВДАННЯМИ ДРУЗІВ ---
+
+    async function sendAssignedTask() {
+        const text = assignTaskTitle.value.trim();
+        const recipientId = assignFriendSelect.value;
+        if (!text || !recipientId || !userId) return;
+
+        try {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
+                text,
+                senderId: userId,
+                recipientId: recipientId,
+                status: 'pending',
+                sentAt: serverTimestamp()
+            });
+
+            showNotification('Успіх', 'Завдання надіслано другу.');
+            hideAssignTaskModal();
+            assignTaskTitle.value = '';
+            assignFriendSelect.value = '';
+
+        } catch (e) {
+            console.error("Помилка надсилання завдання:", e);
+        }
+    }
+
+    function subscribeToIncomingTasks() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'),
+            where('recipientId', '==', userId),
+            where('status', 'in', ['pending', 'deferred', 'active'])
+        );
+
+        onSnapshot(q, (snapshot) => {
+            incomingTasksList.innerHTML = '';
+            const pendingTasks = [];
+
+            snapshot.forEach(doc => {
+                const task = { id: doc.id, ...doc.data() };
+                if (task.status === 'pending') {
+                    pendingTasks.push(task);
+                    renderIncomingTask(task);
+                }
+            });
+
+            incomingTasksCount.textContent = pendingTasks.length;
+            incomingTasksCount.classList.toggle('bg-red-500', pendingTasks.length > 0);
+        });
+    }
+
+    async function renderIncomingTask(task) {
+        const senderSnap = await getDoc(doc(db, 'artifacts', appId, 'users', task.senderId, 'profile', 'settings'));
+        const senderEmail = senderSnap.data()?.email || task.senderId.substring(0, 8) + '...';
+
+        const el = document.createElement('div');
+        el.className = 'p-3 mb-2 rounded shadow-sm bg-blue-100 cursor-pointer hover:shadow-md';
+        el.innerHTML = `
+            <p class="font-semibold">${task.text}</p>
+            <p class="text-xs text-gray-600">Від: ${senderEmail}</p>
+        `;
+
+        el.addEventListener('click', () => {
+            currentIncomingTask = task;
+            incomingTaskTitle.textContent = task.text;
+            incomingTaskDetails.innerHTML = `Надіслано користувачем: ${senderEmail}`;
+            viewIncomingTaskModal.classList.remove('hidden');
+        });
+
+        incomingTasksList.appendChild(el);
+    }
+
+    async function acceptIncomingTask(task) {
+        if (!userId) return;
+
+        const batch = writeBatch(db);
+
+        // 1. Додавання завдання до власних
+        const userTaskRef = doc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'));
+        batch.set(userTaskRef, {
+            text: task.text,
+            status: 'active',
+            isCompleted: false,
+            createdAt: serverTimestamp(),
+            originalSharedTaskId: task.id, // Посилання на оригінальне завдання
+            ownerId: userId
+        });
+
+        // 2. Оновлення статусу спільного завдання
+        const sharedTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', task.id);
+        batch.update(sharedTaskRef, { status: 'accepted', acceptedAt: serverTimestamp() });
+
+        try {
+            await batch.commit();
+            showNotification('Успіх', 'Завдання прийнято та додано до ваших справ.');
+        } catch (e) {
+            console.error("Помилка прийняття завдання:", e);
+        }
+    }
+
+    function updateSharedTaskStatus(sharedTaskId, newStatus) {
+        if (!userId) return;
+        const sharedTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', sharedTaskId);
+        updateDoc(sharedTaskRef, { status: newStatus }).catch(e => console.error("Помилка оновлення статусу спільного завдання:", e));
+    }
+
+    // --- ФУНКЦІЇ ЧАТУ ---
+
+    function openChatView() {
+        mainContent.classList.add('hidden');
+        chatSection.classList.remove('hidden');
+    }
+
+    function closeChatView() {
+        chatSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        selectedFriendForChat = null;
+        chatBox.classList.add('hidden');
+    }
+
+    async function openChatBox(friendId, friendEmail) {
+        selectedFriendForChat = friendId;
+        chatHeader.textContent = `Чат з ${friendEmail}`;
+        chatBox.classList.remove('hidden');
+        chatMessages.innerHTML = '';
+
+        // Очистити лічильник непрочитаних
+        const unreadBadge = getEl(`unread-count-${friendId}`);
+        if (unreadBadge) unreadBadge.textContent = '';
+
+        subscribeToChat(friendId);
+    }
+
+    function getChatId(user1, user2) {
+        return user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+    }
+
+    function subscribeToChat(friendId) {
+        if (!userId || !friendId) return;
+        const chatId = getChatId(userId, friendId);
+
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'chats', chatId, 'messages'),
+            orderBy('sentAt', 'asc')
+        );
+
+        onSnapshot(q, async (snapshot) => {
+            chatMessages.innerHTML = '';
+            const messages = [];
+            const batch = writeBatch(db);
+
+            snapshot.forEach(doc => {
+                const message = { id: doc.id, ...doc.data() };
+                messages.push(message);
+
+                // Позначити як прочитане, якщо не відправник
+                if (message.recipientId === userId && !message.isRead) {
+                    batch.update(doc.ref, { isRead: true, readAt: serverTimestamp() });
+                }
+            });
+
+            // Застосувати зміни для оновлення статусу "прочитано"
+            await batch.commit().catch(e => console.error("Помилка оновлення статусу прочитання:", e));
+
+            messages.forEach(renderChatMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Прокрутка до останнього
+        });
+    }
+
+    async function sendChatMessage({ text, imageUrl, recipient }) {
+        if (!userId || !recipient) return;
+        const chatId = getChatId(userId, recipient);
+        const messageText = text || '🖼️ Зображення';
+
+        try {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'chats', chatId, 'messages'), {
+                senderId: userId,
+                recipientId: recipient,
+                text: messageText,
+                imageUrl: imageUrl || null,
+                isRead: false,
+                sentAt: serverTimestamp()
+            });
+            chatMessageInput.value = '';
+        } catch (e) {
+            console.error("Помилка надсилання повідомлення:", e);
+        }
+    }
+
+    function renderChatMessage(message) {
+        const isSender = message.senderId === userId;
+        const el = document.createElement('div');
+        el.className = `flex ${isSender ? 'justify-end' : 'justify-start'} mb-3`;
+
+        let content;
+        if (message.imageUrl) {
+            content = `
+                <img src="${message.imageUrl}" class="max-w-xs max-h-48 object-cover rounded cursor-pointer" onclick="showImageViewer('${message.imageUrl}')">
+            `;
+        } else {
+            content = `<p class="text-sm">${message.text}</p>`;
+        }
+
+        const readStatus = isSender && message.isRead ? '<i class="fas fa-check-double text-blue-400 text-xs ml-1"></i>' : (isSender ? '<i class="fas fa-check text-gray-400 text-xs ml-1"></i>' : '');
+        const time = message.sentAt ? new Date(message.sentAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+        el.innerHTML = `
+            <div class="max-w-3/4 p-3 rounded-xl shadow-md relative ${isSender ? 'bg-indigo-500 text-white rounded-tr-none' : 'bg-gray-200 text-gray-800 rounded-tl-none'}">
+                ${content}
+                <div class="text-right text-xs mt-1 flex items-center justify-end ${isSender ? 'text-indigo-200' : 'text-gray-500'}">
+                    <span>${time}</span>
+                    ${readStatus}
+                </div>
+            </div>
+        `;
+        chatMessages.appendChild(el);
+    }
+
+    window.showImageViewer = function (imageUrl) {
+        imageViewerContent.innerHTML = `<img src="${imageUrl}" class="max-w-full max-h-full object-contain">`;
+        imageViewerModal.classList.remove('hidden');
+    };
+
+    async function uploadImageAndSendMessage(file) {
+        if (!userId || !selectedFriendForChat) {
+            showNotification('Помилка', 'Виберіть друга для надсилання файлу.');
+            return;
+        }
+
+        const storageRef = ref(storage, `chat_images/${userId}/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log('Upload is ' + progress + '% done');
+            },
+            (error) => {
+                console.error("Помилка завантаження зображення:", error);
+                showNotification('Помилка', 'Не вдалося завантажити зображення.');
+            },
+            () => {
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    sendChatMessage({ imageUrl: downloadURL, recipient: selectedFriendForChat });
+                });
             }
         );
     }
 
-    async function saveEditBoardTask() {
-        if (!editingBoardTask) return;
+    function subscribeToUnreadCounts() {
+        if (!userId) return;
 
-        const title = getEl("editBoardTaskTitle").value.trim();
-        if (!title) return;
+        // Потрібно знайти всі чати, де поточний користувач є або відправником, або отримувачем.
+        // Оскільки ми не можемо використовувати "where" для поля "messages" у підколекції,
+        // ми підписуємось на всіх друзів і перевіряємо їхні чати.
 
-        const originalSubtasks = editingBoardTask.subtasks || [];
-        
-        const originalSubtaskMap = new Map();
-        originalSubtasks.forEach(s => {
+        const friendsRef = collection(db, 'artifacts', appId, 'users', userId, 'friends');
+        onSnapshot(friendsRef, (snapshot) => {
+            snapshot.forEach(doc => {
+                const friendId = doc.id;
+                const chatId = getChatId(userId, friendId);
 
-            originalSubtaskMap.set(s.text, s.completed); 
+                const messagesRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats', chatId, 'messages');
+                const q = query(messagesRef, where('recipientId', '==', userId), where('isRead', '==', false));
+
+                onSnapshot(q, (messagesSnapshot) => {
+                    const unreadCount = messagesSnapshot.size;
+                    const badge = getEl(`unread-count-${friendId}`);
+                    if (badge) {
+                        badge.textContent = unreadCount > 0 ? `(${unreadCount} нових)` : '';
+                    }
+                });
+            });
+        });
+    }
+
+    // --- ФУНКЦІЇ ЗВІТІВ ---
+
+    function openReportView() {
+        mainContent.classList.add('hidden');
+        reportSection.classList.remove('hidden');
+        subscribeToSharedTasksReport();
+    }
+
+    function closeReportView() {
+        reportSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+    }
+
+    function subscribeToSharedTasksReport() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'),
+            where('senderId', '==', userId),
+            orderBy('sentAt', 'desc')
+        );
+
+        onSnapshot(q, (snapshot) => {
+            reportTableBody.innerHTML = '';
+            snapshot.forEach(doc => renderReportRow({ id: doc.id, ...doc.data() }));
+        });
+    }
+
+    async function renderReportRow(task) {
+        const recipientSnap = await getDoc(doc(db, 'artifacts', appId, 'users', task.recipientId, 'profile', 'settings'));
+        const recipientEmail = recipientSnap.data()?.email || task.recipientId.substring(0, 8) + '...';
+
+        const row = document.createElement('tr');
+        row.className = 'border-b hover:bg-gray-50 cursor-pointer report-task-card';
+        row.dataset.taskText = task.text;
+        row.dataset.taskId = task.id;
+
+        const statusMap = {
+            'pending': 'Очікує',
+            'accepted': 'Прийнято',
+            'declined': 'Відхилено',
+            'completed': 'Виконано',
+            'deferred': 'Відкладено',
+            'active': 'Активно'
+        };
+
+        const statusClass = {
+            'pending': 'bg-yellow-100 text-yellow-800',
+            'accepted': 'bg-blue-100 text-blue-800',
+            'declined': 'bg-red-100 text-red-800',
+            'completed': 'bg-green-100 text-green-800',
+            'deferred': 'bg-gray-100 text-gray-800',
+            'active': 'bg-indigo-100 text-indigo-800'
+        };
+
+        row.innerHTML = `
+            <td class="p-3 text-sm font-medium">${task.text}</td>
+            <td class="p-3 text-sm">${recipientEmail}</td>
+            <td class="p-3 text-sm">
+                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass[task.status] || 'bg-gray-100 text-gray-800'}">
+                    ${statusMap[task.status] || task.status}
+                </span>
+            </td>
+            <td class="p-3 text-sm">${task.sentAt ? new Date(task.sentAt.toDate()).toLocaleDateString() : 'N/A'}</td>
+        `;
+        reportTableBody.appendChild(row);
+    }
+
+    function showTaskDetailsModal(taskText, taskId) {
+        taskDetailsText.textContent = taskText;
+        taskDetailsStatus.textContent = taskId; // Temporarily store ID
+        deleteFromReportBtn.dataset.taskId = taskId;
+        taskDetailsModal.classList.remove('hidden');
+    }
+
+    function deleteSharedTaskFromReport() {
+        const taskId = deleteFromReportBtn.dataset.taskId;
+        if (!taskId) return;
+        deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', taskId))
+            .then(() => showNotification('Успіх', 'Запис видалено зі звіту.'))
+            .catch(e => console.error("Помилка видалення зі звіту:", e));
+        hideTaskDetailsModal();
+    }
+
+    // --- ФУНКЦІЇ РЕСУРСІВ ---
+
+    function openResourcesView() {
+        mainContent.classList.add('hidden');
+        resourcesSection.classList.remove('hidden');
+        subscribeToShelves();
+    }
+
+    function closeResourcesView() {
+        resourcesSection.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+    }
+
+    function subscribeToShelves() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', userId, 'shelves'),
+            orderBy('name', 'asc')
+        );
+
+        onSnapshot(q, (snapshot) => {
+            shelvesList.innerHTML = '';
+            resourceShelfSelect.innerHTML = '<option value="">Виберіть полицю</option>';
+            snapshot.forEach(doc => {
+                renderShelf({ id: doc.id, ...doc.data() });
+                resourceShelfSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+            });
+            subscribeToResources();
+        });
+    }
+
+    function renderShelf(shelf) {
+        const el = document.createElement('li');
+        el.className = 'p-3 mb-2 rounded shadow-sm bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors flex justify-between items-center';
+        el.innerHTML = `
+            <span class="font-semibold">${shelf.name}</span>
+            <button class="text-red-500 hover:text-red-700 delete-shelf-btn" data-id="${shelf.id}"><i class="fas fa-trash-alt"></i></button>
+        `;
+        el.querySelector('.delete-shelf-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showConfirmModal(() => deleteShelf(shelf.id), `Видалити полицю "${shelf.name}"?`, "Видалити");
         });
 
-        const subtasks = Array.from(
-            document.querySelectorAll(".edit-subtask-input")
-        )
-        .map(el => {
-            const text = el.value.trim();
-            let completed = false;
-
-            if (originalSubtaskMap.has(text)) {
-                completed = originalSubtaskMap.get(text);
-            } 
-
-            return {
-                text: text,
-                completed: completed
-            };
-        })
-        .filter(s => s.text !== "");
-
-        // --- ДОДАНО ЛОГІКУ ПЕРЕВІРКИ ЗАВЕРШЕННЯ ---
-        const allCompleted = subtasks.length > 0 && subtasks.every(s => s.completed);
-        // ------------------------------------------
-
-        await updateBoardItem_withLogging(editingBoardTask.id, {
-            text: title,
-            subtasks,
-            isCompleted: allCompleted, // Оновлюємо статус завершення
+        el.addEventListener('click', () => {
+            filterAndRenderResources(shelf.id);
         });
 
-        getEl("editBoardTaskModal").classList.add("hidden");
+        shelvesList.appendChild(el);
+    }
 
-        editingBoardTask = null;
+    function addShelf() {
+        const name = shelfNameInput.value.trim();
+        if (!name || !userId) return;
+        addDoc(collection(db, 'artifacts', appId, 'users', userId, 'shelves'), {
+            name,
+            createdAt: serverTimestamp()
+        }).then(() => {
+            addShelfModal.classList.add('hidden');
+            shelfNameInput.value = '';
+            showNotification('Успіх', 'Полицю додано.');
+        }).catch(e => console.error("Помилка додавання полиці:", e));
+    }
 
-        loadBoardTasks();
+    function deleteShelf(shelfId) {
+        if (!userId) return;
+        deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'shelves', shelfId))
+            .catch(e => console.error("Помилка видалення полиці:", e));
+    }
+
+    // --- ФУНКЦІЇ РЕСУРСІВ ---
+
+    let allResources = [];
+
+    function subscribeToResources() {
+        if (!userId) return;
+        const q = query(
+            collection(db, 'artifacts', appId, 'users', userId, 'resources'),
+            orderBy('title', 'asc')
+        );
+
+        onSnapshot(q, (snapshot) => {
+            allResources = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            filterAndRenderResources();
+        });
+    }
+
+    function filterAndRenderResources(shelfId = null, searchTerm = resourcesSearchInput.value.trim()) {
+        resourcesContainer.innerHTML = '';
+        let filtered = allResources;
+
+        if (shelfId) {
+            filtered = filtered.filter(r => r.shelfId === shelfId);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        }
+
+        if (filtered.length === 0) {
+            resourcesContainer.innerHTML = '<p class="text-center text-gray-500 mt-4">Ресурси не знайдено.</p>';
+            return;
+        }
+
+        filtered.forEach(renderResource);
+    }
+
+    function renderResource(resource) {
+        const el = document.createElement('div');
+        el.className = 'p-3 mb-2 rounded shadow-sm bg-white border hover:shadow-md transition-shadow flex justify-between items-center';
+        el.innerHTML = `
+            <div>
+                <a href="${resource.link}" target="_blank" class="font-semibold text-blue-600 hover:underline">${resource.title}</a>
+                <p class="text-xs text-gray-500">Полиця: ${resource.shelfName || 'N/A'}</p>
+            </div>
+            <button class="text-red-500 hover:text-red-700 delete-resource-btn" data-id="${resource.id}"><i class="fas fa-trash-alt"></i></button>
+        `;
+        el.querySelector('.delete-resource-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            showConfirmModal(() => deleteResource(resource.id), `Видалити ресурс "${resource.title}"?`, "Видалити");
+        });
+        resourcesContainer.appendChild(el);
+    }
+
+    function addResource() {
+        const title = resourceTitleInput.value.trim();
+        const link = resourceLinkInput.value.trim();
+        const shelfId = resourceShelfSelect.value;
+        const shelfName = resourceShelfSelect.options[resourceShelfSelect.selectedIndex].text;
+
+        if (!title || !link || !shelfId || !userId) return;
+
+        addDoc(collection(db, 'artifacts', appId, 'users', userId, 'resources'), {
+            title,
+            link,
+            shelfId,
+            shelfName,
+            createdAt: serverTimestamp()
+        }).then(() => {
+            addResourceModal.classList.add('hidden');
+            resourceTitleInput.value = '';
+            resourceLinkInput.value = '';
+            showNotification('Успіх', 'Ресурс додано.');
+        }).catch(e => console.error("Помилка додавання ресурсу:", e));
+    }
+
+    function deleteResource(resourceId) {
+        if (!userId) return;
+        deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'resources', resourceId))
+            .catch(e => console.error("Помилка видалення ресурсу:", e));
+    }
+
+    // --- ФУНКЦІЇ ДОШОК (Boards) ---
+
+    const getBoardStatusTag = (statusKey) => {
+        const status = BOARD_STATUSES[statusKey] || BOARD_STATUSES.New;
+        return `<span class="board-status-tag text-xs font-semibold px-2 py-0.5 rounded-full ${status.color} ${status.text} absolute top-1 right-1/2 translate-x-1/2">${status.title}</span>`;
+    };
+
+    function switchMobileTab(tab) {
+        if (tab === 'tasks') {
+            boardTasksColumn.classList.remove('hidden');
+            boardStickersColumn.classList.add('hidden');
+            mobileTabTasks.classList.add('border-indigo-500', 'text-indigo-600');
+            mobileTabStickers.classList.remove('border-indigo-500', 'text-indigo-600');
+        } else {
+            boardTasksColumn.classList.add('hidden');
+            boardStickersColumn.classList.remove('hidden');
+            mobileTabTasks.classList.remove('border-indigo-500', 'text-indigo-600');
+            mobileTabStickers.classList.add('border-indigo-500', 'text-indigo-600');
+        }
     }
 
     const renderBoardTask = (item) => {
@@ -910,6 +1184,7 @@ async function updateBoardItem_withLogging(taskId, data) {
         const isCompleted = item.isCompleted === true; // Нове поле
 
         const el = document.createElement('div');
+        // Додаємо клас для completed-task-card та змінюємо border/background
         el.className = `board-task-card p-3 mb-3 border rounded flex flex-col ${isCompleted ? 'completed-task-card bg-green-100 border-green-300 opacity-75' : 'bg-white'}`;
         el.style.minHeight = "80px";
         el.style.wordBreak = "break-word";
@@ -961,288 +1236,7 @@ async function updateBoardItem_withLogging(taskId, data) {
         }
     };
 
-    const renderBoardSticker = (item) => {
-        const el = document.createElement('div');
-        el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
-        el.innerHTML = `
-            <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
-            <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
-                ${item.text}
-            </div>
-        `;
-        el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        boardStickersArea.appendChild(el);
-    };
-
-    const subscribeToBoardItems = (boardId) => {
-        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-            boardTasksList.innerHTML = '';
-            boardStickersArea.innerHTML = '';
-            snapshot.forEach(d => {
-                const item = { id: d.id, ...d.data() };
-                if(item.type === 'task') renderBoardTask(item);
-                else if(item.type === 'sticker') renderBoardSticker(item);
-            });
-        }, error => console.error("Board items subscription error:", error));
-    };
-
-    const logBoardActivity = async (boardId, payload) => {
-        try {
-            if (!boardId || !userId) return;
-            const data = { boardId, ...payload, performedBy: userId, timestamp: serverTimestamp() };
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), data);
-        } catch (e) { console.error("Error logging board activity:", e); }
-    };
-
-    const boardReportModal = getEl('board-report-modal');
-    const boardReportBody = getEl('board-report-body');
-    const boardReportTitle = getEl('board-report-title');
-    const boardReportSubtitle = getEl('board-report-subtitle');
-    const boardReportClose = getEl('board-report-close');
-    const boardReportFilterUser = getEl('board-report-filter-user');
-    const boardReportFilterType = getEl('board-report-filter-type');
-    const boardReportSearch = getEl('board-report-search');
-    const boardReportDownload = getEl('board-report-download');
-
-    let unsubscribeFromBoardActivities = null;
-    let latestBoardActivities = [];
-
-    const formatActivityText = (act) => {
-        const actor = getDisplayNameFor(act.performedBy);
-        switch(act.type) {
-            case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-            case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
-            case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
-            case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-            case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-            case 'task_deleted': return `${actor} видалив елемент`;
-            default: return `${actor} зробив дію: ${act.type}`;
-        }
-    };
-
-    const subscribeToBoardActivities = (boardId) => {
-        if (unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), where('boardId', '==', boardId));
-        unsubscribeFromBoardActivities = onSnapshot(q, (snapshot) => {
-            latestBoardActivities = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
-            renderBoardReport(latestBoardActivities);
-            populateFilterUsers(latestBoardActivities);
-        }, error => console.error("Board activities subscription error:", error));
-    };
-
-    const populateFilterUsers = (activities) => {
-        const ids = new Set();
-        activities.forEach(a => ids.add(a.performedBy));
-        boardReportFilterUser.innerHTML = '<option value="">Усі користувачі</option>';
-        Array.from(ids).forEach(id => {
-            const name = getDisplayNameFor(id);
-            const opt = document.createElement('option');
-            opt.value = id;
-            opt.textContent = name;
-            boardReportFilterUser.appendChild(opt);
-        });
-    };
-
-    const renderBoardReport = (activities) => {
-        const filterUser = boardReportFilterUser.value;
-        const filterType = boardReportFilterType.value;
-        const search = boardReportSearch.value.trim().toLowerCase();
-        let filtered = activities.slice();
-        if (filterUser) filtered = filtered.filter(a => a.performedBy === filterUser);
-        if (filterType) filtered = filtered.filter(a => a.type === filterType);
-        if (search) filtered = filtered.filter(a => {
-            const text = (a.text || a.itemText || a.subtaskText || a.stickerText || '').toString().toLowerCase();
-            return text.includes(search) || getDisplayNameFor(a.performedBy).toLowerCase().includes(search) || a.type.includes(search);
-        });
-
-        boardReportBody.innerHTML = '';
-        const emptyEl = getEl('board-report-empty');
-        if (!filtered || filtered.length === 0) { boardReportBody.appendChild(emptyEl); emptyEl.style.display = 'block'; return; }
-        emptyEl.style.display = 'none';
-
-        const grouped = {};
-        filtered.forEach(a => {
-            const d = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp ? new Date(a.timestamp) : new Date());
-            const key = d.toISOString().slice(0,10);
-            if (!grouped[key]) grouped[key] = [];
-            grouped[key].push(a);
-        });
-
-        Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(dayKey => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'py-2 text-sm font-semibold text-gray-600';
-            const day = new Date(dayKey);
-            dayHeader.textContent = day.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-            boardReportBody.appendChild(dayHeader);
-
-            grouped[dayKey].sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)).forEach(act => {
-                const item = document.createElement('div');
-                item.className = 'timeline-item bg-white mb-3';
-                const avatar = document.createElement('div');
-                avatar.className = 'timeline-avatar';
-                avatar.style.background = colorForUid(act.performedBy || 'x');
-                avatar.textContent = getInitials(act.performedBy || '');
-                const card = document.createElement('div');
-                card.className = 'timeline-card';
-                const title = document.createElement('div');
-                title.className = 'text-sm';
-                title.innerHTML = `<div class="timeline-badge">${formatActivityText(act)}</div>`;
-                const meta = document.createElement('div');
-                meta.className = 'timeline-meta';
-                meta.textContent = `${fmtTime(act.timestamp)} • ${act.type}`;
-                const detail = document.createElement('div');
-                detail.className = 'text-sm text-gray-700 mt-2';
-                const pieces = [];
-                if (act.itemText) pieces.push(`Завдання: ${act.itemText}`);
-                if (act.subtaskText) pieces.push(`Пункт: ${act.subtaskText}`);
-                if (act.stickerText) pieces.push(`Стікeр: ${act.stickerText}`);
-                if (pieces.length) detail.textContent = pieces.join(' • ');
-                else detail.textContent = '';
-                card.appendChild(title);
-                if (detail.textContent) card.appendChild(detail);
-                card.appendChild(meta);
-
-                item.appendChild(avatar);
-                item.appendChild(card);
-                boardReportBody.appendChild(item);
-            });
-        });
-    };
-
-    const openBoardReport = () => {
-        if (!currentBoardId) { showNotification('Помилка', 'Дошка не вибрана'); return; }
-        boardReportTitle.textContent = `Звіт — ${activeBoardTitle.textContent || 'Дошка'}`;
-        boardReportSubtitle.textContent = `Показано події для дошки`;
-        boardReportModal.classList.remove('hidden');
-        subscribeToBoardActivities(currentBoardId);
-    };
-
-    boardReportClose.addEventListener('click', () => {
-        boardReportModal.classList.add('hidden');
-        if (unsubscribeFromBoardActivities) { unsubscribeFromBoardActivities(); unsubscribeFromBoardActivities = null; }
-    });
-
-    boardReportFilterUser.addEventListener('change', () => renderBoardReport(latestBoardActivities));
-    boardReportFilterType.addEventListener('change', () => renderBoardReport(latestBoardActivities));
-    boardReportSearch.addEventListener('input', debounce(() => renderBoardReport(latestBoardActivities), 250));
-
-    boardReportDownload.addEventListener('click', () => {
-        const data = latestBoardActivities;
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `board-${currentBoardId || 'report'}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    });
-
-    const addBoardTask_withLogging = async () => {
-        const title = boardTaskTitle.value.trim();
-        if(!title || !currentBoardId) return;
-
-        const subtaskInputs = document.querySelectorAll('.subtask-input');
-        const subtasks = Array.from(subtaskInputs).map(inp => ({
-            text: inp.value.trim(),
-            completed: false
-        })).filter(s => s.text !== '');
-
-        try {
-            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-                boardId: currentBoardId,
-                type: 'task',
-                text: title,
-                subtasks,
-                createdAt: serverTimestamp()
-            });
-
-            await logBoardActivity(currentBoardId, {
-                type: 'task_added',
-                itemId: docRef.id,
-                itemText: title
-            });
-            addBoardTaskModal.classList.add('hidden');
-            boardTaskTitle.value = '';
-            subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
-        } catch(e) { console.error("Error adding board task", e); }
-    };
-
-    async function updateBoardItem_withLogging(taskId, data) {
-
-        await updateDoc(
-            doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId),
-            data
-        );
-
-        const uid = auth?.currentUser?.uid || null;
-
-        await addDoc(
-            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
-            {
-                boardId: currentBoardId,
-                type: "edit_task",
-                performedBy: uid,
-                itemId: taskId,
-                itemText: data.text,
-                timestamp: serverTimestamp()
-            }
-        );
-    }
-
-    async function saveEditBoardTask() {
-        if (!editingBoardTask) return;
-
-        const title = getEl("editBoardTaskTitle").value.trim();
-        if (!title) return;
-
-        const originalSubtasks = editingBoardTask.subtasks || [];
-        
-        const originalSubtaskMap = new Map();
-        originalSubtasks.forEach(s => {
-
-            originalSubtaskMap.set(s.text, s.completed); 
-        });
-
-        const subtasks = Array.from(
-            document.querySelectorAll(".edit-subtask-input")
-        )
-        .map(el => {
-            const text = el.value.trim();
-            let completed = false;
-
-            if (originalSubtaskMap.has(text)) {
-                completed = originalSubtaskMap.get(text);
-            } 
-
-            return {
-                text: text,
-                completed: completed
-            };
-        })
-        .filter(s => s.text !== "");
-
-        // --- ДОДАНО ЛОГІКУ ПЕРЕВІРКИ ЗАВЕРШЕННЯ ---
-        const allCompleted = subtasks.length > 0 && subtasks.every(s => s.completed);
-        // ------------------------------------------
-
-        await updateBoardItem_withLogging(editingBoardTask.id, {
-            text: title,
-            subtasks,
-            isCompleted: allCompleted, // Оновлюємо статус завершення
-        });
-
-        getEl("editBoardTaskModal").classList.add("hidden");
-
-        editingBoardTask = null;
-
-        loadBoardTasks();
-    }
-
-    // --- ОНОВЛЕНА ФУНКЦІЯ toggleSubtask_withLogging ---
+    // --- Єдина та виправлена функція toggleSubtask_withLogging (Виправлення Cannot redeclare) ---
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
         try {
             if (!item || !Array.isArray(item.subtasks)) return;
@@ -1266,88 +1260,277 @@ async function updateBoardItem_withLogging(taskId, data) {
             });
         } catch (e) { console.error("Error toggling subtask:", e); }
     };
+    
+    // Інші функції дощок
+    
+    const renderSticker = (sticker) => {
+        const el = document.createElement('div');
+        el.className = `p-3 rounded shadow-md border cursor-pointer hover:shadow-lg transition-all relative sticker-${sticker.color}`;
+        el.innerHTML = `
+            <div class="flex justify-end">
+                <button class="text-gray-400 hover:text-red-600 delete-sticker-btn" data-id="${sticker.id}"><i class="fas fa-trash-alt"></i></button>
+            </div>
+            <p class="text-gray-800 break-words mt-1">${sticker.text}</p>
+        `;
+        el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteSticker_withLogging(sticker.id));
+        boardStickersArea.appendChild(el);
+    };
 
-    const addSticker_withLogging = async () => {
+    async function addBoardTask_withLogging() {
+        if (!currentBoardId || !userId) return;
+        const text = boardTaskTitle.value.trim();
+        const subtaskInputs = subtasksContainer.querySelectorAll('.subtask-input');
+        const subtasks = Array.from(subtaskInputs)
+            .map(input => input.value.trim())
+            .filter(v => v)
+            .map(v => ({ text: v, completed: false }));
+
+        if (!text) return;
+
         try {
-            const text = stickerTextInput.value.trim();
-            if(!text || !currentBoardId) return;
-            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+            const newItemRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+                boardId: currentBoardId,
+                type: 'task',
+                text,
+                subtasks,
+                isCompleted: false, // Нове поле
+                ownerId: userId,
+                createdAt: serverTimestamp()
+            });
+
+            await logBoardActivity(currentBoardId, {
+                type: 'task_added',
+                itemId: newItemRef.id,
+                taskText: text
+            });
+
+            addBoardTaskModal.classList.add('hidden');
+        } catch (e) { console.error("Error adding board task", e); }
+    }
+
+    function openEditBoardTask(item) {
+        editingBoardTask = item;
+        boardTaskTitle.value = item.text || '';
+        subtasksContainer.innerHTML = '';
+        if (item.subtasks && item.subtasks.length > 0) {
+            item.subtasks.forEach(s => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = s.text;
+                input.placeholder = `Крок`;
+                input.className = 'subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm mb-1';
+                subtasksContainer.appendChild(input);
+            });
+        } else {
+            subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
+        }
+
+        addBoardTaskModal.classList.remove('hidden');
+
+        // Змінюємо обробник для збереження
+        saveBoardTaskBtn.removeEventListener('click', addBoardTask_withLogging);
+        saveBoardTaskBtn.addEventListener('click', saveEditedBoardTask_withLogging);
+        cancelBoardTaskBtn.addEventListener('click', () => {
+            addBoardTaskModal.classList.add('hidden');
+            // Відновлюємо оригінальний обробник
+            saveBoardTaskBtn.removeEventListener('click', saveEditedBoardTask_withLogging);
+            saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
+        });
+    }
+
+    async function saveEditedBoardTask_withLogging() {
+        if (!editingBoardTask || !userId) return;
+        const newText = boardTaskTitle.value.trim();
+        const subtaskInputs = subtasksContainer.querySelectorAll('.subtask-input');
+        const newSubtasks = Array.from(subtaskInputs)
+            .map(input => input.value.trim())
+            .filter(v => v)
+            .map((v, idx) => ({ 
+                text: v, 
+                completed: editingBoardTask.subtasks?.[idx]?.completed || false 
+            })); // Зберігаємо статус completed
+
+        if (!newText) return;
+        
+        // Перевіряємо, чи всі підзавдання виконані
+        const allCompleted = newSubtasks.length > 0 && newSubtasks.every(s => s.completed);
+
+        try {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', editingBoardTask.id), {
+                text: newText,
+                subtasks: newSubtasks,
+                isCompleted: allCompleted,
+                updatedAt: serverTimestamp()
+            });
+
+            await logBoardActivity(editingBoardTask.boardId, {
+                type: 'task_edited',
+                itemId: editingBoardTask.id,
+                oldText: editingBoardTask.text,
+                newText: newText
+            });
+
+            addBoardTaskModal.classList.add('hidden');
+        } catch (e) { console.error("Error saving edited board task", e); }
+        
+        // Відновлюємо оригінальний обробник
+        saveBoardTaskBtn.removeEventListener('click', saveEditedBoardTask_withLogging);
+        saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
+        editingBoardTask = null;
+    }
+
+    async function deleteBoardItem_withLogging(itemId) {
+        if (!currentBoardId || !userId) return;
+        try {
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId));
+
+            await logBoardActivity(currentBoardId, {
+                type: 'item_deleted',
+                itemId: itemId
+            });
+
+            showNotification('Успіх', 'Елемент дошки видалено.');
+        } catch (e) { console.error("Error deleting board item", e); }
+    }
+
+    async function addSticker_withLogging() {
+        if (!currentBoardId || !userId) return;
+        const text = stickerTextInput.value.trim();
+        const color = selectedStickerColor;
+
+        if (!text) return;
+
+        try {
+            const newItemRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
                 boardId: currentBoardId,
                 type: 'sticker',
                 text,
-                color: selectedStickerColor,
+                color,
+                ownerId: userId,
                 createdAt: serverTimestamp()
             });
+
             await logBoardActivity(currentBoardId, {
                 type: 'sticker_added',
-                itemId: docRef.id,
-                stickerText: text,
-                stickerColor: selectedStickerColor
+                itemId: newItemRef.id,
+                stickerText: text
             });
+
             addStickerModal.classList.add('hidden');
-            stickerTextInput.value = '';
-        } catch(e) { console.error("Error adding sticker", e); }
-    };
+        } catch (e) { console.error("Error adding sticker", e); }
+    }
 
-    const deleteBoardItem_withLogging = async (itemId) => {
+    async function deleteSticker_withLogging(stickerId) {
+        if (!currentBoardId || !userId) return;
         try {
-            if (!confirm('Видалити цей елемент?')) return;
-            const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
-            const snapshot = await getDoc(itemRef);
-            if (!snapshot.exists()) { console.warn('Item not found for deletion', itemId); return; }
-            const item = { id: snapshot.id, ...snapshot.data() };
-            if(item.type === 'sticker') {
-                await logBoardActivity(item.boardId || currentBoardId, {
-                    type: 'sticker_removed',
-                    itemId: item.id,
-                    stickerText: item.text,
-                    stickerColor: item.color
-                });
-            } else {
-                await logBoardActivity(item.boardId || currentBoardId, {
-                    type: 'task_deleted',
-                    itemId: item.id,
-                    itemText: item.text
-                });
-            }
-            await deleteDoc(itemRef);
-        } catch (e) {
-            console.error("Error deleting board item with logging:", e);
-        }
-    };
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', stickerId));
 
-    const BOARD_STATUSES = {
-        'New': { title: 'Нове', color: 'bg-indigo-500', text: 'text-white' },
-        'Question': { title: 'Питання', color: 'bg-yellow-500', text: 'text-gray-800' },
-        'Completed': { title: 'Виконано', color: 'bg-green-500', text: 'text-white' }
-    };
+            await logBoardActivity(currentBoardId, {
+                type: 'item_deleted',
+                itemId: stickerId
+            });
+        } catch (e) { console.error("Error deleting sticker", e); }
+    }
 
-    const getBoardStatusTag = (statusKey) => {
-        const status = BOARD_STATUSES[statusKey] || BOARD_STATUSES.New;
-        return `<span class="board-status-tag text-xs font-semibold px-2 py-0.5 rounded-full ${status.color} ${status.text} absolute top-1 right-1/2 translate-x-1/2">${status.title}</span>`;
-    };
+    function subscribeToBoardItems(boardId) {
+        if (!boardId) return;
+
+        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+        
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'board_items'),
+            where('boardId', '==', boardId),
+            orderBy('createdAt', 'desc')
+        );
+
+        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+            boardTasksList.innerHTML = '';
+            boardStickersArea.innerHTML = '';
+            
+            snapshot.forEach(doc => {
+                const item = { id: doc.id, ...doc.data() };
+                if (item.type === 'task') {
+                    renderBoardTask(item);
+                } else if (item.type === 'sticker') {
+                    renderSticker(item);
+                }
+            });
+        });
+    }
+
+    function subscribeToBoardActivities(boardId) {
+        if (!boardId) return;
+
+        if(unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
+        
+        const q = query(
+            collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'),
+            where('boardId', '==', boardId),
+            orderBy('timestamp', 'desc')
+        );
+
+        unsubscribeFromBoardActivities = onSnapshot(q, (snapshot) => {
+            latestBoardActivities = snapshot.docs.slice(0, 50).map(d => d.data());
+            // Тут може бути функція для рендерингу активності, якщо вона потрібна
+        });
+    }
+
+    async function logBoardActivity(boardId, activity) {
+        if (!userId) return;
+        try {
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), {
+                boardId,
+                userId,
+                timestamp: serverTimestamp(),
+                ...activity
+            });
+        } catch (e) { console.error("Error logging board activity", e); }
+    }
+
+    function openActiveBoard(board) {
+        currentBoardId = board.id;
+        activeBoardTitle.textContent = board.title;
+        
+        boardsListView.classList.add('hidden');
+        activeBoardView.classList.remove('hidden');
+        activeBoardView.classList.add('flex');
+        
+        switchMobileTab('tasks');
+        
+        subscribeToBoardItems(board.id);
+        subscribeToBoardActivities(board.id);
+    }
 
     const subscribeToBoards = () => {
         if(!userId) return;
-        // Сортуємо: Completed дошки йдуть в кінець
+        // Сортуємо: Completed дошки йдуть в кінець (status ASC)
         const q = query(
             collection(db, 'artifacts', appId, 'public', 'data', 'boards'), 
-            where('members', 'array-contains', userId),
-            orderBy('status', 'asc') 
+            where('members', 'array-contains', userId)
         );
         unsubscribeFromBoards = onSnapshot(q, (snapshot) => {
             boardsGrid.innerHTML = '';
-            if(snapshot.empty) {
+            // Сортуємо на клієнті, щоб Completed були в кінці
+            const sortedBoards = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+                const statusA = a.status || 'New';
+                const statusB = b.status || 'New';
+                if (statusA === 'Completed' && statusB !== 'Completed') return 1;
+                if (statusA !== 'Completed' && statusB === 'Completed') return -1;
+                return 0;
+            });
+            
+            if(sortedBoards.length === 0) {
                 boardsGrid.innerHTML = `<p class="text-center col-span-3 text-gray-500">Ви ще не маєте спільних дошок.</p>`;
                 return;
             }
-            snapshot.forEach(docSnap => {
-                const board = { id: docSnap.id, ...docSnap.data() };
+            
+            sortedBoards.forEach(board => {
                 const isOwner = board.ownerId === userId;
                 const status = board.status || 'New';
                 const isCompleted = status === 'Completed';
 
                 const el = document.createElement('div');
+                // Додаємо клас для completed дощок
                 el.className = `bg-white p-6 rounded-xl shadow-lg border cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group ${isCompleted ? 'border-green-300 bg-green-50' : 'border-orange-100'}`;
 
                 const deleteBtnHtml = isOwner 
@@ -1355,13 +1538,11 @@ async function updateBoardItem_withLogging(taskId, data) {
                     : '';
 
                 const editBtnHtml = isOwner
-                    ? `<button class="edit-board-btn absolute top-2 left-2 text-gray-300 hover:text-blue-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Редагувати назву"><i class="fas fa-edit"></i></button>`
+                    ? `<button class="edit-board-btn absolute top-2 left-2 text-gray-300 hover:text-blue-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Редагувати назву та статус"><i class="fas fa-edit"></i></button>`
                     : '';
                 
-                // --- ДОДАНО ВИКЛИК СТАТУСУ ---
                 const statusTagHtml = getBoardStatusTag(status);
-                // ------------------------------
-
+                
                 el.innerHTML = `
                     <h3 class="font-bold text-xl text-gray-800 mb-2 pr-6">${board.title}</h3>
                     <p class="text-sm text-gray-500"><i class="fas fa-user-friends"></i> ${board.members ? board.members.length : 0} учасників</p>
@@ -1393,6 +1574,13 @@ async function updateBoardItem_withLogging(taskId, data) {
             });
         });
     };
+    
+    function deleteBoard(boardId) {
+        if (!userId) return;
+        deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'boards', boardId))
+            .then(() => showNotification('Успіх', 'Дошку видалено.'))
+            .catch(e => console.error("Помилка видалення дошки:", e));
+    }
 
     const createBoard = async () => {
         const title = boardNameInput.value.trim();
@@ -1409,91 +1597,81 @@ async function updateBoardItem_withLogging(taskId, data) {
             boardNameInput.value = '';
         } catch(e) { console.error("Error creating board", e); }
     };
-
-    const deleteBoard = async (boardId) => {
-        if(!boardId || !userId) return;
-        try {
-            const itemsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-            const itemsSnapshot = await getDocs(itemsQuery);
-            const batch = writeBatch(db);
-            itemsSnapshot.forEach(d => batch.delete(d.ref));
-            batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'boards', boardId));
-            await batch.commit();
-            showNotification('Успіх', 'Дошку успішно видалено.');
-        } catch(e) {
-            console.error("Error deleting board:", e);
-            showNotification('Помилка', 'Не вдалося видалити дошку.');
-        }
-    };
-
-    const openActiveBoard = (board) => {
-        currentBoardId = board.id;
-        activeBoardTitle.textContent = board.title;
-        // Можна також відобразити статус тут
-        // const status = BOARD_STATUSES[board.status || 'New'].title;
-        // activeBoardTitle.insertAdjacentHTML('afterend', ` <span class="text-sm">(${status})</span>`);
+    
+    function openEditBoardModal(board) {
+        editingBoard = board; 
         
-        getEl('board-member-count').textContent = board.members.length;
-        boardsListView.classList.add('hidden');
-        activeBoardView.classList.remove('hidden');
-        activeBoardView.classList.add('flex');
-        switchMobileTab('tasks');
-        boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
-        Object.values(friendsCache).forEach(f => {
-            if(!board.members.includes(f.userId)) {
-                boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
-            }
-        });
-        subscribeToBoardItems(board.id);
+        editBoardTitleInput.value = board.title;
+        
+        // Логіка статусу
+        editBoardStatusSelect.innerHTML = Object.keys(BOARD_STATUSES).map(key => 
+            `<option value="${key}" ${board.status === key ? 'selected' : ''}>${BOARD_STATUSES[key].title}</option>`
+        ).join('');
+        
+        editBoardModal.classList.remove("hidden"); 
+    }
 
-        (function addBoardReportButton() {
-            try {
-                const header = document.querySelector('#active-board-title')?.parentElement;
-                if (!header) return;
-                // Прибираємо старий звіт, якщо він був
-                const oldReportBtn = getEl('open-board-report-btn');
-                if (oldReportBtn) oldReportBtn.remove();
-                
-                const btn = document.createElement('button');
-                btn.id = 'open-board-report-btn';
-                btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
-                btn.textContent = 'Звіт';
-                btn.addEventListener('click', openBoardReport);
-                header.appendChild(btn);
-            } catch (e) { console.error(e); }
-        })();
+    function cancelEditBoard() {
+        editBoardModal.classList.add("hidden"); 
+        editingBoard = null;
+    }
 
-        subscribeToBoardActivities(board.id);
-    };
+    async function saveEditedBoard() {
+        if (!editingBoard) return;
 
-        (function addBoardReportButton() {
-            try {
-                const header = document.querySelector('#active-board-title')?.parentElement;
-                if (!header) return;
-                if (getEl('open-board-report-btn')) return;
-                const btn = document.createElement('button');
-                btn.id = 'open-board-report-btn';
-                btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
-                btn.textContent = 'Звіт';
-                btn.addEventListener('click', openBoardReport);
-                header.appendChild(btn);
-            } catch (e) { console.error(e); }
-        })();
+        const newTitle = editBoardTitleInput.value.trim();
+        const newStatus = editBoardStatusSelect.value;
+        if (!newTitle) {
+            cancelEditBoard(); 
+            return;
+        }
 
-        subscribeToBoardActivities(board.id);
-    };
-
-    const addBoardMember = async () => {
-        const friendId = boardFriendSelect.value;
-        if(!friendId || !currentBoardId) return;
         try {
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'boards', currentBoardId), { members: arrayUnion(friendId) });
-            addBoardMemberModal.classList.add('hidden');
-            const currentCount = parseInt(getEl('board-member-count').textContent);
-            getEl('board-member-count').textContent = currentCount + 1;
-        } catch(e) { console.error("Error adding member", e); }
-    };
 
+            await updateDoc(
+                doc(db, 'artifacts', appId, 'public', 'data', 'boards', editingBoard.id),
+                { title: newTitle, status: newStatus } // Оновлено
+            );
+
+            if (editingBoard.id === currentBoardId) {
+                activeBoardTitle.textContent = newTitle;
+            }
+
+            cancelEditBoard();
+            showNotification('Успіх', 'Дошку оновлено.');
+
+        } catch (e) {
+            console.error("Помилка оновлення назви дошки:", e);
+        }
+    }
+    
+    async function addBoardMember() {
+        if (!currentBoardId || !userId) return;
+        const friendId = boardFriendSelect.value;
+        if (!friendId) return;
+
+        try {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'boards', currentBoardId), {
+                members: arrayUnion(friendId)
+            });
+
+            await logBoardActivity(currentBoardId, {
+                type: 'member_added',
+                newMemberId: friendId
+            });
+
+            addBoardMemberModal.classList.add('hidden');
+            boardFriendSelect.value = '';
+            showNotification('Успіх', 'Учасника додано до дошки.');
+
+        } catch (e) {
+            console.error("Error adding board member", e);
+        }
+    }
+
+
+    // --- ОБРОБНИКИ ПОДІЙ ---
+    
     googleSignInButton.addEventListener('click', signInWithGoogle);
     signOutButton.addEventListener('click', signOutUser);
     addTaskButton.addEventListener('click', addTask);
@@ -1503,7 +1681,17 @@ async function updateBoardItem_withLogging(taskId, data) {
     saveEditBtn.addEventListener('click', saveEditedTask);
     cancelEditBtn.addEventListener('click', hideViewEditModal);
     saveSettingsBtn.addEventListener('click', saveSettings);
-    const toggleSection = (listEl, btnEl) => { listEl.classList.toggle('hidden'); btnEl.textContent = listEl.classList.contains('hidden') ? 'Розгорнути' : 'Згорнути'; saveExpansionState(); };
+    
+    const toggleSection = (listEl, btnEl, initialLoad = false) => { 
+        if (!initialLoad) {
+            listEl.classList.toggle('hidden'); 
+            btnEl.textContent = listEl.classList.contains('hidden') ? 'Розгорнути' : 'Згорнути'; 
+            saveExpansionState(); 
+        } else {
+             btnEl.textContent = listEl.classList.contains('hidden') ? 'Розгорнути' : 'Згорнути'; 
+        }
+    };
+    
     deferredToggleBtn.addEventListener('click', () => toggleSection(deferredTasksList, deferredToggleBtn));
     completedToggleBtn.addEventListener('click', () => toggleSection(completedTasksList, completedToggleBtn));
     settingsToggleBtn.addEventListener('click', () => toggleSection(settingsContent, settingsToggleBtn));
@@ -1598,12 +1786,27 @@ async function updateBoardItem_withLogging(taskId, data) {
     sendChatMessageBtn.addEventListener('click', handleSendMessage);
     chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendMessage(); });
 
+    // --- ОБРОБНИКИ ДОШОК ---
     boardsBtn.addEventListener('click', () => { mainContent.classList.add('hidden'); boardsSection.classList.remove('hidden'); subscribeToBoards(); });
-    backToTasksFromBoardsBtn.addEventListener('click', () => { boardsSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if(unsubscribeFromBoards) unsubscribeFromBoards(); });
+    backToTasksFromBoardsBtn.addEventListener('click', () => { 
+        activeBoardView.classList.add('hidden'); 
+        activeBoardView.classList.remove('flex'); 
+        boardsListView.classList.add('hidden'); 
+        boardsSection.classList.add('hidden'); 
+        mainContent.classList.remove('hidden'); 
+        if(unsubscribeFromBoards) unsubscribeFromBoards(); 
+    });
     createBoardBtn.addEventListener('click', () => { boardNameInput.value = ''; createBoardModal.classList.remove('hidden'); });
     cancelBoardBtn.addEventListener('click', () => createBoardModal.classList.add('hidden'));
     saveBoardBtn.addEventListener('click', createBoard);
-    backToBoardsListBtn.addEventListener('click', () => { activeBoardView.classList.add('hidden'); activeBoardView.classList.remove('flex'); boardsListView.classList.remove('hidden'); if(unsubscribeFromBoardItems) unsubscribeFromBoardItems(); });
+    backToBoardsListBtn.addEventListener('click', () => { 
+        activeBoardView.classList.add('hidden'); 
+        activeBoardView.classList.remove('flex'); 
+        boardsListView.classList.remove('hidden'); 
+        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems(); 
+        if(unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
+        currentBoardId = null;
+    });
 
     addBoardMemberBtn.addEventListener('click', () => addBoardMemberModal.classList.remove('hidden'));
     cancelBoardMemberBtn.addEventListener('click', () => addBoardMemberModal.classList.add('hidden'));
@@ -1613,7 +1816,17 @@ async function updateBoardItem_withLogging(taskId, data) {
         boardTaskTitle.value = '';
         subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
         addBoardTaskModal.classList.remove('hidden');
+        
+        // Відновлюємо оригінальний обробник
+        saveBoardTaskBtn.removeEventListener('click', saveEditedBoardTask_withLogging);
+        saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
+        cancelBoardTaskBtn.addEventListener('click', () => addBoardTaskModal.classList.add('hidden'));
     });
+    
+    // Нові обробники для редагування дошки
+    saveEditBoardBtn.addEventListener('click', saveEditedBoard);
+    cancelEditBoardBtn.addEventListener('click', cancelEditBoard);
+    
     cancelBoardTaskBtn.addEventListener('click', () => addBoardTaskModal.classList.add('hidden'));
     addSubtaskFieldBtn.addEventListener('click', () => {
         const input = document.createElement('input');
@@ -1640,6 +1853,7 @@ async function updateBoardItem_withLogging(taskId, data) {
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
 
+    // --- ФІНАЛЬНА АУТЕНТИФІКАЦІЯ ---
     onAuthStateChanged(auth, async (user) => {
         loadingSpinner.classList.add('hidden');
         if (user) {
@@ -1653,7 +1867,7 @@ async function updateBoardItem_withLogging(taskId, data) {
             subscribeToIncomingTasks();
             subscribeToUnreadCounts();
             checkNotificationStatus();
-            subscribeToBoards(); // ДОДАНО
+            subscribeToBoards(); // Запускаємо підписку на дошки
         } else {
             userId = null;
             userIdSpan.textContent = 'Немає';
@@ -1668,4 +1882,4 @@ async function updateBoardItem_withLogging(taskId, data) {
 
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     if (initialAuthToken) { signInWithCustomToken(auth, initialAuthToken).catch(() => signInAnonymously(auth)); } else { signInAnonymously(auth); }
-  ;
+};

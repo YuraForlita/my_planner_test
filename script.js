@@ -1483,9 +1483,6 @@ async function updateBoardItem_withLogging(taskId, data) {
         subscribeToBoardActivities(board.id);
     };
 
-    saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
-    saveStickerBtn.addEventListener('click', addSticker_withLogging);
-
     const addBoardMember = async () => {
         const friendId = boardFriendSelect.value;
         if(!friendId || !currentBoardId) return;

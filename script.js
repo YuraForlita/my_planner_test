@@ -902,31 +902,6 @@ async function updateBoardItem_withLogging(taskId, data) {
         loadBoardTasks();
     }
 
-    // --- ОНОВЛЕНА ФУНКЦІЯ toggleSubtask_withLogging ---
-    const toggleSubtask_withLogging = async (item, idx, isChecked) => {
-        try {
-            if (!item || !Array.isArray(item.subtasks)) return;
-            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
-            const oldText = newSubtasks[idx]?.text || '';
-            newSubtasks[idx].completed = isChecked;
-
-            // Перевіряємо, чи всі підзавдання виконані
-            const allCompleted = newSubtasks.length > 0 && newSubtasks.every(s => s.completed);
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-                subtasks: newSubtasks,
-                isCompleted: allCompleted, // Оновлюємо статус завершення
-            });
-
-            await logBoardActivity(item.boardId || currentBoardId, {
-                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
-                itemId: item.id,
-                subtaskIdx: idx,
-                subtaskText: oldText
-            });
-        } catch (e) { console.error("Error toggling subtask:", e); }
-    };
-
     const renderBoardTask = (item) => {
         const total = item.subtasks ? item.subtasks.length : 0;
         const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
@@ -1696,4 +1671,4 @@ async function updateBoardItem_withLogging(taskId, data) {
 
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     if (initialAuthToken) { signInWithCustomToken(auth, initialAuthToken).catch(() => signInAnonymously(auth)); } else { signInAnonymously(auth); }
-};
+  ;

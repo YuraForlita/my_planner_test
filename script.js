@@ -954,6 +954,8 @@ const formatActivityText = (act) => {
             return `${actor} видалив елемент: «${act.itemText || act.text || 'Без назви'}»`;
         default:
             return `${actor} зробив дію: ${act.type}`;
+        case 'subtask_removed':
+            return `${actor} видалив пункт: «${act.subtaskText || '…'}» у завданні «${act.taskTitle || 'Без назви'}»`;    
     }
 };
 
@@ -1105,11 +1107,22 @@ const formatActivityText = (act) => {
             createdAt: serverTimestamp()
         });
 
+        // Логуємо саме створення завдання
         await logBoardActivity(currentBoardId, {
             type: 'task_added',
             itemId: docRef.id,
             itemText: title
         });
+
+        // Лог кожної підзадачі як subtask_checked=false (створені)
+        for (let idx = 0; idx < subtasks.length; idx++) {
+            await logBoardActivity(currentBoardId, {
+                type: 'subtask_unchecked',  // нові кроки створюються як неперевірені
+                itemId: docRef.id,
+                taskTitle: title,
+                subtaskText: subtasks[idx].text
+            });
+        }
 
         addBoardTaskModal.classList.add('hidden');
         boardTaskTitle.value = '';
@@ -1180,6 +1193,19 @@ const toggleSubtask_withLogging = async (item, idx, isChecked) => {
         }
         const item = { id: snapshot.id, ...snapshot.data() };
 
+        // Лог кожної підзадачі як видалення (subtask_removed)
+        if(Array.isArray(item.subtasks)) {
+            for (let subtask of item.subtasks) {
+                await logBoardActivity(item.boardId || currentBoardId, {
+                    type: 'subtask_removed',
+                    itemId: item.id,
+                    taskTitle: item.text,
+                    subtaskText: subtask.text
+                });
+            }
+        }
+
+        // Лог самого завдання / стікера
         if(item.type === 'sticker') {
             await logBoardActivity(item.boardId || currentBoardId, {
                 type: 'sticker_removed',

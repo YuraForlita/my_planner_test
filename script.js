@@ -922,17 +922,30 @@ window.onload = function () {
     let latestBoardActivities = [];
 
     const formatActivityText = (act) => {
-        const actor = getDisplayNameFor(act.performedBy);
-        switch(act.type) {
-            case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-            case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
-            case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
-            case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-            case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-            case 'task_deleted': return `${actor} видалив елемент`;
-            default: return `${actor} зробив дію: ${act.type}`;
-        }
-    };
+    const actor = getDisplayNameFor(act.performedBy);
+    switch(act.type) {
+        case 'task_added':
+            return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
+        case 'subtask_checked':
+            return act.taskTitle
+                ? `${actor} викреслив пункт у завданні «${act.taskTitle}»: «${act.subtaskText || '…'}»`
+                : `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
+        case 'subtask_unchecked':
+            return act.taskTitle
+                ? `${actor} відновив пункт у завданні «${act.taskTitle}»: «${act.subtaskText || '…'}»`
+                : `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
+        case 'sticker_added':
+            return `${actor} додав стікер: «${act.stickerText || '…'}»`;
+        case 'sticker_removed':
+            return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
+        case 'task_deleted':
+            return act.taskTitle
+                ? `${actor} видалив завдання: «${act.taskTitle}»`
+                : `${actor} видалив елемент`;
+        default:
+            return `${actor} зробив дію: ${act.type}`;
+    }
+};
 
     const subscribeToBoardActivities = (boardId) => {
         if (unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
@@ -1074,6 +1087,7 @@ window.onload = function () {
 
             await logBoardActivity(currentBoardId, {
                 type: 'task_added',
+                taskTitle: item.title || '',
                 itemId: docRef.id,
                 itemText: title
             });
@@ -1095,6 +1109,7 @@ window.onload = function () {
             await logBoardActivity(item.boardId || currentBoardId, {
                 type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
                 itemId: item.id,
+                taskTitle: item.title || '',
                 subtaskIdx: idx,
                 subtaskText: oldText
             });
@@ -1115,6 +1130,7 @@ window.onload = function () {
             await logBoardActivity(currentBoardId, {
                 type: 'sticker_added',
                 itemId: docRef.id,
+                taskTitle: item.title || '',
                 stickerText: text,
                 stickerColor: selectedStickerColor
             });
@@ -1134,6 +1150,7 @@ window.onload = function () {
                 await logBoardActivity(item.boardId || currentBoardId, {
                     type: 'sticker_removed',
                     itemId: item.id,
+                    taskTitle: item.title || '',
                     stickerText: item.text,
                     stickerColor: item.color
                 });
@@ -1141,6 +1158,7 @@ window.onload = function () {
                 await logBoardActivity(item.boardId || currentBoardId, {
                     type: 'task_deleted',
                     itemId: item.id,
+                    taskTitle: item.title || '',
                     itemText: item.text
                 });
             }

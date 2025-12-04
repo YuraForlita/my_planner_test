@@ -824,89 +824,105 @@ window.onload = function () {
     });
 
     const renderBoardTask = (item) => {
-        const total = item.subtasks ? item.subtasks.length : 0;
-        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const total = item.subtasks ? item.subtasks.length : 0;
+    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
-        const el = document.createElement('div');
-        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
-        el.style.minHeight = "80px";
-        el.style.wordBreak = "break-word";
-        el.style.overflowWrap = "break-word"; 
-        el.style.whiteSpace = "normal";
+    const el = document.createElement('div');
+    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
+    el.style.minHeight = "80px";
+    el.style.wordBreak = "break-word";
+    el.style.overflowWrap = "break-word";
+    el.style.whiteSpace = "normal";
 
-        let subtasksHtml = '';
-        if(item.subtasks) {
-            subtasksHtml = item.subtasks.map((s, idx) => `
-                <div class="flex items-start gap-2 mt-1">
-                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
-                </div>
-            `).join('');
-        }
+    let subtasksHtml = '';
+    if (item.subtasks) {
+        subtasksHtml = item.subtasks.map((s, idx) =>
+            `<div class="flex items-start gap-2 mt-1">
+                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
+            </div>`
+        ).join('');
+    }
 
-        el.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
-                <div class="flex gap-2 flex-shrink-0">
-                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
-                </div>
+    el.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
+            <div class="flex gap-2 flex-shrink-0">
+                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-            </div>
-            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-            <div class="pl-1 space-y-1">
-                ${subtasksHtml}
-            </div>
-        `;
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+        <div class="pl-1 space-y-1">
+            ${subtasksHtml}
+        </div>
+    `;
 
-        const deleteBtn = el.querySelector('.delete-item-btn');
-        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        const editBtn = el.querySelector('.edit-item-btn');
-        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    const deleteBtn = el.querySelector('.delete-item-btn');
+    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+
+    const editBtn = el.querySelector('.edit-item-btn');
+    if (editBtn) editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditBoardTask(item);
+    });
+
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    });
+
+    boardTasksList.appendChild(el);
+};
+
+
+const renderBoardSticker = (item) => {
+    const el = document.createElement('div');
+    el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
+    el.innerHTML = `
+        <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
+            ${item.text}
+        </div>
+    `;
+    el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+    boardStickersArea.appendChild(el);
+};
+
+
+const subscribeToBoardItems = (boardId) => {
+    if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
+    unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+        boardTasksList.innerHTML = '';
+        boardStickersArea.innerHTML = '';
+        snapshot.forEach(d => {
+            const item = { id: d.id, ...d.data() };
+            if (item.type === 'task') renderBoardTask(item);
+            else if (item.type === 'sticker') renderBoardSticker(item);
         });
-
-        boardTasksList.appendChild(el);
-    };
-
-    const renderBoardSticker = (item) => {
-        const el = document.createElement('div');
-        el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
-        el.innerHTML = `
-            <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
-            <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
-                ${item.text}
-            </div>
-        `;
-        el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        boardStickersArea.appendChild(el);
-    };
-
-    const subscribeToBoardItems = (boardId) => {
-        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-            boardTasksList.innerHTML = '';
-            boardStickersArea.innerHTML = '';
-            snapshot.forEach(d => {
-                const item = { id: d.id, ...d.data() };
-                if(item.type === 'task') renderBoardTask(item);
-                else if(item.type === 'sticker') renderBoardSticker(item);
-            });
-        }, error => console.error("Board items subscription error:", error));
-    };
+    }, error => console.error("Board items subscription error:", error));
+};
 
     const logBoardActivity = async (boardId, payload) => {
-        try {
-            if (!boardId || !userId) return;
-            const data = { boardId, ...payload, performedBy: userId, timestamp: serverTimestamp() };
-            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), data);
-        } catch (e) { console.error("Error logging board activity:", e); }
-    };
+    try {
+        if (!boardId || !userId) return;
+        const data = {
+            boardId,
+            ...payload,
+            performedBy: userId,
+            timestamp: serverTimestamp()
+        };
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), data);
+    } catch (e) {
+        console.error("Error logging board activity:", e);
+    }
+};
 
     const boardReportModal = getEl('board-report-modal');
     const boardReportBody = getEl('board-report-body');
@@ -921,29 +937,16 @@ window.onload = function () {
     let unsubscribeFromBoardActivities = null;
     let latestBoardActivities = [];
 
-    const formatActivityText = (act) => {
+const formatActivityText = (act) => {
     const actor = getDisplayNameFor(act.performedBy);
     switch(act.type) {
-        case 'task_added':
-            return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-        case 'subtask_checked':
-            return act.taskTitle
-                ? `${actor} викреслив пункт у завданні «${act.taskTitle}»: «${act.subtaskText || '…'}»`
-                : `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
-        case 'subtask_unchecked':
-            return act.taskTitle
-                ? `${actor} відновив пункт у завданні «${act.taskTitle}»: «${act.subtaskText || '…'}»`
-                : `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
-        case 'sticker_added':
-            return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-        case 'sticker_removed':
-            return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-        case 'task_deleted':
-            return act.taskTitle
-                ? `${actor} видалив завдання: «${act.taskTitle}»`
-                : `${actor} видалив елемент`;
-        default:
-            return `${actor} зробив дію: ${act.type}`;
+        case 'task_added': return `${actor} створив завдання: «${act.itemText || 'Без назви'}»`;
+        case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}» в завданні «${act.taskTitle || '…'}»`;
+        case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}» в завданні «${act.taskTitle || '…'}»`;
+        case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
+        case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
+        case 'task_deleted': return `${actor} видалив елемент: «${act.itemText || '…'}»`;
+        default: return `${actor} зробив дію: ${act.type}`;
     }
 };
 
@@ -1067,106 +1070,109 @@ window.onload = function () {
     });
 
     const addBoardTask_withLogging = async () => {
-        const title = boardTaskTitle.value.trim();
-        if(!title || !currentBoardId) return;
+    const title = boardTaskTitle.value.trim();
+    if (!title || !currentBoardId) return;
+    const subtaskInputs = document.querySelectorAll('.subtask-input');
+    const subtasks = Array.from(subtaskInputs).map(inp => ({ text: inp.value.trim(), completed: false })).filter(s => s.text !== '');
+    try {
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+            boardId: currentBoardId,
+            type: 'task',
+            text: title,
+            subtasks,
+            createdAt: serverTimestamp()
+        });
 
-        const subtaskInputs = document.querySelectorAll('.subtask-input');
-        const subtasks = Array.from(subtaskInputs).map(inp => ({
-            text: inp.value.trim(),
-            completed: false
-        })).filter(s => s.text !== '');
+        await logBoardActivity(currentBoardId, {
+            type: 'task_added',
+            itemId: docRef.id,
+            itemText: title
+        });
 
-        try {
-            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-                boardId: currentBoardId,
-                type: 'task',
-                text: title,
-                subtasks,
-                createdAt: serverTimestamp()
-            });
+        addBoardTaskModal.classList.add('hidden');
+        boardTaskTitle.value = '';
+        subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
+    } catch (e) {
+        console.error("Error adding board task", e);
+    }
+};
 
-            await logBoardActivity(currentBoardId, {
-                type: 'task_added',
-                taskTitle: item.title || '',
-                itemId: docRef.id,
-                itemText: title
-            });
-            addBoardTaskModal.classList.add('hidden');
-            boardTaskTitle.value = '';
-            subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
-        } catch(e) { console.error("Error adding board task", e); }
-    };
+const toggleSubtask_withLogging = async (item, idx, isChecked) => {
+    try {
+        if (!item || !Array.isArray(item.subtasks)) return;
+        const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
+        const oldText = newSubtasks[idx]?.text || '';
+        newSubtasks[idx].completed = isChecked;
 
-    const toggleSubtask_withLogging = async (item, idx, isChecked) => {
-        try {
-            if (!item || !Array.isArray(item.subtasks)) return;
-            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
-            const oldText = newSubtasks[idx]?.text || '';
-            newSubtasks[idx].completed = isChecked;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-                subtasks: newSubtasks
-            });
-            await logBoardActivity(item.boardId || currentBoardId, {
-                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
-                itemId: item.id,
-                taskTitle: item.title || '',
-                subtaskIdx: idx,
-                subtaskText: oldText
-            });
-        } catch (e) { console.error("Error toggling subtask:", e); }
-    };
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            subtasks: newSubtasks
+        });
+
+        // Логування з taskTitle
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+            itemId: item.id,
+            taskTitle: item.text, // додаємо назву завдання
+            subtaskText: oldText
+        });
+    } catch (e) {
+        console.error("Error toggling subtask:", e);
+    }
+};
 
     const addSticker_withLogging = async () => {
-        try {
-            const text = stickerTextInput.value.trim();
-            if(!text || !currentBoardId) return;
-            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-                boardId: currentBoardId,
-                type: 'sticker',
-                text,
-                color: selectedStickerColor,
-                createdAt: serverTimestamp()
-            });
-            await logBoardActivity(currentBoardId, {
-                type: 'sticker_added',
-                itemId: docRef.id,
-                taskTitle: item.title || '',
-                stickerText: text,
-                stickerColor: selectedStickerColor
-            });
-            addStickerModal.classList.add('hidden');
-            stickerTextInput.value = '';
-        } catch(e) { console.error("Error adding sticker", e); }
-    };
+    try {
+        const text = stickerTextInput.value.trim();
+        if (!text || !currentBoardId) return;
+        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+            boardId: currentBoardId,
+            type: 'sticker',
+            text,
+            color: selectedStickerColor,
+            createdAt: serverTimestamp()
+        });
 
+        await logBoardActivity(currentBoardId, {
+            type: 'sticker_added',
+            itemId: docRef.id,
+            stickerText: text,
+            stickerColor: selectedStickerColor
+        });
+
+        addStickerModal.classList.add('hidden');
+        stickerTextInput.value = '';
+    } catch (e) {
+        console.error("Error adding sticker", e);
+    }
+};
     const deleteBoardItem_withLogging = async (itemId) => {
-        try {
-            if (!confirm('Видалити цей елемент?')) return;
-            const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
-            const snapshot = await getDoc(itemRef);
-            if (!snapshot.exists()) { console.warn('Item not found for deletion', itemId); return; }
-            const item = { id: snapshot.id, ...snapshot.data() };
-            if(item.type === 'sticker') {
-                await logBoardActivity(item.boardId || currentBoardId, {
-                    type: 'sticker_removed',
-                    itemId: item.id,
-                    taskTitle: item.title || '',
-                    stickerText: item.text,
-                    stickerColor: item.color
-                });
-            } else {
-                await logBoardActivity(item.boardId || currentBoardId, {
-                    type: 'task_deleted',
-                    itemId: item.id,
-                    taskTitle: item.title || '',
-                    itemText: item.text
-                });
-            }
-            await deleteDoc(itemRef);
-        } catch (e) {
-            console.error("Error deleting board item with logging:", e);
+    try {
+        if (!confirm('Видалити цей елемент?')) return;
+        const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
+        const snapshot = await getDoc(itemRef);
+        if (!snapshot.exists()) return;
+
+        const item = { id: snapshot.id, ...snapshot.data() };
+        if (item.type === 'sticker') {
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'sticker_removed',
+                itemId: item.id,
+                stickerText: item.text,
+                stickerColor: item.color
+            });
+        } else {
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'task_deleted',
+                itemId: item.id,
+                itemText: item.text
+            });
         }
-    };
+
+        await deleteDoc(itemRef);
+    } catch (e) {
+        console.error("Error deleting board item with logging:", e);
+    }
+};
 
     const subscribeToBoards = () => {
         if(!userId) return;

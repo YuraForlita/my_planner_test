@@ -824,105 +824,89 @@ window.onload = function () {
     });
 
     const renderBoardTask = (item) => {
-    const total = item.subtasks ? item.subtasks.length : 0;
-    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        const total = item.subtasks ? item.subtasks.length : 0;
+        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
-    const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
-    el.style.minHeight = "80px";
-    el.style.wordBreak = "break-word";
-    el.style.overflowWrap = "break-word";
-    el.style.whiteSpace = "normal";
+        const el = document.createElement('div');
+        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
+        el.style.minHeight = "80px";
+        el.style.wordBreak = "break-word";
+        el.style.overflowWrap = "break-word"; 
+        el.style.whiteSpace = "normal";
 
-    let subtasksHtml = '';
-    if (item.subtasks) {
-        subtasksHtml = item.subtasks.map((s, idx) =>
-            `<div class="flex items-start gap-2 mt-1">
-                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
-            </div>`
-        ).join('');
-    }
+        let subtasksHtml = '';
+        if(item.subtasks) {
+            subtasksHtml = item.subtasks.map((s, idx) => `
+                <div class="flex items-start gap-2 mt-1">
+                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
+                </div>
+            `).join('');
+        }
 
-    el.innerHTML = `
-        <div class="flex justify-between items-start mb-2">
-            <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
-            <div class="flex gap-2 flex-shrink-0">
-                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+        el.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
+                <div class="flex gap-2 flex-shrink-0">
+                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+                </div>
             </div>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-        </div>
-        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-        <div class="pl-1 space-y-1">
-            ${subtasksHtml}
-        </div>
-    `;
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+            </div>
+            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+            <div class="pl-1 space-y-1">
+                ${subtasksHtml}
+            </div>
+        `;
 
-    const deleteBtn = el.querySelector('.delete-item-btn');
-    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-
-    const editBtn = el.querySelector('.edit-item-btn');
-    if (editBtn) editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditBoardTask(item);
-    });
-
-    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
-    });
-
-    boardTasksList.appendChild(el);
-};
-
-
-const renderBoardSticker = (item) => {
-    const el = document.createElement('div');
-    el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
-    el.innerHTML = `
-        <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
-            ${item.text}
-        </div>
-    `;
-    el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-    boardStickersArea.appendChild(el);
-};
-
-
-const subscribeToBoardItems = (boardId) => {
-    if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-    unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-        boardTasksList.innerHTML = '';
-        boardStickersArea.innerHTML = '';
-        snapshot.forEach(d => {
-            const item = { id: d.id, ...d.data() };
-            if (item.type === 'task') renderBoardTask(item);
-            else if (item.type === 'sticker') renderBoardSticker(item);
+        const deleteBtn = el.querySelector('.delete-item-btn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const editBtn = el.querySelector('.edit-item-btn');
+        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
         });
-    }, error => console.error("Board items subscription error:", error));
-};
+
+        boardTasksList.appendChild(el);
+    };
+
+    const renderBoardSticker = (item) => {
+        const el = document.createElement('div');
+        el.className = `sticker ${item.color} p-4 w-full aspect-square flex flex-col relative transform rotate-1`;
+        el.innerHTML = `
+            <button class="absolute top-1 right-1 text-gray-600 hover:text-red-600 delete-sticker-btn"><i class="fas fa-times"></i></button>
+            <div class="flex-grow flex items-center justify-center text-center font-medium text-gray-800 break-words overflow-hidden p-2">
+                ${item.text}
+            </div>
+        `;
+        el.querySelector('.delete-sticker-btn').addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        boardStickersArea.appendChild(el);
+    };
+
+    const subscribeToBoardItems = (boardId) => {
+        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
+        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+            boardTasksList.innerHTML = '';
+            boardStickersArea.innerHTML = '';
+            snapshot.forEach(d => {
+                const item = { id: d.id, ...d.data() };
+                if(item.type === 'task') renderBoardTask(item);
+                else if(item.type === 'sticker') renderBoardSticker(item);
+            });
+        }, error => console.error("Board items subscription error:", error));
+    };
 
     const logBoardActivity = async (boardId, payload) => {
-    try {
-        if (!boardId || !userId) return;
-        const data = {
-            boardId,
-            ...payload,
-            performedBy: userId,
-            timestamp: serverTimestamp()
-        };
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), data);
-    } catch (e) {
-        console.error("Error logging board activity:", e);
-    }
-};
+        try {
+            if (!boardId || !userId) return;
+            const data = { boardId, ...payload, performedBy: userId, timestamp: serverTimestamp() };
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), data);
+        } catch (e) { console.error("Error logging board activity:", e); }
+    };
 
     const boardReportModal = getEl('board-report-modal');
     const boardReportBody = getEl('board-report-body');
@@ -937,27 +921,18 @@ const subscribeToBoardItems = (boardId) => {
     let unsubscribeFromBoardActivities = null;
     let latestBoardActivities = [];
 
-const formatActivityText = (act) => {
-    const actor = getDisplayNameFor(act.performedBy);
-    switch(act.type) {
-        case 'task_added':
-            return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-        case 'subtask_checked':
-            return `${actor} викреслив пункт: «${act.subtaskText || '…'}» у завданні «${act.taskTitle || 'Без назви'}»`;
-        case 'subtask_unchecked':
-            return `${actor} відновив пункт: «${act.subtaskText || '…'}» у завданні «${act.taskTitle || 'Без назви'}»`;
-        case 'sticker_added':
-            return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-        case 'sticker_removed':
-            return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-        case 'task_deleted':
-            return `${actor} видалив елемент: «${act.itemText || act.text || 'Без назви'}»`;
-        default:
-            return `${actor} зробив дію: ${act.type}`;
-        case 'subtask_removed':
-            return `${actor} видалив пункт: «${act.subtaskText || '…'}» у завданні «${act.taskTitle || 'Без назви'}»`;    
-    }
-};
+    const formatActivityText = (act) => {
+        const actor = getDisplayNameFor(act.performedBy);
+        switch(act.type) {
+            case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
+            case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
+            case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
+            case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
+            case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
+            case 'task_deleted': return `${actor} видалив елемент`;
+            default: return `${actor} зробив дію: ${act.type}`;
+        }
+    };
 
     const subscribeToBoardActivities = (boardId) => {
         if (unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
@@ -983,81 +958,70 @@ const formatActivityText = (act) => {
     };
 
     const renderBoardReport = (activities) => {
-    const filterUser = boardReportFilterUser.value;
-    const filterType = boardReportFilterType.value;
-    const search = boardReportSearch.value.trim().toLowerCase();
-
-    let filtered = activities.slice();
-    if (filterUser) filtered = filtered.filter(a => a.performedBy === filterUser);
-    if (filterType) filtered = filtered.filter(a => a.type === filterType);
-    if (search) filtered = filtered.filter(a => {
-        const text = (a.text || a.itemText || a.subtaskText || a.stickerText || '').toString().toLowerCase();
-        return text.includes(search) || getDisplayNameFor(a.performedBy).toLowerCase().includes(search) || a.type.includes(search);
-    });
-
-    boardReportBody.innerHTML = '';
-    const emptyEl = getEl('board-report-empty');
-    if (!filtered || filtered.length === 0) {
-        boardReportBody.appendChild(emptyEl);
-        emptyEl.style.display = 'block';
-        return;
-    }
-    emptyEl.style.display = 'none';
-
-    const grouped = {};
-    filtered.forEach(a => {
-        const d = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp ? new Date(a.timestamp) : new Date());
-        const key = d.toISOString().slice(0,10);
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(a);
-    });
-
-    Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(dayKey => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'py-2 text-sm font-semibold text-gray-600';
-        const day = new Date(dayKey);
-        dayHeader.textContent = day.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
-        boardReportBody.appendChild(dayHeader);
-
-        grouped[dayKey].sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)).forEach(act => {
-            const item = document.createElement('div');
-            item.className = 'timeline-item bg-white mb-3';
-
-            const avatar = document.createElement('div');
-            avatar.className = 'timeline-avatar';
-            avatar.style.background = colorForUid(act.performedBy || 'x');
-            avatar.textContent = getInitials(act.performedBy || '');
-
-            const card = document.createElement('div');
-            card.className = 'timeline-card';
-
-            const title = document.createElement('div');
-            title.className = 'text-sm';
-            title.innerHTML = `<div class="timeline-badge">${formatActivityText(act)}</div>`;
-
-            const meta = document.createElement('div');
-            meta.className = 'timeline-meta';
-            meta.textContent = `${fmtTime(act.timestamp)} • ${act.type}`;
-
-            const detail = document.createElement('div');
-            detail.className = 'text-sm text-gray-700 mt-2';
-            const pieces = [];
-            if (act.itemText) pieces.push(`Завдання: ${act.itemText}`);
-            if (act.subtaskText) pieces.push(`Пункт: ${act.subtaskText}`);
-            if (act.taskTitle) pieces.push(`Завдання: ${act.taskTitle}`);
-            if (act.stickerText) pieces.push(`Стікeр: ${act.stickerText}`);
-            detail.textContent = pieces.join(' • ');
-
-            card.appendChild(title);
-            if (detail.textContent) card.appendChild(detail);
-            card.appendChild(meta);
-
-            item.appendChild(avatar);
-            item.appendChild(card);
-            boardReportBody.appendChild(item);
+        const filterUser = boardReportFilterUser.value;
+        const filterType = boardReportFilterType.value;
+        const search = boardReportSearch.value.trim().toLowerCase();
+        let filtered = activities.slice();
+        if (filterUser) filtered = filtered.filter(a => a.performedBy === filterUser);
+        if (filterType) filtered = filtered.filter(a => a.type === filterType);
+        if (search) filtered = filtered.filter(a => {
+            const text = (a.text || a.itemText || a.subtaskText || a.stickerText || '').toString().toLowerCase();
+            return text.includes(search) || getDisplayNameFor(a.performedBy).toLowerCase().includes(search) || a.type.includes(search);
         });
-    });
-};
+
+        boardReportBody.innerHTML = '';
+        const emptyEl = getEl('board-report-empty');
+        if (!filtered || filtered.length === 0) { boardReportBody.appendChild(emptyEl); emptyEl.style.display = 'block'; return; }
+        emptyEl.style.display = 'none';
+
+        const grouped = {};
+        filtered.forEach(a => {
+            const d = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp ? new Date(a.timestamp) : new Date());
+            const key = d.toISOString().slice(0,10);
+            if (!grouped[key]) grouped[key] = [];
+            grouped[key].push(a);
+        });
+
+        Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(dayKey => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'py-2 text-sm font-semibold text-gray-600';
+            const day = new Date(dayKey);
+            dayHeader.textContent = day.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            boardReportBody.appendChild(dayHeader);
+
+            grouped[dayKey].sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)).forEach(act => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item bg-white mb-3';
+                const avatar = document.createElement('div');
+                avatar.className = 'timeline-avatar';
+                avatar.style.background = colorForUid(act.performedBy || 'x');
+                avatar.textContent = getInitials(act.performedBy || '');
+                const card = document.createElement('div');
+                card.className = 'timeline-card';
+                const title = document.createElement('div');
+                title.className = 'text-sm';
+                title.innerHTML = `<div class="timeline-badge">${formatActivityText(act)}</div>`;
+                const meta = document.createElement('div');
+                meta.className = 'timeline-meta';
+                meta.textContent = `${fmtTime(act.timestamp)} • ${act.type}`;
+                const detail = document.createElement('div');
+                detail.className = 'text-sm text-gray-700 mt-2';
+                const pieces = [];
+                if (act.itemText) pieces.push(`Завдання: ${act.itemText}`);
+                if (act.subtaskText) pieces.push(`Пункт: ${act.subtaskText}`);
+                if (act.stickerText) pieces.push(`Стікeр: ${act.stickerText}`);
+                if (pieces.length) detail.textContent = pieces.join(' • ');
+                else detail.textContent = '';
+                card.appendChild(title);
+                if (detail.textContent) card.appendChild(detail);
+                card.appendChild(meta);
+
+                item.appendChild(avatar);
+                item.appendChild(card);
+                boardReportBody.appendChild(item);
+            });
+        });
+    };
 
     const openBoardReport = () => {
         if (!currentBoardId) { showNotification('Помилка', 'Дошка не вибрана'); return; }
@@ -1090,143 +1054,101 @@ const formatActivityText = (act) => {
     });
 
     const addBoardTask_withLogging = async () => {
-    const title = boardTaskTitle.value.trim();
-    if(!title || !currentBoardId) return;
+        const title = boardTaskTitle.value.trim();
+        if(!title || !currentBoardId) return;
 
-    const subtaskInputs = document.querySelectorAll('.subtask-input');
-    const subtasks = Array.from(subtaskInputs)
-        .map(inp => ({ text: inp.value.trim(), completed: false }))
-        .filter(s => s.text !== '');
+        const subtaskInputs = document.querySelectorAll('.subtask-input');
+        const subtasks = Array.from(subtaskInputs).map(inp => ({
+            text: inp.value.trim(),
+            completed: false
+        })).filter(s => s.text !== '');
 
-    try {
-        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-            boardId: currentBoardId,
-            type: 'task',
-            text: title,
-            subtasks,
-            createdAt: serverTimestamp()
-        });
-
-        // Логуємо саме створення завдання
-        await logBoardActivity(currentBoardId, {
-            type: 'task_added',
-            itemId: docRef.id,
-            itemText: title
-        });
-
-        // Лог кожної підзадачі як subtask_checked=false (створені)
-        for (let idx = 0; idx < subtasks.length; idx++) {
-            await logBoardActivity(currentBoardId, {
-                type: 'subtask_unchecked',  // нові кроки створюються як неперевірені
-                itemId: docRef.id,
-                taskTitle: title,
-                subtaskText: subtasks[idx].text
+        try {
+            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+                boardId: currentBoardId,
+                type: 'task',
+                text: title,
+                subtasks,
+                createdAt: serverTimestamp()
             });
-        }
 
-        addBoardTaskModal.classList.add('hidden');
-        boardTaskTitle.value = '';
-        subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
-    } catch(e) {
-        console.error("Error adding board task", e);
-    }
-};
+            await logBoardActivity(currentBoardId, {
+                type: 'task_added',
+                itemId: docRef.id,
+                itemText: title
+            });
+            addBoardTaskModal.classList.add('hidden');
+            boardTaskTitle.value = '';
+            subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
+        } catch(e) { console.error("Error adding board task", e); }
+    };
 
-const toggleSubtask_withLogging = async (item, idx, isChecked) => {
-    try {
-        if (!item || !Array.isArray(item.subtasks)) return;
-        const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
-        const oldText = newSubtasks[idx]?.text || '';
-        newSubtasks[idx].completed = isChecked;
-
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-            subtasks: newSubtasks
-        });
-
-        // Логування з назвою завдання
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
-            itemId: item.id,
-            taskTitle: item.text || '',   // додали назву завдання
-            subtaskText: oldText
-        });
-
-    } catch (e) {
-        console.error("Error toggling subtask:", e);
-    }
-};
+    const toggleSubtask_withLogging = async (item, idx, isChecked) => {
+        try {
+            if (!item || !Array.isArray(item.subtasks)) return;
+            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
+            const oldText = newSubtasks[idx]?.text || '';
+            newSubtasks[idx].completed = isChecked;
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+                subtasks: newSubtasks
+            });
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+                itemId: item.id,
+                subtaskIdx: idx,
+                subtaskText: oldText
+            });
+        } catch (e) { console.error("Error toggling subtask:", e); }
+    };
 
     const addSticker_withLogging = async () => {
-    try {
-        const text = stickerTextInput.value.trim();
-        if (!text || !currentBoardId) return;
-        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
-            boardId: currentBoardId,
-            type: 'sticker',
-            text,
-            color: selectedStickerColor,
-            createdAt: serverTimestamp()
-        });
+        try {
+            const text = stickerTextInput.value.trim();
+            if(!text || !currentBoardId) return;
+            const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
+                boardId: currentBoardId,
+                type: 'sticker',
+                text,
+                color: selectedStickerColor,
+                createdAt: serverTimestamp()
+            });
+            await logBoardActivity(currentBoardId, {
+                type: 'sticker_added',
+                itemId: docRef.id,
+                stickerText: text,
+                stickerColor: selectedStickerColor
+            });
+            addStickerModal.classList.add('hidden');
+            stickerTextInput.value = '';
+        } catch(e) { console.error("Error adding sticker", e); }
+    };
 
-        await logBoardActivity(currentBoardId, {
-            type: 'sticker_added',
-            itemId: docRef.id,
-            stickerText: text,
-            stickerColor: selectedStickerColor
-        });
-
-        addStickerModal.classList.add('hidden');
-        stickerTextInput.value = '';
-    } catch (e) {
-        console.error("Error adding sticker", e);
-    }
-};
     const deleteBoardItem_withLogging = async (itemId) => {
-    try {
-        if (!confirm('Видалити цей елемент?')) return;
-
-        const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
-        const snapshot = await getDoc(itemRef);
-        if (!snapshot.exists()) {
-            console.warn('Item not found for deletion', itemId);
-            return;
-        }
-        const item = { id: snapshot.id, ...snapshot.data() };
-
-        // Лог кожної підзадачі як видалення (subtask_removed)
-        if(Array.isArray(item.subtasks)) {
-            for (let subtask of item.subtasks) {
+        try {
+            if (!confirm('Видалити цей елемент?')) return;
+            const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', itemId);
+            const snapshot = await getDoc(itemRef);
+            if (!snapshot.exists()) { console.warn('Item not found for deletion', itemId); return; }
+            const item = { id: snapshot.id, ...snapshot.data() };
+            if(item.type === 'sticker') {
                 await logBoardActivity(item.boardId || currentBoardId, {
-                    type: 'subtask_removed',
+                    type: 'sticker_removed',
                     itemId: item.id,
-                    taskTitle: item.text,
-                    subtaskText: subtask.text
+                    stickerText: item.text,
+                    stickerColor: item.color
+                });
+            } else {
+                await logBoardActivity(item.boardId || currentBoardId, {
+                    type: 'task_deleted',
+                    itemId: item.id,
+                    itemText: item.text
                 });
             }
+            await deleteDoc(itemRef);
+        } catch (e) {
+            console.error("Error deleting board item with logging:", e);
         }
-
-        // Лог самого завдання / стікера
-        if(item.type === 'sticker') {
-            await logBoardActivity(item.boardId || currentBoardId, {
-                type: 'sticker_removed',
-                itemId: item.id,
-                stickerText: item.text,
-                stickerColor: item.color
-            });
-        } else {
-            await logBoardActivity(item.boardId || currentBoardId, {
-                type: 'task_deleted',
-                itemId: item.id,
-                itemText: item.text
-            });
-        }
-
-        await deleteDoc(itemRef);
-
-    } catch (e) {
-        console.error("Error deleting board item with logging:", e);
-    }
-};
+    };
 
     const subscribeToBoards = () => {
         if(!userId) return;

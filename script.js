@@ -121,6 +121,15 @@ window.onload = function () {
     const cancelEditBoardTaskBtn = getEl('cancelEditBoardTaskBtn');
     const saveEditBoardTaskBtn = getEl('saveEditBoardTaskBtn');
 
+    let currentTaskWithAttachments = null; 
+    const attachmentModal = getEl('attachment-modal');
+    const closeAttachmentModal = getEl('close-attachment-modal');
+    const attachmentTaskTitle = getEl('attachment-task-title');
+    const attachmentsList = getEl('attachments-list');
+    const attachmentNameInput = getEl('attachment-name-input');
+    const attachmentUrlInput = getEl('attachment-url-input');
+    const addAttachmentBtn = getEl('add-attachment-btn');
+
     let currentEditingBoard = null;
     const editBoardModal = getEl('editBoardModal');
     const editBoardTitleInput = getEl('editBoardTitleInput');
@@ -1279,18 +1288,6 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
         }
     };
     
-// --- ЗМІННІ ТА ЕЛЕМЕНТИ DOM ДЛЯ Вкладень ---
-let currentTaskWithAttachments = null; 
-
-// Елементи DOM для модального вікна вкладень
-const attachmentModal = getEl('attachment-modal');
-const closeAttachmentModal = getEl('close-attachment-modal');
-const attachmentTaskTitle = getEl('attachment-task-title');
-const attachmentsList = getEl('attachments-list');
-const attachmentNameInput = getEl('attachment-name-input');
-const attachmentUrlInput = getEl('attachment-url-input');
-const addAttachmentBtn = getEl('add-attachment-btn');
-
 
 // --- ЛОГІКА Вкладень (Attachment Logic) ---
 

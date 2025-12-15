@@ -728,7 +728,7 @@ window.onload = function () {
         );
     }
 
-   async function saveEditBoardTask() {
+    async function saveEditBoardTask() {
     if (!editingBoardTask) return;
 
     const title = getEl("editBoardTaskTitle").value.trim();
@@ -736,7 +736,6 @@ window.onload = function () {
 
     const originalSubtasks = editingBoardTask.subtasks || [];
     
-    // Створення карти для збереження статусу completed (як і у вашій логіці)
     const originalSubtaskMap = new Map();
     originalSubtasks.forEach(s => {
         originalSubtaskMap.set(s.text, s.completed); 
@@ -749,7 +748,6 @@ window.onload = function () {
         const text = el.value.trim();
         let completed = false;
 
-        // Зберігаємо старий статус, якщо текст підзадачі не змінився
         if (originalSubtaskMap.has(text)) {
             completed = originalSubtaskMap.get(text);
         } 
@@ -771,7 +769,6 @@ window.onload = function () {
         });
     }
 
-    // Оновлення документу
     await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', editingBoardTask.id), {
         text: title,
         subtasks
@@ -780,10 +777,7 @@ window.onload = function () {
     getEl("editBoardTaskModal").classList.add("hidden");
     editingBoardTask = null;
 
-    // Якщо ви використовуєте onSnapshot (як в subscribeToBoardItems), 
-    // loadBoardTasks() може бути не потрібний, але залишаю його, 
-    // якщо він потрібен для оновлення іншого стану.
-    // loadBoardTasks(); 
+    loadBoardTasks(); 
 }
 
     async function saveEditedBoard() {
@@ -848,10 +842,10 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-    const attachmentsCount = (item.attachments || []).length; // <<< НОВА ЗМІННА
+    const attachmentsCount = (item.attachments || []).length; 
 
     const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500'; // <<< ДОДАНО СТИЛІ
+    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
     el.style.minHeight = "80px";
     el.style.wordBreak = "break-word";
     el.style.overflowWrap = "break-word"; 
@@ -896,7 +890,8 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
         <div class="pl-1 space-y-1">
             ${subtasksHtml}
         </div>
-        ${attachmentBtnHtml} `;
+        ${attachmentBtnHtml}
+    `;
 
     const deleteBtn = el.querySelector('.delete-item-btn');
     if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
@@ -945,127 +940,6 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
         }, error => console.error("Board items subscription error:", error));
     };
 
-    let currentTaskWithAttachments = null; 
-
-// Елементи DOM для модального вікна вкладень
-const attachmentModal = getEl('attachment-modal');
-const closeAttachmentModal = getEl('close-attachment-modal');
-const attachmentTaskTitle = getEl('attachment-task-title');
-const attachmentsList = getEl('attachments-list');
-const attachmentNameInput = getEl('attachment-name-input');
-const attachmentUrlInput = getEl('attachment-url-input');
-const addAttachmentBtn = getEl('add-attachment-btn');
-
-
-// --- ЛОГІКА Вкладень (Attachment Logic) ---
-
-const renderAttachmentItem = (item, attachment, index) => {
-    const li = document.createElement('div');
-    li.className = 'flex justify-between items-center p-2 bg-gray-100 rounded text-sm group';
-    li.innerHTML = `
-        <a href="${attachment.url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 truncate flex items-center max-w-[85%]">
-            <i class="fas fa-external-link-alt text-xs mr-2"></i>
-            <span class="font-medium">${attachment.name}</span>
-        </a>
-        <button data-index="${index}" class="remove-attachment-btn text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-1" title="Видалити">
-            <i class="fas fa-trash-alt"></i>
-        </button>
-    `;
-    li.querySelector('.remove-attachment-btn').addEventListener('click', () => removeAttachment_withLogging(item, index));
-    attachmentsList.appendChild(li);
-};
-
-const showAttachmentPopover = (item) => {
-    currentTaskWithAttachments = item;
-    attachmentTaskTitle.textContent = `Завдання: ${item.text}`;
-    attachmentsList.innerHTML = '';
-    
-    (item.attachments || []).forEach((att, index) => {
-        renderAttachmentItem(item, att, index);
-    });
-    
-    attachmentNameInput.value = '';
-    attachmentUrlInput.value = '';
-    attachmentModal.classList.remove('hidden');
-    attachmentUrlInput.focus();
-};
-
-const addAttachment_withLogging = async () => {
-    const name = attachmentNameInput.value.trim();
-    const url = attachmentUrlInput.value.trim();
-    
-    if (!name || !url || !currentTaskWithAttachments) {
-        showNotification('Помилка', 'Введіть назву та коректний URL.');
-        return;
-    }
-    
-    try {
-        new URL(url);
-    } catch (_) {
-        showNotification('Помилка', 'Введений URL не є коректним.');
-        return;  
-    }
-
-    try {
-        const item = currentTaskWithAttachments;
-        // Додаємо новий запис з поточною міткою часу сервера
-        const newAttachments = [...(item.attachments || []), { name, url, createdAt: serverTimestamp() }]; 
-        
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-            attachments: newAttachments
-        });
-        
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: 'attachment_added',
-            itemId: item.id,
-            itemText: item.text,
-            attachmentName: name
-        });
-
-        // Оновлення UI відбувається через onSnapshot в subscribeToBoardItems
-        attachmentNameInput.value = '';
-        attachmentUrlInput.value = '';
-    } catch (e) {
-        console.error("Error adding attachment:", e);
-        showNotification('Помилка', 'Не вдалося додати посилання.');
-    }
-};
-
-const removeAttachment_withLogging = async (item, index) => {
-    if (!confirm('Видалити це посилання?')) return;
-    
-    try {
-        const attachmentToRemove = item.attachments[index];
-        const newAttachments = item.attachments.filter((_, idx) => idx !== index);
-        
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-            attachments: newAttachments
-        });
-        
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: 'attachment_removed',
-            itemId: item.id,
-            itemText: item.text,
-            attachmentName: attachmentToRemove.name
-        });
-
-        // Оновлення UI відбувається через onSnapshot
-    } catch (e) {
-        console.error("Error removing attachment:", e);
-        showNotification('Помилка', 'Не вдалося видалити посилання.');
-    }
-};
-
-
-// --- НОВІ ОБРОБНИКИ ПОДІЙ ---
-// Додайте ці обробники подій у кінці вашого script.js, де знаходяться інші addEventListener.
-closeAttachmentModal.addEventListener('click', () => {
-    attachmentModal.classList.add('hidden');
-    currentTaskWithAttachments = null;
-});
-
-addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
-
     const logBoardActivity = async (boardId, payload) => {
         try {
             if (!boardId || !userId) return;
@@ -1096,8 +970,9 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
         case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
         case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
         case 'task_deleted': return `${actor} видалив елемент`;
-        case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`; // <<< НОВИЙ CASE
-        case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`; // <<< НОВИЙ CASE
+        case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`; 
+        case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`; 
+        case 'task_edited': return `${actor} змінив завдання з «${act.itemText || '…'}» на «${act.newItemText || '…'}»`;
         default: return `${actor} зробив дію: ${act.type}`;
     }
 };
@@ -1403,6 +1278,115 @@ addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
             showNotification('Помилка', 'Не вдалося видалити дошку.');
         }
     };
+    
+// --- ЗМІННІ ТА ЕЛЕМЕНТИ DOM ДЛЯ Вкладень ---
+let currentTaskWithAttachments = null; 
+
+// Елементи DOM для модального вікна вкладень
+const attachmentModal = getEl('attachment-modal');
+const closeAttachmentModal = getEl('close-attachment-modal');
+const attachmentTaskTitle = getEl('attachment-task-title');
+const attachmentsList = getEl('attachments-list');
+const attachmentNameInput = getEl('attachment-name-input');
+const attachmentUrlInput = getEl('attachment-url-input');
+const addAttachmentBtn = getEl('add-attachment-btn');
+
+
+// --- ЛОГІКА Вкладень (Attachment Logic) ---
+
+const renderAttachmentItem = (item, attachment, index) => {
+    const li = document.createElement('div');
+    li.className = 'flex justify-between items-center p-2 bg-gray-100 rounded text-sm group';
+    li.innerHTML = `
+        <a href="${attachment.url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 truncate flex items-center max-w-[85%]">
+            <i class="fas fa-external-link-alt text-xs mr-2"></i>
+            <span class="font-medium">${attachment.name}</span>
+        </a>
+        <button data-index="${index}" class="remove-attachment-btn text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-1" title="Видалити">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+    li.querySelector('.remove-attachment-btn').addEventListener('click', () => removeAttachment_withLogging(item, index));
+    attachmentsList.appendChild(li);
+};
+
+const showAttachmentPopover = (item) => {
+    currentTaskWithAttachments = item;
+    attachmentTaskTitle.textContent = `Завдання: ${item.text}`;
+    attachmentsList.innerHTML = '';
+    
+    (item.attachments || []).forEach((att, index) => {
+        renderAttachmentItem(item, att, index);
+    });
+    
+    attachmentNameInput.value = '';
+    attachmentUrlInput.value = '';
+    attachmentModal.classList.remove('hidden');
+    attachmentUrlInput.focus();
+};
+
+const addAttachment_withLogging = async () => {
+    const name = attachmentNameInput.value.trim();
+    const url = attachmentUrlInput.value.trim();
+    
+    if (!name || !url || !currentTaskWithAttachments) {
+        showNotification('Помилка', 'Введіть назву та коректний URL.');
+        return;
+    }
+    
+    try {
+        new URL(url);
+    } catch (_) {
+        showNotification('Помилка', 'Введений URL не є коректним.');
+        return;  
+    }
+
+    try {
+        const item = currentTaskWithAttachments;
+        const newAttachments = [...(item.attachments || []), { name, url, createdAt: serverTimestamp() }]; 
+        
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            attachments: newAttachments
+        });
+        
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: 'attachment_added',
+            itemId: item.id,
+            itemText: item.text,
+            attachmentName: name
+        });
+
+        attachmentNameInput.value = '';
+        attachmentUrlInput.value = '';
+    } catch (e) {
+        console.error("Error adding attachment:", e);
+        showNotification('Помилка', 'Не вдалося додати посилання.');
+    }
+};
+
+const removeAttachment_withLogging = async (item, index) => {
+    if (!confirm('Видалити це посилання?')) return;
+    
+    try {
+        const attachmentToRemove = item.attachments[index];
+        const newAttachments = item.attachments.filter((_, idx) => idx !== index);
+        
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            attachments: newAttachments
+        });
+        
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: 'attachment_removed',
+            itemId: item.id,
+            itemText: item.text,
+            attachmentName: attachmentToRemove.name
+        });
+
+    } catch (e) {
+        console.error("Error removing attachment:", e);
+        showNotification('Помилка', 'Не вдалося видалити посилання.');
+    }
+};
 
     const openActiveBoard = (board) => {
         currentBoardId = board.id;

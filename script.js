@@ -837,6 +837,13 @@ window.onload = function () {
         editingBoardTask = null;
     });
 
+    closeAttachmentModal.addEventListener('click', () => {
+    attachmentModal.classList.add('hidden');
+    currentTaskWithAttachments = null;
+});
+
+addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
+
     const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;

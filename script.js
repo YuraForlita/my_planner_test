@@ -728,49 +728,63 @@ window.onload = function () {
         );
     }
 
-    async function saveEditBoardTask() {
-        if (!editingBoardTask) return;
+   async function saveEditBoardTask() {
+    if (!editingBoardTask) return;
 
-        const title = getEl("editBoardTaskTitle").value.trim();
-        if (!title) return;
+    const title = getEl("editBoardTaskTitle").value.trim();
+    if (!title) return;
 
-        const originalSubtasks = editingBoardTask.subtasks || [];
-        
-        const originalSubtaskMap = new Map();
-        originalSubtasks.forEach(s => {
+    const originalSubtasks = editingBoardTask.subtasks || [];
+    
+    // Створення карти для збереження статусу completed (як і у вашій логіці)
+    const originalSubtaskMap = new Map();
+    originalSubtasks.forEach(s => {
+        originalSubtaskMap.set(s.text, s.completed); 
+    });
 
-            originalSubtaskMap.set(s.text, s.completed); 
+    const subtasks = Array.from(
+        document.querySelectorAll(".edit-subtask-input")
+    )
+    .map(el => {
+        const text = el.value.trim();
+        let completed = false;
+
+        // Зберігаємо старий статус, якщо текст підзадачі не змінився
+        if (originalSubtaskMap.has(text)) {
+            completed = originalSubtaskMap.get(text);
+        } 
+
+        return {
+            text: text,
+            completed: completed
+        };
+    })
+    .filter(s => s.text !== "");
+
+    // Логування зміни завдання, якщо назва змінилася
+    if (editingBoardTask.text !== title) {
+        await logBoardActivity(editingBoardTask.boardId || currentBoardId, {
+            type: 'task_edited',
+            itemId: editingBoardTask.id,
+            itemText: editingBoardTask.text,
+            newItemText: title
         });
-
-        const subtasks = Array.from(
-            document.querySelectorAll(".edit-subtask-input")
-        )
-        .map(el => {
-            const text = el.value.trim();
-            let completed = false;
-
-            if (originalSubtaskMap.has(text)) {
-                completed = originalSubtaskMap.get(text);
-            } 
-
-            return {
-                text: text,
-                completed: completed
-            };
-        })
-        .filter(s => s.text !== "");
-
-        await updateBoardItem_withLogging(editingBoardTask.id, {
-            text: title,
-            subtasks
-        });
-
-        getEl("editBoardTaskModal").classList.add("hidden");
-
-        editingBoardTask = null;
-
-        loadBoardTasks();
     }
+
+    // Оновлення документу
+    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', editingBoardTask.id), {
+        text: title,
+        subtasks
+    });
+
+    getEl("editBoardTaskModal").classList.add("hidden");
+    editingBoardTask = null;
+
+    // Якщо ви використовуєте onSnapshot (як в subscribeToBoardItems), 
+    // loadBoardTasks() може бути не потрібний, але залишаю його, 
+    // якщо він потрібен для оновлення іншого стану.
+    // loadBoardTasks(); 
+}
 
     async function saveEditedBoard() {
         if (!editingBoard) return;
@@ -824,54 +838,78 @@ window.onload = function () {
     });
 
     const renderBoardTask = (item) => {
-        const total = item.subtasks ? item.subtasks.length : 0;
-        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const total = item.subtasks ? item.subtasks.length : 0;
+    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const attachmentsCount = (item.attachments || []).length; // <<< НОВА ЗМІННА
 
-        const el = document.createElement('div');
-        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col';
-        el.style.minHeight = "80px";
-        el.style.wordBreak = "break-word";
-        el.style.overflowWrap = "break-word"; 
-        el.style.whiteSpace = "normal";
+    const el = document.createElement('div');
+    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500'; // <<< ДОДАНО СТИЛІ
+    el.style.minHeight = "80px";
+    el.style.wordBreak = "break-word";
+    el.style.overflowWrap = "break-word"; 
+    el.style.whiteSpace = "normal";
 
-        let subtasksHtml = '';
-        if(item.subtasks) {
-            subtasksHtml = item.subtasks.map((s, idx) => `
-                <div class="flex items-start gap-2 mt-1">
-                    <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                    <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
-                </div>
-            `).join('');
-        }
+    // --- ЛОГІКА СКРІПКИ ---
+    let attachmentBtnHtml = '';
+    if (attachmentsCount > 0) {
+        attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
+            <i class="fas fa-paperclip text-xs"></i><span class="ml-1">${attachmentsCount}</span>
+        </button>`;
+    } else {
+         attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
+            <i class="fas fa-paperclip"></i>
+        </button>`;
+    }
+    // --- КІНЕЦЬ ЛОГІКИ СКРІПКИ ---
 
-        el.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold text-gray-800 break-words">${item.text}</h4>
-                <div class="flex gap-2 flex-shrink-0">
-                    <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
-                    <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
-                </div>
+
+    let subtasksHtml = '';
+    if(item.subtasks) {
+        subtasksHtml = item.subtasks.map((s, idx) => `
+            <div class="flex items-start gap-2 mt-1">
+                <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
+                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-                <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
-            </div>
-            <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
-            <div class="pl-1 space-y-1">
-                ${subtasksHtml}
-            </div>
-        `;
+        `).join('');
+    }
 
-        const deleteBtn = el.querySelector('.delete-item-btn');
-        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        const editBtn = el.querySelector('.edit-item-btn');
-        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    el.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${item.text}</h4>
+            <div class="flex gap-2 flex-shrink-0">
+                <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
+                <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
+        <div class="pl-1 space-y-1">
+            ${subtasksHtml}
+        </div>
+        ${attachmentBtnHtml} `;
+
+    const deleteBtn = el.querySelector('.delete-item-btn');
+    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+    const editBtn = el.querySelector('.edit-item-btn');
+    if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    });
+
+    // НОВИЙ ОБРОБНИК ПОДІЙ ДЛЯ КНОПКИ СКРІПКИ
+    const attachmentBtnEl = el.querySelector('.attachment-btn');
+    if (attachmentBtnEl) {
+        attachmentBtnEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showAttachmentPopover(item);
         });
+    }
 
-        boardTasksList.appendChild(el);
-    };
+    boardTasksList.appendChild(el);
+};
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');
@@ -900,6 +938,127 @@ window.onload = function () {
         }, error => console.error("Board items subscription error:", error));
     };
 
+    let currentTaskWithAttachments = null; 
+
+// Елементи DOM для модального вікна вкладень
+const attachmentModal = getEl('attachment-modal');
+const closeAttachmentModal = getEl('close-attachment-modal');
+const attachmentTaskTitle = getEl('attachment-task-title');
+const attachmentsList = getEl('attachments-list');
+const attachmentNameInput = getEl('attachment-name-input');
+const attachmentUrlInput = getEl('attachment-url-input');
+const addAttachmentBtn = getEl('add-attachment-btn');
+
+
+// --- ЛОГІКА Вкладень (Attachment Logic) ---
+
+const renderAttachmentItem = (item, attachment, index) => {
+    const li = document.createElement('div');
+    li.className = 'flex justify-between items-center p-2 bg-gray-100 rounded text-sm group';
+    li.innerHTML = `
+        <a href="${attachment.url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 truncate flex items-center max-w-[85%]">
+            <i class="fas fa-external-link-alt text-xs mr-2"></i>
+            <span class="font-medium">${attachment.name}</span>
+        </a>
+        <button data-index="${index}" class="remove-attachment-btn text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity p-1" title="Видалити">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    `;
+    li.querySelector('.remove-attachment-btn').addEventListener('click', () => removeAttachment_withLogging(item, index));
+    attachmentsList.appendChild(li);
+};
+
+const showAttachmentPopover = (item) => {
+    currentTaskWithAttachments = item;
+    attachmentTaskTitle.textContent = `Завдання: ${item.text}`;
+    attachmentsList.innerHTML = '';
+    
+    (item.attachments || []).forEach((att, index) => {
+        renderAttachmentItem(item, att, index);
+    });
+    
+    attachmentNameInput.value = '';
+    attachmentUrlInput.value = '';
+    attachmentModal.classList.remove('hidden');
+    attachmentUrlInput.focus();
+};
+
+const addAttachment_withLogging = async () => {
+    const name = attachmentNameInput.value.trim();
+    const url = attachmentUrlInput.value.trim();
+    
+    if (!name || !url || !currentTaskWithAttachments) {
+        showNotification('Помилка', 'Введіть назву та коректний URL.');
+        return;
+    }
+    
+    try {
+        new URL(url);
+    } catch (_) {
+        showNotification('Помилка', 'Введений URL не є коректним.');
+        return;  
+    }
+
+    try {
+        const item = currentTaskWithAttachments;
+        // Додаємо новий запис з поточною міткою часу сервера
+        const newAttachments = [...(item.attachments || []), { name, url, createdAt: serverTimestamp() }]; 
+        
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            attachments: newAttachments
+        });
+        
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: 'attachment_added',
+            itemId: item.id,
+            itemText: item.text,
+            attachmentName: name
+        });
+
+        // Оновлення UI відбувається через onSnapshot в subscribeToBoardItems
+        attachmentNameInput.value = '';
+        attachmentUrlInput.value = '';
+    } catch (e) {
+        console.error("Error adding attachment:", e);
+        showNotification('Помилка', 'Не вдалося додати посилання.');
+    }
+};
+
+const removeAttachment_withLogging = async (item, index) => {
+    if (!confirm('Видалити це посилання?')) return;
+    
+    try {
+        const attachmentToRemove = item.attachments[index];
+        const newAttachments = item.attachments.filter((_, idx) => idx !== index);
+        
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+            attachments: newAttachments
+        });
+        
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: 'attachment_removed',
+            itemId: item.id,
+            itemText: item.text,
+            attachmentName: attachmentToRemove.name
+        });
+
+        // Оновлення UI відбувається через onSnapshot
+    } catch (e) {
+        console.error("Error removing attachment:", e);
+        showNotification('Помилка', 'Не вдалося видалити посилання.');
+    }
+};
+
+
+// --- НОВІ ОБРОБНИКИ ПОДІЙ ---
+// Додайте ці обробники подій у кінці вашого script.js, де знаходяться інші addEventListener.
+closeAttachmentModal.addEventListener('click', () => {
+    attachmentModal.classList.add('hidden');
+    currentTaskWithAttachments = null;
+});
+
+addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
+
     const logBoardActivity = async (boardId, payload) => {
         try {
             if (!boardId || !userId) return;
@@ -922,17 +1081,19 @@ window.onload = function () {
     let latestBoardActivities = [];
 
     const formatActivityText = (act) => {
-        const actor = getDisplayNameFor(act.performedBy);
-        switch(act.type) {
-            case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-            case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
-            case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
-            case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-            case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-            case 'task_deleted': return `${actor} видалив елемент`;
-            default: return `${actor} зробив дію: ${act.type}`;
-        }
-    };
+    const actor = getDisplayNameFor(act.performedBy);
+    switch(act.type) {
+        case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
+        case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
+        case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
+        case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
+        case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
+        case 'task_deleted': return `${actor} видалив елемент`;
+        case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`; // <<< НОВИЙ CASE
+        case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`; // <<< НОВИЙ CASE
+        default: return `${actor} зробив дію: ${act.type}`;
+    }
+};
 
     const subscribeToBoardActivities = (boardId) => {
         if (unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();

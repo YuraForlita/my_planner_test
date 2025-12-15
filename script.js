@@ -840,12 +840,6 @@ window.onload = function () {
         editingBoardTask = null;
     });
 
-    closeAttachmentModal.addEventListener('click', () => {
-    attachmentModal.classList.add('hidden');
-    currentTaskWithAttachments = null;
-});
-
-addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
 
     const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
@@ -1420,6 +1414,13 @@ const removeAttachment_withLogging = async (item, index) => {
 
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
+
+    closeAttachmentModal.addEventListener('click', () => {
+        attachmentModal.classList.add('hidden');
+        currentTaskWithAttachments = null;
+    });
+
+    addAttachmentBtn.addEventListener('click', addAttachment_withLogging);
 
     const addBoardMember = async () => {
         const friendId = boardFriendSelect.value;

@@ -1317,9 +1317,12 @@ const showAttachmentPopover = (item) => {
 };
 
 const addAttachment_withLogging = async () => {
+    // Елементи DOM тепер мають бути доступні, якщо ви їх оголосили в window.onload
     const name = attachmentNameInput.value.trim();
     const url = attachmentUrlInput.value.trim();
     
+    //console.log("Крок 1: Перевірка змінних"); // Видаляємо діагностику
+
     if (!name || !url || !currentTaskWithAttachments) {
         showNotification('Помилка', 'Введіть назву та коректний URL.');
         return;
@@ -1334,10 +1337,17 @@ const addAttachment_withLogging = async () => {
 
     try {
         const item = currentTaskWithAttachments;
-        const newAttachments = [...(item.attachments || []), { name, url, createdAt: serverTimestamp() }]; 
         
+        // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: Використовуємо arrayUnion для атомарного додавання >>>
         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-            attachments: newAttachments
+            // arrayUnion додає об'єкт до масиву attachments.
+            // При цьому Firestore сам обробляє serverTimestamp, оскільки він є частиною об'єкта,
+            // який додається атомарно, а не є частиною повного масиву, що перезаписується.
+            attachments: arrayUnion({ 
+                name: name, 
+                url: url, 
+                createdAt: serverTimestamp() 
+            })
         });
         
         await logBoardActivity(item.boardId || currentBoardId, {
@@ -1346,12 +1356,16 @@ const addAttachment_withLogging = async () => {
             itemText: item.text,
             attachmentName: name
         });
-
+        
         attachmentNameInput.value = '';
         attachmentUrlInput.value = '';
+        
+        // Не обов'язково, але корисно для закриття, якщо користувач швидко додає багато посилань
+        // attachmentModal.classList.add('hidden'); 
+
     } catch (e) {
         console.error("Error adding attachment:", e);
-        showNotification('Помилка', 'Не вдалося додати посилання.');
+        showNotification('Помилка', 'Не вдалося додати посилання. Перевірте консоль.');
     }
 };
 

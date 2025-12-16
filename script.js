@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, getDoc, getDocs, where, writeBatch, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, setDoc, getDoc, getDocs, where, writeBatch, arrayUnion, FieldValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -1317,12 +1317,9 @@ const showAttachmentPopover = (item) => {
 };
 
 const addAttachment_withLogging = async () => {
-    // Елементи DOM тепер мають бути доступні, якщо ви їх оголосили в window.onload
     const name = attachmentNameInput.value.trim();
     const url = attachmentUrlInput.value.trim();
     
-    //console.log("Крок 1: Перевірка змінних"); // Видаляємо діагностику
-
     if (!name || !url || !currentTaskWithAttachments) {
         showNotification('Помилка', 'Введіть назву та коректний URL.');
         return;
@@ -1338,11 +1335,8 @@ const addAttachment_withLogging = async () => {
     try {
         const item = currentTaskWithAttachments;
         
-        // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: Використовуємо arrayUnion для атомарного додавання >>>
+        // <<< ВИПРАВЛЕННЯ: serverTimestamp() всередині arrayUnion >>>
         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-            // arrayUnion додає об'єкт до масиву attachments.
-            // При цьому Firestore сам обробляє serverTimestamp, оскільки він є частиною об'єкта,
-            // який додається атомарно, а не є частиною повного масиву, що перезаписується.
             attachments: arrayUnion({ 
                 name: name, 
                 url: url, 
@@ -1359,9 +1353,6 @@ const addAttachment_withLogging = async () => {
         
         attachmentNameInput.value = '';
         attachmentUrlInput.value = '';
-        
-        // Не обов'язково, але корисно для закриття, якщо користувач швидко додає багато посилань
-        // attachmentModal.classList.add('hidden'); 
 
     } catch (e) {
         console.error("Error adding attachment:", e);

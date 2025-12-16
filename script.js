@@ -842,43 +842,47 @@ window.onload = function () {
 
 
     const renderBoardTask = (item) => {
-        const total = item.subtasks ? item.subtasks.length : 0;
-        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-        const attachmentsCount = (item.attachments || []).length;
+    const total = item.subtasks ? item.subtasks.length : 0;
+    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const attachmentsCount = (item.attachments || []).length; 
 
-        const el = document.createElement('div');
-        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
-        el.style.minHeight = "80px";
-        el.style.wordBreak = "break-word";
-        el.style.overflowWrap = "break-word";
-        el.style.whiteSpace = "normal";
+    const el = document.createElement('div');
+    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
+    el.style.minHeight = "80px";
+    el.style.wordBreak = "break-word";
+    el.style.overflowWrap = "break-word"; 
+    el.style.whiteSpace = "normal";
 
-        let attachmentBtnHtml = '';
-        if (attachmentsCount > 0) {
-            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
+    // --- ЛОГІКА СКРІПКИ ---
+    let attachmentBtnHtml = '';
+    if (attachmentsCount > 0) {
+        attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
             <i class="fas fa-paperclip text-xs"></i><span class="ml-1">${attachmentsCount}</span>
         </button>`;
-        } else {
-            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
+    } else {
+         attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
             <i class="fas fa-paperclip"></i>
         </button>`;
-        }
+    }
+    // --- КІНЕЦЬ ЛОГІКИ СКРІПКИ ---
 
-        let subtasksHtml = '';
-        if (item.subtasks) {
-            subtasksHtml = item.subtasks.map((s, idx) => `
+
+    let subtasksHtml = '';
+    if(item.subtasks) {
+        subtasksHtml = item.subtasks.map((s, idx) => `
             <div class="flex items-start gap-2 mt-1">
                 <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
                 <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
             </div>
         `).join('');
-        }
+    }
 
-        el.innerHTML = `
+    el.innerHTML = `
         <div class="flex justify-between items-start mb-2">
             <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${item.text}</h4>
             <div class="flex gap-2 flex-shrink-0">
+                <button class="text-yellow-500 hover:text-yellow-600 notify-item-btn" title="Сповістити про це завдання"><i class="fas fa-bell"></i></button>
                 <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
                 <button class="text-red-400 hover:text-red-600 delete-item-btn"><i class="fas fa-times"></i></button>
             </div>
@@ -893,25 +897,34 @@ window.onload = function () {
         ${attachmentBtnHtml}
     `;
 
-        const deleteBtn = el.querySelector('.delete-item-btn');
-        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-        const editBtn = el.querySelector('.edit-item-btn');
-        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    const deleteBtn = el.querySelector('.delete-item-btn');
+    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+    const editBtn = el.querySelector('.edit-item-btn');
+    if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
+    });
+
+    // Обробник для кнопки СКРІПКИ
+    const attachmentBtnEl = el.querySelector('.attachment-btn');
+    if (attachmentBtnEl) {
+        attachmentBtnEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showAttachmentPopover(item);
         });
+    }
 
-        // НОВИЙ ОБРОБНИК ПОДІЙ ДЛЯ КНОПКИ СКРІПКИ
-        const attachmentBtnEl = el.querySelector('.attachment-btn');
-        if (attachmentBtnEl) {
-            attachmentBtnEl.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showAttachmentPopover(item);
-            });
-        }
+    // НОВИЙ ОБРОБНИК ДЛЯ КНОПКИ ДЗВІНОЧКА
+    const notifyBtn = el.querySelector('.notify-item-btn');
+    if (notifyBtn) {
+        notifyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifyUsersAboutTask_withLogging(item);
+        });
+    }
 
-        boardTasksList.appendChild(el);
-    };
+    boardTasksList.appendChild(el);
+};
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');
@@ -973,6 +986,7 @@ window.onload = function () {
             case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`;
             case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`;
             case 'task_edited': return `${actor} змінив завдання з «${act.itemText || '…'}» на «${act.newItemText || '…'}»`;
+            case 'task_notified': return `${actor} сповістив учасників про завдання «${act.itemText || '…'}»`;
             default: return `${actor} зробив дію: ${act.type}`;
         }
     };
@@ -1405,37 +1419,40 @@ window.onload = function () {
     };
 
     const openActiveBoard = (board) => {
-        currentBoardId = board.id;
-        activeBoardTitle.textContent = board.title;
-        getEl('board-member-count').textContent = board.members.length;
-        boardsListView.classList.add('hidden');
-        activeBoardView.classList.remove('hidden');
-        activeBoardView.classList.add('flex');
-        switchMobileTab('tasks');
-        boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
-        Object.values(friendsCache).forEach(f => {
-            if (!board.members.includes(f.userId)) {
-                boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
-            }
-        });
-        subscribeToBoardItems(board.id);
+    currentBoardId = board.id;
+    activeBoardTitle.textContent = board.title;
+    getEl('board-member-count').textContent = board.members.length;
+    boardsListView.classList.add('hidden');
+    activeBoardView.classList.remove('hidden');
+    activeBoardView.classList.add('flex');
+    switchMobileTab('tasks');
+    boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+    Object.values(friendsCache).forEach(f => {
+        if (!board.members.includes(f.userId)) {
+            boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
+        }
+    });
 
-        (function addBoardReportButton() {
-            try {
-                const header = document.querySelector('#active-board-title')?.parentElement;
-                if (!header) return;
-                if (getEl('open-board-report-btn')) return;
-                const btn = document.createElement('button');
-                btn.id = 'open-board-report-btn';
-                btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
-                btn.textContent = 'Звіт';
-                btn.addEventListener('click', openBoardReport);
-                header.appendChild(btn);
-            } catch (e) { console.error(e); }
-        })();
+    // Оновлена підписка:
+    subscribeToBoardItems(board.id);
+    subscribeToBoardActivities(board.id);
+    // <<< НОВИЙ ВИКЛИК ПІДПИСКИ НА СПОВІЩЕННЯ >>>
+    subscribeToBoardNotifications();
 
-        subscribeToBoardActivities(board.id);
-    };
+    (function addBoardReportButton() {
+        try {
+            const header = document.querySelector('#active-board-title')?.parentElement;
+            if (!header) return;
+            if (getEl('open-board-report-btn')) return;
+            const btn = document.createElement('button');
+            btn.id = 'open-board-report-btn';
+            btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
+            btn.textContent = 'Звіт';
+            btn.addEventListener('click', openBoardReport);
+            header.appendChild(btn);
+        } catch (e) { console.error(e); }
+    })();
+};
 
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
@@ -1548,6 +1565,86 @@ window.onload = function () {
             showConfirmModal(() => deleteTask(taskToDelete), "Видалити це завдання?", "Видалити");
         }
     });
+
+
+    const notifyUsersAboutTask_withLogging = async (item) => {
+    if (!currentBoardId) return showNotification('Помилка', 'Дошка не вибрана.');
+    if (!auth.currentUser) return showNotification('Помилка', 'Ви не авторизовані.');
+
+    // Колекція, яка використовуватиметься для тригера сповіщень
+    const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
+
+    try {
+        await addDoc(notificationsRef, {
+            boardId: currentBoardId,
+            itemId: item.id,
+            itemText: item.text,
+            notifierId: auth.currentUser.uid,
+            // ВИКОРИСТОВУЄМО АКТУАЛЬНЕ ІМ'Я З DISPLAYNAME АБО КЕШУ
+            notifierName: getDisplayNameFor(auth.currentUser.uid), 
+            timestamp: serverTimestamp() // Використовуємо serverTimestamp для запису в основному документі
+        });
+        
+        // Логування активності 
+        await logBoardActivity(currentBoardId, {
+            type: 'task_notified',
+            itemId: item.id,
+            itemText: item.text,
+        });
+
+        showNotification('Успіх', 'Учасникам надіслано сповіщення!');
+        
+    } catch (e) {
+        console.error("Помилка надсилання сповіщення:", e);
+        showNotification('Помилка', 'Не вдалося надіслати сповіщення.');
+    }
+};
+
+// --- ПІДПИСКА НА СПОВІЩЕННЯ ---
+
+const subscribeToBoardNotifications = () => {
+    if (!currentBoardId) return;
+
+    const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
+    
+    // Запит для сповіщень по поточній дошці, сортування за часом
+    const q = query(
+        notificationsRef, 
+        where("boardId", "==", currentBoardId),
+        orderBy("timestamp", "desc"),
+        limit(10) // Обмеження для уникнення надмірного завантаження
+    );
+
+    // Слухач onSnapshot для реального часу
+    onSnapshot(q, (snapshot) => {
+        // Ітеруємо лише нові додані сповіщення
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const notif = change.doc.data();
+                const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
+                
+                // НЕ сповіщаємо користувача, який сам натиснув на дзвіночок
+                if (notif.notifierId === currentUserId) {
+                    // Оскільки ми вже показали 'Успіх' цьому користувачу, нічого не робимо
+                    // АБО: Очищаємо нове сповіщення, щоб не засмічувати базу (опціонально)
+                    // deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id));
+                    return; 
+                }
+                
+                const message = `Користувач ${notif.notifierName} сповіщає про завдання: "${notif.itemText}"`;
+                
+                // Відображаємо сповіщення в застосунку
+                showNotification('🔔 Сповіщення про завдання', message);
+                
+                // Після того, як сповіщення було показано, його можна видалити, щоб воно не з'явилося знову 
+                // при наступному завантаженні дошки. Це чистий підхід.
+                deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
+                     console.error("Помилка видалення сповіщення:", e);
+                });
+            }
+        });
+    });
+};
 
     resourcesBtn.addEventListener('click', openResourcesView);
     backToTasksFromResourcesBtn.addEventListener('click', closeResourcesView);

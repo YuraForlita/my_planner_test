@@ -33,85 +33,85 @@ window.onload = function () {
     const getEl = (id) => document.getElementById(id);
 
     const mainContent = getEl('main-content'), taskInput = getEl('task-input'), addTaskButton = getEl('add-task-btn'),
-          assignTaskOpenBtn = getEl('assign-task-open-btn'), userIdSpan = getEl('user-id-span'),
-          loadingSpinner = getEl('loading-spinner'), authButtons = getEl('auth-buttons'),
-          contentSection = getEl('content-section'), googleSignInButton = getEl('google-signin-btn'),
-          signOutButton = getEl('signout-btn'), confirmModal = getEl('confirm-modal'),
-          confirmModalMessage = getEl('confirm-modal-message'), confirmDeleteButton = confirmModal.querySelector('.confirm-btn'),
-          cancelDeleteButton = confirmModal.querySelector('.cancel-btn'), notificationModal = getEl('notification-modal'),
-          notificationTitle = getEl('notification-title'), notificationMessage = getEl('notification-message'),
-          closeNotificationBtn = getEl('close-notification-btn'), viewEditModal = getEl('view-edit-modal'),
-          editTaskInput = getEl('edit-task-input'), saveEditBtn = getEl('save-edit-btn'),
-          cancelEditBtn = getEl('cancel-edit-btn'), activeTasksList = getEl('active-tasks-list'),
-          deferredTasksList = getEl('deferred-tasks-list'), completedTasksList = getEl('completed-tasks-list'),
-          deferredToggleBtn = getEl('deferred-toggle-btn'), completedToggleBtn = getEl('completed-toggle-btn'),
-          settingsToggleBtn = getEl('settings-toggle-btn'), settingsContent = getEl('settings-content'),
-          deferredDurationInput = getEl('deferred-duration'), staleDurationInput = getEl('stale-duration'),
-          saveSettingsBtn = getEl('save-settings-btn'), settingsMessage = getEl('settings-message'),
-          incomingTasksSection = getEl('incoming-tasks-section'), incomingTasksList = getEl('incoming-tasks-list'),
-          friendsToggleBtn = getEl('friends-toggle-btn'), friendsContent = getEl('friends-content'),
-          addFriendOpenBtn = getEl('add-friend-open-btn'), friendsList = getEl('friends-list'),
-          addFriendModal = getEl('add-friend-modal'), friendNameInput = getEl('friend-name-input'),
-          friendIdInput = getEl('friend-id-input'), saveFriendBtn = getEl('save-friend-btn'),
-          cancelFriendBtn = getEl('cancel-friend-btn'), assignTaskModal = getEl('assign-task-modal'),
-          friendSelect = getEl('friend-select'), assignTaskInput = getEl('assign-task-input'),
-          sendTaskBtn = getEl('send-task-btn'), cancelAssignBtn = getEl('cancel-assign-btn'),
-          chatsBtn = getEl('chats-btn'), chatNotificationBadge = getEl('chat-notification-badge'),
-          chatSection = getEl('chat-section'), backToTasksBtn = getEl('back-to-tasks-btn'),
-          chatFriendsList = getEl('chat-friends-list'), chatWindow = getEl('chat-window'),
-          chatWindowPlaceholder = getEl('chat-window-placeholder'), chatHeader = getEl('chat-header'),
-          chatMessages = getEl('chat-messages'), chatMessageInput = getEl('chat-message-input'),
-          sendChatMessageBtn = getEl('send-chat-message-btn'), enableNotificationsBtn = getEl('enable-notifications-btn'),
-          notificationsStatus = getEl('notifications-status'), imageViewerModal = getEl('image-viewer-modal'),
-          fullImage = getEl('full-image'), closeImageViewerBtn = getEl('close-image-viewer-btn'),
-          attachFileBtn = getEl('attach-file-btn'), imageUploadInput = getEl('image-upload-input'),
-          uploadProgressContainer = getEl('upload-progress-container'), uploadProgressBar = getEl('upload-progress-bar'),
-          reportBtn = getEl('report-btn'), reportSection = getEl('report-section'),
-          backToTasksFromReportBtn = getEl('back-to-tasks-from-report-btn'), reportTableBody = getEl('report-table-body'),
-          taskDetailsModal = getEl('task-details-modal'), taskDetailsContent = getEl('task-details-content'),
-          closeTaskDetailsBtn = getEl('close-task-details-btn'),
-          deleteFromReportBtn = getEl('delete-from-report-btn'),
-          viewIncomingTaskModal = getEl('view-incoming-task-modal'),
-          incomingTaskSender = getEl('incoming-task-sender'),
-          incomingTaskContent = getEl('incoming-task-content'),
-          incomingTaskAcceptBtn = getEl('incoming-task-accept-btn'),
-          incomingTaskDeclineBtn = getEl('incoming-task-decline-btn'),
-          incomingTaskCloseBtn = getEl('incoming-task-close-btn'),
-          taskActionsModal = getEl('task-actions-modal'),
-          actionDeferBtn = getEl('action-defer-btn'),
-          actionActivateBtn = getEl('action-activate-btn'),
-          actionProlongBtn = getEl('action-prolong-btn'),
-          actionDeleteBtn = getEl('action-delete-btn'),
-          cancelActionsBtn = getEl('cancel-actions-btn'),
-          resourcesBtn = getEl('resources-btn'), resourcesSection = getEl('resources-section'),
-          backToTasksFromResourcesBtn = getEl('back-to-tasks-from-resources-btn'),
-          resourcesGrid = getEl('resources-grid'), addShelfBtn = getEl('add-shelf-btn'),
-          addShelfModal = getEl('add-shelf-modal'), shelfNameInput = getEl('shelf-name-input'),
-          saveShelfBtn = getEl('save-shelf-btn'), cancelShelfBtn = getEl('cancel-shelf-btn'),
-          addResourceModal = getEl('add-resource-modal'), resourceTitleInput = getEl('resource-title-input'),
-          resourceContentInput = getEl('resource-content-input'),
-          saveResourceBtn = getEl('save-resource-btn'), cancelResourceBtn = getEl('cancel-resource-btn'),
-          resourcesSearchInput = getEl('resources-search-input');
+        assignTaskOpenBtn = getEl('assign-task-open-btn'), userIdSpan = getEl('user-id-span'),
+        loadingSpinner = getEl('loading-spinner'), authButtons = getEl('auth-buttons'),
+        contentSection = getEl('content-section'), googleSignInButton = getEl('google-signin-btn'),
+        signOutButton = getEl('signout-btn'), confirmModal = getEl('confirm-modal'),
+        confirmModalMessage = getEl('confirm-modal-message'), confirmDeleteButton = confirmModal.querySelector('.confirm-btn'),
+        cancelDeleteButton = confirmModal.querySelector('.cancel-btn'), notificationModal = getEl('notification-modal'),
+        notificationTitle = getEl('notification-title'), notificationMessage = getEl('notification-message'),
+        closeNotificationBtn = getEl('close-notification-btn'), viewEditModal = getEl('view-edit-modal'),
+        editTaskInput = getEl('edit-task-input'), saveEditBtn = getEl('save-edit-btn'),
+        cancelEditBtn = getEl('cancel-edit-btn'), activeTasksList = getEl('active-tasks-list'),
+        deferredTasksList = getEl('deferred-tasks-list'), completedTasksList = getEl('completed-tasks-list'),
+        deferredToggleBtn = getEl('deferred-toggle-btn'), completedToggleBtn = getEl('completed-toggle-btn'),
+        settingsToggleBtn = getEl('settings-toggle-btn'), settingsContent = getEl('settings-content'),
+        deferredDurationInput = getEl('deferred-duration'), staleDurationInput = getEl('stale-duration'),
+        saveSettingsBtn = getEl('save-settings-btn'), settingsMessage = getEl('settings-message'),
+        incomingTasksSection = getEl('incoming-tasks-section'), incomingTasksList = getEl('incoming-tasks-list'),
+        friendsToggleBtn = getEl('friends-toggle-btn'), friendsContent = getEl('friends-content'),
+        addFriendOpenBtn = getEl('add-friend-open-btn'), friendsList = getEl('friends-list'),
+        addFriendModal = getEl('add-friend-modal'), friendNameInput = getEl('friend-name-input'),
+        friendIdInput = getEl('friend-id-input'), saveFriendBtn = getEl('save-friend-btn'),
+        cancelFriendBtn = getEl('cancel-friend-btn'), assignTaskModal = getEl('assign-task-modal'),
+        friendSelect = getEl('friend-select'), assignTaskInput = getEl('assign-task-input'),
+        sendTaskBtn = getEl('send-task-btn'), cancelAssignBtn = getEl('cancel-assign-btn'),
+        chatsBtn = getEl('chats-btn'), chatNotificationBadge = getEl('chat-notification-badge'),
+        chatSection = getEl('chat-section'), backToTasksBtn = getEl('back-to-tasks-btn'),
+        chatFriendsList = getEl('chat-friends-list'), chatWindow = getEl('chat-window'),
+        chatWindowPlaceholder = getEl('chat-window-placeholder'), chatHeader = getEl('chat-header'),
+        chatMessages = getEl('chat-messages'), chatMessageInput = getEl('chat-message-input'),
+        sendChatMessageBtn = getEl('send-chat-message-btn'), enableNotificationsBtn = getEl('enable-notifications-btn'),
+        notificationsStatus = getEl('notifications-status'), imageViewerModal = getEl('image-viewer-modal'),
+        fullImage = getEl('full-image'), closeImageViewerBtn = getEl('close-image-viewer-btn'),
+        attachFileBtn = getEl('attach-file-btn'), imageUploadInput = getEl('image-upload-input'),
+        uploadProgressContainer = getEl('upload-progress-container'), uploadProgressBar = getEl('upload-progress-bar'),
+        reportBtn = getEl('report-btn'), reportSection = getEl('report-section'),
+        backToTasksFromReportBtn = getEl('back-to-tasks-from-report-btn'), reportTableBody = getEl('report-table-body'),
+        taskDetailsModal = getEl('task-details-modal'), taskDetailsContent = getEl('task-details-content'),
+        closeTaskDetailsBtn = getEl('close-task-details-btn'),
+        deleteFromReportBtn = getEl('delete-from-report-btn'),
+        viewIncomingTaskModal = getEl('view-incoming-task-modal'),
+        incomingTaskSender = getEl('incoming-task-sender'),
+        incomingTaskContent = getEl('incoming-task-content'),
+        incomingTaskAcceptBtn = getEl('incoming-task-accept-btn'),
+        incomingTaskDeclineBtn = getEl('incoming-task-decline-btn'),
+        incomingTaskCloseBtn = getEl('incoming-task-close-btn'),
+        taskActionsModal = getEl('task-actions-modal'),
+        actionDeferBtn = getEl('action-defer-btn'),
+        actionActivateBtn = getEl('action-activate-btn'),
+        actionProlongBtn = getEl('action-prolong-btn'),
+        actionDeleteBtn = getEl('action-delete-btn'),
+        cancelActionsBtn = getEl('cancel-actions-btn'),
+        resourcesBtn = getEl('resources-btn'), resourcesSection = getEl('resources-section'),
+        backToTasksFromResourcesBtn = getEl('back-to-tasks-from-resources-btn'),
+        resourcesGrid = getEl('resources-grid'), addShelfBtn = getEl('add-shelf-btn'),
+        addShelfModal = getEl('add-shelf-modal'), shelfNameInput = getEl('shelf-name-input'),
+        saveShelfBtn = getEl('save-shelf-btn'), cancelShelfBtn = getEl('cancel-shelf-btn'),
+        addResourceModal = getEl('add-resource-modal'), resourceTitleInput = getEl('resource-title-input'),
+        resourceContentInput = getEl('resource-content-input'),
+        saveResourceBtn = getEl('save-resource-btn'), cancelResourceBtn = getEl('cancel-resource-btn'),
+        resourcesSearchInput = getEl('resources-search-input');
 
     const boardsBtn = getEl('boards-btn'), boardsSection = getEl('boards-section'),
-          backToTasksFromBoardsBtn = getEl('back-to-tasks-from-boards-btn'),
-          boardsGrid = getEl('boards-grid'), createBoardBtn = getEl('create-board-btn'),
-          createBoardModal = getEl('create-board-modal'), boardNameInput = getEl('board-name-input'),
-          saveBoardBtn = getEl('save-board-btn'), cancelBoardBtn = getEl('cancel-board-btn'),
-          boardsListView = getEl('boards-list-view'), activeBoardView = getEl('active-board-view'),
-          activeBoardTitle = getEl('active-board-title'), backToBoardsListBtn = getEl('back-to-boards-list-btn'),
-          addBoardMemberBtn = getEl('add-board-member-btn'), addBoardMemberModal = getEl('add-board-member-modal'),
-          boardFriendSelect = getEl('board-friend-select'), saveBoardMemberBtn = getEl('save-board-member-btn'),
-          cancelBoardMemberBtn = getEl('cancel-board-member-btn'),
-          boardTasksList = getEl('board-tasks-list'), addBoardTaskBtn = getEl('add-board-task-btn'),
-          addBoardTaskModal = getEl('add-board-task-modal'), boardTaskTitle = getEl('board-task-title'),
-          subtasksContainer = getEl('subtasks-container'), addSubtaskFieldBtn = getEl('add-subtask-field-btn'),
-          saveBoardTaskBtn = getEl('save-board-task-btn'), cancelBoardTaskBtn = getEl('cancel-board-task-btn'),
-          boardStickersArea = getEl('board-stickers-area'), addStickerBtn = getEl('add-sticker-btn'),
-          addStickerModal = getEl('add-sticker-modal'), stickerTextInput = getEl('sticker-text-input'),
-          saveStickerBtn = getEl('save-sticker-btn'), cancelStickerBtn = getEl('cancel-sticker-btn'),
-          mobileTabTasks = getEl('mobile-tab-tasks'), mobileTabStickers = getEl('mobile-tab-stickers'),
-          boardTasksColumn = getEl('board-tasks-column'), boardStickersColumn = getEl('board-stickers-column');
+        backToTasksFromBoardsBtn = getEl('back-to-tasks-from-boards-btn'),
+        boardsGrid = getEl('boards-grid'), createBoardBtn = getEl('create-board-btn'),
+        createBoardModal = getEl('create-board-modal'), boardNameInput = getEl('board-name-input'),
+        saveBoardBtn = getEl('save-board-btn'), cancelBoardBtn = getEl('cancel-board-btn'),
+        boardsListView = getEl('boards-list-view'), activeBoardView = getEl('active-board-view'),
+        activeBoardTitle = getEl('active-board-title'), backToBoardsListBtn = getEl('back-to-boards-list-btn'),
+        addBoardMemberBtn = getEl('add-board-member-btn'), addBoardMemberModal = getEl('add-board-member-modal'),
+        boardFriendSelect = getEl('board-friend-select'), saveBoardMemberBtn = getEl('save-board-member-btn'),
+        cancelBoardMemberBtn = getEl('cancel-board-member-btn'),
+        boardTasksList = getEl('board-tasks-list'), addBoardTaskBtn = getEl('add-board-task-btn'),
+        addBoardTaskModal = getEl('add-board-task-modal'), boardTaskTitle = getEl('board-task-title'),
+        subtasksContainer = getEl('subtasks-container'), addSubtaskFieldBtn = getEl('add-subtask-field-btn'),
+        saveBoardTaskBtn = getEl('save-board-task-btn'), cancelBoardTaskBtn = getEl('cancel-board-task-btn'),
+        boardStickersArea = getEl('board-stickers-area'), addStickerBtn = getEl('add-sticker-btn'),
+        addStickerModal = getEl('add-sticker-modal'), stickerTextInput = getEl('sticker-text-input'),
+        saveStickerBtn = getEl('save-sticker-btn'), cancelStickerBtn = getEl('cancel-sticker-btn'),
+        mobileTabTasks = getEl('mobile-tab-tasks'), mobileTabStickers = getEl('mobile-tab-stickers'),
+        boardTasksColumn = getEl('board-tasks-column'), boardStickersColumn = getEl('board-stickers-column');
 
     let currentEditingTask = null;
     const editBoardTaskModal = getEl('editBoardTaskModal');
@@ -121,7 +121,7 @@ window.onload = function () {
     const cancelEditBoardTaskBtn = getEl('cancelEditBoardTaskBtn');
     const saveEditBoardTaskBtn = getEl('saveEditBoardTaskBtn');
 
-    let currentTaskWithAttachments = null; 
+    let currentTaskWithAttachments = null;
     const attachmentModal = getEl('attachment-modal');
     const closeAttachmentModal = getEl('close-attachment-modal');
     const attachmentTaskTitle = getEl('attachment-task-title');
@@ -158,21 +158,21 @@ window.onload = function () {
         if (!uid) return 'Невідомий';
         if (uid === userId) return (auth.currentUser?.displayName || 'Ви');
         if (friendsCache[uid] && friendsCache[uid].name) return friendsCache[uid].name;
-        return uid.substring(0,6) + '...';
+        return uid.substring(0, 6) + '...';
     };
 
     const getInitials = (uid) => {
         const name = getDisplayNameFor(uid);
         const parts = name.split(/\s+/).filter(Boolean);
-        if (parts.length === 0) return name.slice(0,2).toUpperCase();
-        if (parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+        if (parts.length === 0) return name.slice(0, 2).toUpperCase();
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[1][0]).toUpperCase();
     };
 
     const colorForUid = (uid) => {
-        const colors = ['#6366f1','#ef4444','#f97316','#059669','#0ea5e9','#8b5cf6','#db2777','#eab308'];
+        const colors = ['#6366f1', '#ef4444', '#f97316', '#059669', '#0ea5e9', '#8b5cf6', '#db2777', '#eab308'];
         let hash = 0;
-        for (let i=0;i<uid.length;i++) hash = (hash<<5)-hash + uid.charCodeAt(i);
+        for (let i = 0; i < uid.length; i++) hash = (hash << 5) - hash + uid.charCodeAt(i);
         return colors[Math.abs(hash) % colors.length];
     };
 
@@ -219,7 +219,7 @@ window.onload = function () {
                     }
                 }
                 if (task.status === 'active' && task.lastUpdatedAt) {
-                   if (Date.now() - task.lastUpdatedAt.toMillis() >= staleDurationHours * 3600000 && !task.isStale) {
+                    if (Date.now() - task.lastUpdatedAt.toMillis() >= staleDurationHours * 3600000 && !task.isStale) {
                         await updateDoc(task.ref, { isStale: true });
                         task.isStale = true;
                         showPushNotification('Завдання стало застарілим', { body: `Зверніть увагу на завдання: "${task.text}"` });
@@ -243,17 +243,17 @@ window.onload = function () {
         tasks.forEach(task => {
             const taskItem = document.createElement('div');
             taskItem.className = `p-4 rounded-xl shadow-md flex items-start justify-between ${task.isStale ? 'bg-red-100' : 'bg-white'} space-x-2`;
-            let buttonsHTML = status === 'completed' 
+            let buttonsHTML = status === 'completed'
                 ? `<button class="active-btn px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 btn-frosty">Активувати</button>`
                 : `<button class="complete-btn px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 btn-frosty">Виконано</button>
                    <button class="more-options-btn p-2 rounded-full hover:bg-gray-200">...</button>`;
-            
+
             taskItem.innerHTML = `
                 <div class="flex-grow min-w-0">
                     <p class="text-gray-800 cursor-pointer text-truncate-2 break-words">${task.text}</p>
                 </div>
                 <div class="flex-shrink-0 flex items-center space-x-2">${buttonsHTML}</div>`;
-            
+
             if (status !== 'completed') {
                 const moreBtn = taskItem.querySelector('.more-options-btn');
                 if (moreBtn) moreBtn.addEventListener('click', (e) => { e.stopPropagation(); showTaskActionsModal(task); });
@@ -291,126 +291,127 @@ window.onload = function () {
 
     const prolongTask = async (id) => { if (!userId) return; try { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, id), { lastUpdatedAt: serverTimestamp(), isStale: false }); } catch (e) { console.error("Error prolonging task:", e); } };
 
-    const saveSettings = async () => { 
-        if (!userId) return; 
-        const newDeferred = parseFloat(deferredDurationInput.value); 
-        const newStale = parseFloat(staleDurationInput.value); 
-        if (isNaN(newDeferred) || newDeferred < 0 || isNaN(newStale) || newStale < 0) { settingsMessage.textContent = "Будь ласка, введіть дійсні числа."; settingsMessage.className = 'text-sm text-center text-red-600'; return; } 
-        try { 
-            await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`), { deferredDurationHours: newDeferred, staleDurationHours: newStale }, { merge: true }); 
-            deferredDurationHours = newDeferred; staleDurationHours = newStale; 
-            settingsMessage.textContent = "Налаштування збережено."; settingsMessage.className = 'text-sm text-center text-green-600 visible'; 
-            setTimeout(() => settingsMessage.classList.remove('visible'), 3000); 
-        } catch (e) { console.error("Error saving settings:", e); } 
+    const saveSettings = async () => {
+        if (!userId) return;
+        const newDeferred = parseFloat(deferredDurationInput.value);
+        const newStale = parseFloat(staleDurationInput.value);
+        if (isNaN(newDeferred) || newDeferred < 0 || isNaN(newStale) || newStale < 0) { settingsMessage.textContent = "Будь ласка, введіть дійсні числа."; settingsMessage.className = 'text-sm text-center text-red-600'; return; }
+        try {
+            await setDoc(doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`), { deferredDurationHours: newDeferred, staleDurationHours: newStale }, { merge: true });
+            deferredDurationHours = newDeferred; staleDurationHours = newStale;
+            settingsMessage.textContent = "Налаштування збережено."; settingsMessage.className = 'text-sm text-center text-green-600 visible';
+            setTimeout(() => settingsMessage.classList.remove('visible'), 3000);
+        } catch (e) { console.error("Error saving settings:", e); }
     };
 
-    const saveExpansionState = async () => { 
-        if (!userId) return; 
-        const sections = { deferred: !deferredTasksList.classList.contains('hidden'), completed: !completedTasksList.classList.contains('hidden'), settings: !settingsContent.classList.contains('hidden'), friends: !friendsContent.classList.contains('hidden') }; 
-        try { const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`); await setDoc(settingsRef, { expandedSections: sections }, { merge: true }); } catch (e) { console.error("Error saving expansion state:", e); } 
+    const saveExpansionState = async () => {
+        if (!userId) return;
+        const sections = { deferred: !deferredTasksList.classList.contains('hidden'), completed: !completedTasksList.classList.contains('hidden'), settings: !settingsContent.classList.contains('hidden'), friends: !friendsContent.classList.contains('hidden') };
+        try { const settingsRef = doc(db, `artifacts/${appId}/users/${userId}/settings/app_settings`); await setDoc(settingsRef, { expandedSections: sections }, { merge: true }); } catch (e) { console.error("Error saving expansion state:", e); }
     };
 
     const showConfirmModal = (action, message, buttonText) => { currentAction = action; confirmModalMessage.textContent = message; confirmDeleteButton.textContent = buttonText; confirmModal.classList.remove('hidden'); };
     const hideConfirmModal = () => { confirmModal.classList.add('hidden'); currentAction = null; };
 
-    const deleteTask = async (task) => { 
-        if (!userId || !task || !task.id) return; 
-        try { 
-            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, task.id)); 
-            if (task.originalSharedTaskId) { 
-                const publicTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', task.originalSharedTaskId); 
-                await updateDoc(publicTaskRef, { status: 'declined' }); 
-            } 
-        } catch (e) { console.error("Error processing task deletion: ", e); showNotification('Помилка', 'Не вдалося повністю видалити завдання. Спробуйте ще раз.'); } 
+    const deleteTask = async (task) => {
+        if (!userId || !task || !task.id) return;
+        try {
+            await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, task.id));
+            if (task.originalSharedTaskId) {
+                const publicTaskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', task.originalSharedTaskId);
+                await updateDoc(publicTaskRef, { status: 'declined' });
+            }
+        } catch (e) { console.error("Error processing task deletion: ", e); showNotification('Помилка', 'Не вдалося повністю видалити завдання. Спробуйте ще раз.'); }
     };
 
-    const deleteChatMessage = async (msg) => { 
-        if (!userId || !msg.id || msg.senderId !== userId) return; 
-        try { 
-            const publicDataRef = doc(db, 'artifacts', appId, 'public', 'data'); 
-            await deleteDoc(doc(collection(publicDataRef, 'chat_messages'), msg.id)); 
-            if (msg.type === 'image' && msg.imageUrl) { 
-                const imageRef = ref(storage, msg.imageUrl); 
-                await deleteObject(imageRef); 
-            } 
-        } catch (e) { console.error("Error deleting chat message:", e); } 
+    const deleteChatMessage = async (msg) => {
+        if (!userId || !msg.id || msg.senderId !== userId) return;
+        try {
+            const publicDataRef = doc(db, 'artifacts', appId, 'public', 'data');
+            await deleteDoc(doc(collection(publicDataRef, 'chat_messages'), msg.id));
+            if (msg.type === 'image' && msg.imageUrl) {
+                const imageRef = ref(storage, msg.imageUrl);
+                await deleteObject(imageRef);
+            }
+        } catch (e) { console.error("Error deleting chat message:", e); }
     };
 
     const showViewEditModal = (task) => { currentTaskToEdit = task; editTaskInput.value = task.text; viewEditModal.classList.remove('hidden'); };
     const hideViewEditModal = () => { viewEditModal.classList.add('hidden'); currentTaskToEdit = null; };
-    const saveEditedTask = async () => { 
-        if (!userId || !currentTaskToEdit) return; 
-        const newText = editTaskInput.value.trim(); 
-        if (newText === '') { showNotification('Помилка', 'Текст завдання не може бути порожнім.'); return; } 
-        try { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, currentTaskToEdit.id), { text: newText, lastUpdatedAt: serverTimestamp() }); hideViewEditModal(); } catch (e) { console.error("Error updating task:", e); } 
+    const saveEditedTask = async () => {
+        if (!userId || !currentTaskToEdit) return;
+        const newText = editTaskInput.value.trim();
+        if (newText === '') { showNotification('Помилка', 'Текст завдання не може бути порожнім.'); return; }
+        try { await updateDoc(doc(db, `artifacts/${appId}/users/${userId}/tasks`, currentTaskToEdit.id), { text: newText, lastUpdatedAt: serverTimestamp() }); hideViewEditModal(); } catch (e) { console.error("Error updating task:", e); }
     };
 
     const showAddFriendModal = () => { friendNameInput.value = ''; friendIdInput.value = ''; addFriendModal.classList.remove('hidden'); };
     const hideAddFriendModal = () => { addFriendModal.classList.add('hidden'); };
-    const saveFriend = async () => { 
-        const name = friendNameInput.value.trim(); 
-        const friendId = friendIdInput.value.trim(); 
-        if (name === '' || friendId === '' || friendId === userId) return; 
-        try { await setDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId), { name, userId: friendId }); hideAddFriendModal(); } catch (e) { console.error("Error adding friend:", e); } 
+    const saveFriend = async () => {
+        const name = friendNameInput.value.trim();
+        const friendId = friendIdInput.value.trim();
+        if (name === '' || friendId === '' || friendId === userId) return;
+        try { await setDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId), { name, userId: friendId }); hideAddFriendModal(); } catch (e) { console.error("Error adding friend:", e); }
     };
-    const deleteFriend = async (friendId) => { 
-        if (!userId || !friendId) return; 
-        try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId)); } catch (e) { console.error("Error deleting friend:", e); showNotification('Помилка', 'Не вдалося видалити друга.'); } 
-    };
-
-    const subscribeToFriends = () => { 
-        if (!userId) return; 
-        try { onSnapshot(collection(db, `artifacts/${appId}/users/${userId}/friends`), (snapshot) => { friendsCache = {}; snapshot.docs.forEach(d => friendsCache[d.id] = d.data()); renderFriends(Object.values(friendsCache)); renderChatFriends(Object.values(friendsCache)); }, error => console.error("Error in friends subscription:", error)); } catch (e) { console.error("Error subscribing to friends:", e); } 
+    const deleteFriend = async (friendId) => {
+        if (!userId || !friendId) return;
+        try { await deleteDoc(doc(db, `artifacts/${appId}/users/${userId}/friends`, friendId)); } catch (e) { console.error("Error deleting friend:", e); showNotification('Помилка', 'Не вдалося видалити друга.'); }
     };
 
-    const renderFriends = (friends) => { 
-        friendsList.innerHTML = ''; friendSelect.innerHTML = '<option value="">Виберіть друга</option>'; 
-        if (friends.length === 0) { friendsList.innerHTML = `<p class="text-gray-500 text-center italic">Немає друзів.</p>`; return; } 
-        friends.forEach(friend => { 
-            const friendItem = document.createElement('div'); friendItem.className = 'p-3 rounded-lg bg-white shadow-md flex justify-between items-center'; 
-            friendItem.innerHTML = `<div><p class="font-semibold text-gray-800">${friend.name}</p><p class="text-sm text-gray-500 break-all">${friend.userId}</p></div><button class="delete-friend-btn p-2 rounded-full hover:bg-red-100 text-red-500"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`; 
-            friendItem.querySelector('.delete-friend-btn').addEventListener('click', () => { showConfirmModal(() => deleteFriend(friend.userId), `Ви впевнені, що хочете видалити ${friend.name} зі списку друзів?`, "Так, видалити"); }); 
-            friendsList.appendChild(friendItem); friendSelect.innerHTML += `<option value="${friend.userId}">${friend.name}</option>`; 
-        }); 
+    const subscribeToFriends = () => {
+        if (!userId) return;
+        try { onSnapshot(collection(db, `artifacts/${appId}/users/${userId}/friends`), (snapshot) => { friendsCache = {}; snapshot.docs.forEach(d => friendsCache[d.id] = d.data()); renderFriends(Object.values(friendsCache)); renderChatFriends(Object.values(friendsCache)); }, error => console.error("Error in friends subscription:", error)); } catch (e) { console.error("Error subscribing to friends:", e); }
+    };
+
+    const renderFriends = (friends) => {
+        friendsList.innerHTML = ''; friendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+        if (friends.length === 0) { friendsList.innerHTML = `<p class="text-gray-500 text-center italic">Немає друзів.</p>`; return; }
+        friends.forEach(friend => {
+            const friendItem = document.createElement('div'); friendItem.className = 'p-3 rounded-lg bg-white shadow-md flex justify-between items-center';
+            friendItem.innerHTML = `<div><p class="font-semibold text-gray-800">${friend.name}</p><p class="text-sm text-gray-500 break-all">${friend.userId}</p></div><button class="delete-friend-btn p-2 rounded-full hover:bg-red-100 text-red-500"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>`;
+            friendItem.querySelector('.delete-friend-btn').addEventListener('click', () => { showConfirmModal(() => deleteFriend(friend.userId), `Ви впевнені, що хочете видалити ${friend.name} зі списку друзів?`, "Так, видалити"); });
+            friendsList.appendChild(friendItem); friendSelect.innerHTML += `<option value="${friend.userId}">${friend.name}</option>`;
+        });
     };
 
     const renderChatFriends = (friends) => { chatFriendsList.innerHTML = friends.length === 0 ? `<p class="text-gray-500 text-center italic p-4">Немає друзів для чату.</p>` : ''; friends.forEach(friend => { const friendItem = document.createElement('div'); friendItem.className = 'p-3 rounded-lg hover:bg-indigo-100 cursor-pointer flex items-center justify-between'; friendItem.innerHTML = `<div class="font-semibold text-gray-800 flex-grow">${friend.name}</div><span id="unread-count-${friend.userId}" class="px-2 py-1 bg-red-600 text-white text-xs rounded-full hidden"></span>`; friendItem.addEventListener('click', () => selectFriendForChat(friend)); chatFriendsList.appendChild(friendItem); }); };
 
     const showAssignTaskModal = () => { assignTaskInput.value = ''; friendSelect.value = ''; assignTaskModal.classList.remove('hidden'); };
     const hideAssignTaskModal = () => { assignTaskModal.classList.add('hidden'); };
-    const sendAssignedTask = async () => { 
-        const recipientId = friendSelect.value; const taskText = assignTaskInput.value.trim(); 
-        if (recipientId === '' || taskText === '') return; 
-        try { 
-            const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); 
-            await addDoc(sharedTasksCollection, { text: taskText, senderId: userId, senderName: auth.currentUser.displayName || 'Анонім', recipientId, createdAt: serverTimestamp(), status: 'pending' }); 
-            const selectedFriend = { userId: recipientId, name: friendSelect.options[friendSelect.selectedIndex].text }; 
-            await sendChatMessage({ text: `Я призначив вам завдання: "${taskText}"`, recipient: selectedFriend, isTask: true }); 
-            hideAssignTaskModal(); 
-        } catch (e) { console.error("Error sending assigned task:", e); } 
+    const sendAssignedTask = async () => {
+        const recipientId = friendSelect.value; const taskText = assignTaskInput.value.trim();
+        if (recipientId === '' || taskText === '') return;
+        try {
+            const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
+            await addDoc(sharedTasksCollection, { text: taskText, senderId: userId, senderName: auth.currentUser.displayName || 'Анонім', recipientId, createdAt: serverTimestamp(), status: 'pending' });
+            const selectedFriend = { userId: recipientId, name: friendSelect.options[friendSelect.selectedIndex].text };
+            await sendChatMessage({ text: `Я призначив вам завдання: "${taskText}"`, recipient: selectedFriend, isTask: true });
+            hideAssignTaskModal();
+        } catch (e) { console.error("Error sending assigned task:", e); }
     };
 
-    const subscribeToIncomingTasks = () => { 
-        if (!userId) return; 
-        const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); 
-        const q = query(sharedTasksCollection, where("recipientId", "==", userId), where("status", "==", "pending")); 
-        onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderIncomingTasks(tasks); }, error => console.error("Error in incoming tasks subscription:", error)); 
+    const subscribeToIncomingTasks = () => {
+        if (!userId) return;
+        const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
+        const q = query(sharedTasksCollection, where("recipientId", "==", userId), where("status", "==", "pending"));
+        onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderIncomingTasks(tasks); }, error => console.error("Error in incoming tasks subscription:", error));
     };
 
-    const renderIncomingTasks = (tasks) => { 
-        incomingTasksList.innerHTML = ''; 
-        if (tasks.length === 0) { incomingTasksSection.style.display = 'none'; return; } 
-        incomingTasksSection.style.display = 'block'; 
-        tasks.forEach(task => { 
-            const taskItem = document.createElement('div'); taskItem.className = 'p-4 rounded-xl shadow-md bg-white flex items-center justify-between space-x-2'; taskItem.innerHTML = `<div class="flex-grow cursor-pointer min-w-0"><p class="text-sm text-gray-500">Від: <span class="font-semibold">${task.senderName}</span></p><p class="text-gray-800 break-words">${task.text}</p></div><div class="flex-shrink-0"><button class="view-incoming-task-btn px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold btn-frosty">Переглянути</button></div>`; taskItem.querySelector('.view-incoming-task-btn').addEventListener('click', () => showViewIncomingTaskModal(task)); taskItem.querySelector('.flex-grow').addEventListener('click', () => showViewIncomingTaskModal(task)); incomingTasksList.appendChild(taskItem); }); 
+    const renderIncomingTasks = (tasks) => {
+        incomingTasksList.innerHTML = '';
+        if (tasks.length === 0) { incomingTasksSection.style.display = 'none'; return; }
+        incomingTasksSection.style.display = 'block';
+        tasks.forEach(task => {
+            const taskItem = document.createElement('div'); taskItem.className = 'p-4 rounded-xl shadow-md bg-white flex items-center justify-between space-x-2'; taskItem.innerHTML = `<div class="flex-grow cursor-pointer min-w-0"><p class="text-sm text-gray-500">Від: <span class="font-semibold">${task.senderName}</span></p><p class="text-gray-800 break-words">${task.text}</p></div><div class="flex-shrink-0"><button class="view-incoming-task-btn px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold btn-frosty">Переглянути</button></div>`; taskItem.querySelector('.view-incoming-task-btn').addEventListener('click', () => showViewIncomingTaskModal(task)); taskItem.querySelector('.flex-grow').addEventListener('click', () => showViewIncomingTaskModal(task)); incomingTasksList.appendChild(taskItem);
+        });
     };
 
-    const acceptIncomingTask = async (task) => { 
-        if (!userId) return; 
-        try { 
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), { text: task.text, status: 'active', createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), isStale: false, assignedBy: task.senderName, originalSharedTaskId: task.id }); 
-            await updateSharedTaskStatus(task.id, 'accepted'); 
-        } catch (e) { console.error("Error accepting task:", e); } 
+    const acceptIncomingTask = async (task) => {
+        if (!userId) return;
+        try {
+            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/tasks`), { text: task.text, status: 'active', createdAt: serverTimestamp(), lastUpdatedAt: serverTimestamp(), isStale: false, assignedBy: task.senderName, originalSharedTaskId: task.id });
+            await updateSharedTaskStatus(task.id, 'accepted');
+        } catch (e) { console.error("Error accepting task:", e); }
     };
 
     const updateSharedTaskStatus = async (taskId, status) => { try { const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', taskId); await updateDoc(taskRef, { status }); } catch (e) { console.error(`Error updating shared task to ${status}:`, e); } };
@@ -547,7 +548,7 @@ window.onload = function () {
 
     const openReportView = () => { mainContent.classList.add('hidden'); reportSection.classList.remove('hidden'); subscribeToReport(); };
     const closeReportView = () => { reportSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromReport) unsubscribeFromReport(); unsubscribeFromReport = null; };
-    const subscribeToReport = () => { if (!userId) return; if (unsubscribeFromReport) unsubscribeFromReport(); const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); const q = query(sharedTasksCollection, where("senderId", "==", userId)); unsubscribeFromReport = onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a,b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderReport(tasks); }, error => console.error("Error in report subscription:", error)); };
+    const subscribeToReport = () => { if (!userId) return; if (unsubscribeFromReport) unsubscribeFromReport(); const sharedTasksCollection = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'); const q = query(sharedTasksCollection, where("senderId", "==", userId)); unsubscribeFromReport = onSnapshot(q, (snapshot) => { const tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() })); tasks.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)); renderReport(tasks); }, error => console.error("Error in report subscription:", error)); };
     const renderReport = (tasks) => {
         reportTableBody.innerHTML = '';
         if (Object.keys(friendsCache).length === 0 && tasks.length > 0) { setTimeout(() => renderReport(tasks), 100); return; }
@@ -556,7 +557,7 @@ window.onload = function () {
         if (Object.keys(tasksByRecipient).length === 0) { reportTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 italic py-8">Ви ще не призначили жодного завдання.</td></tr>`; return; }
         for (const recipientId in tasksByRecipient) {
             const userTasks = tasksByRecipient[recipientId];
-            const friendName = friendsCache[recipientId]?.name || `Невідомий (${recipientId.substring(0,5)}...)`;
+            const friendName = friendsCache[recipientId]?.name || `Невідомий (${recipientId.substring(0, 5)}...)`;
             const row = document.createElement('tr');
             const statuses = ['pending', 'accepted', 'completed', 'declined'];
             let cellsHTML = statuses.map(status => {
@@ -605,7 +606,7 @@ window.onload = function () {
             const shelfDiv = document.createElement('div');
             shelfDiv.className = 'shelf-card rounded-xl p-4 flex flex-col h-full';
             const itemsHTML = (shelf.items || []).map(item => {
-                if(item.type !== 'link') return '';
+                if (item.type !== 'link') return '';
                 const faviconUrl = getFaviconUrl(item.url);
                 return `<div class="resource-item flex items-center justify-between p-2 rounded mb-1 group relative cursor-pointer" onclick="window.open('${item.url}', '_blank')"><div class="flex items-center space-x-3 overflow-hidden w-full"><img src="${faviconUrl}" alt="icon" class="resource-favicon flex-shrink-0" onerror="this.src='https://www.google.com/s2/favicons?domain=google.com'"><span class="text-gray-800 font-medium truncate text-sm">${item.title}</span></div><div class="flex space-x-1 absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 rounded shadow-sm backdrop-blur-sm" onclick="event.stopPropagation()"><button class="copy-link-btn text-gray-500 hover:text-indigo-600 p-1.5" data-url="${item.url}" title="Копіювати"><i class="fas fa-copy"></i></button><button class="delete-resource-btn text-gray-500 hover:text-red-600 p-1.5" data-shelf-id="${shelf.id}" data-item-id="${item.id}" title="Видалити"><i class="fas fa-times"></i></button></div></div>`;
             }).join('');
@@ -616,7 +617,7 @@ window.onload = function () {
                 btn.addEventListener('click', (e) => {
                     const itemId = e.currentTarget.dataset.itemId;
                     const originalShelf = currentShelvesData.find(s => s.id === shelf.id);
-                    if(originalShelf) deleteResource(shelf.id, itemId, originalShelf.items);
+                    if (originalShelf) deleteResource(shelf.id, itemId, originalShelf.items);
                 });
             });
             shelfDiv.querySelectorAll('.copy-link-btn').forEach(btn => {
@@ -683,17 +684,17 @@ window.onload = function () {
     }
 
     function autoResizeTextarea(element) {
-    element.style.height = "auto";
-    element.style.height = (element.scrollHeight) + "px";
-}
+        element.style.height = "auto";
+        element.style.height = (element.scrollHeight) + "px";
+    }
 
     function addEditSubtaskRow(text = "") {
-    const container = getEl("editSubtasksContainer");
+        const container = getEl("editSubtasksContainer");
 
-    const row = document.createElement("div");
-    row.className = "flex items-start gap-2 mb-1";
+        const row = document.createElement("div");
+        row.className = "flex items-start gap-2 mb-1";
 
-    row.innerHTML = `
+        row.innerHTML = `
         <textarea 
             class="edit-subtask-input 
                 w-full 
@@ -705,13 +706,13 @@ window.onload = function () {
         <button class="remove-subtask-btn text-red-500 text-lg mt-1">&times;</button>
     `;
 
-    const textarea = row.querySelector(".edit-subtask-input");
-    
-    textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+        const textarea = row.querySelector(".edit-subtask-input");
 
-    row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
-    container.appendChild(row);
-}
+        textarea.addEventListener("input", () => autoResizeTextarea(textarea));
+
+        row.querySelector(".remove-subtask-btn").addEventListener("click", () => row.remove());
+        container.appendChild(row);
+    }
 
     getEl("addEditSubtaskBtn").addEventListener("click", () => addEditSubtaskRow(""));
 
@@ -738,63 +739,62 @@ window.onload = function () {
     }
 
     async function saveEditBoardTask() {
-    if (!editingBoardTask) return;
+        if (!editingBoardTask) return;
 
-    const title = getEl("editBoardTaskTitle").value.trim();
-    if (!title) return;
+        const title = getEl("editBoardTaskTitle").value.trim();
+        if (!title) return;
 
-    const originalSubtasks = editingBoardTask.subtasks || [];
-    
-    const originalSubtaskMap = new Map();
-    originalSubtasks.forEach(s => {
-        originalSubtaskMap.set(s.text, s.completed); 
-    });
+        const originalSubtasks = editingBoardTask.subtasks || [];
 
-    const subtasks = Array.from(
-        document.querySelectorAll(".edit-subtask-input")
-    )
-    .map(el => {
-        const text = el.value.trim();
-        let completed = false;
-
-        if (originalSubtaskMap.has(text)) {
-            completed = originalSubtaskMap.get(text);
-        } 
-
-        return {
-            text: text,
-            completed: completed
-        };
-    })
-    .filter(s => s.text !== "");
-
-    // Логування зміни завдання, якщо назва змінилася
-    if (editingBoardTask.text !== title) {
-        await logBoardActivity(editingBoardTask.boardId || currentBoardId, {
-            type: 'task_edited',
-            itemId: editingBoardTask.id,
-            itemText: editingBoardTask.text,
-            newItemText: title
+        const originalSubtaskMap = new Map();
+        originalSubtasks.forEach(s => {
+            originalSubtaskMap.set(s.text, s.completed);
         });
+
+        const subtasks = Array.from(
+            document.querySelectorAll(".edit-subtask-input")
+        )
+            .map(el => {
+                const text = el.value.trim();
+                let completed = false;
+
+                if (originalSubtaskMap.has(text)) {
+                    completed = originalSubtaskMap.get(text);
+                }
+
+                return {
+                    text: text,
+                    completed: completed
+                };
+            })
+            .filter(s => s.text !== "");
+
+        if (editingBoardTask.text !== title) {
+            await logBoardActivity(editingBoardTask.boardId || currentBoardId, {
+                type: 'task_edited',
+                itemId: editingBoardTask.id,
+                itemText: editingBoardTask.text,
+                newItemText: title
+            });
+        }
+
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', editingBoardTask.id), {
+            text: title,
+            subtasks
+        });
+
+        getEl("editBoardTaskModal").classList.add("hidden");
+        editingBoardTask = null;
+
+        loadBoardTasks();
     }
-
-    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', editingBoardTask.id), {
-        text: title,
-        subtasks
-    });
-
-    getEl("editBoardTaskModal").classList.add("hidden");
-    editingBoardTask = null;
-
-    loadBoardTasks(); 
-}
 
     async function saveEditedBoard() {
         if (!editingBoard) return;
 
         const newTitle = getEl("editBoardTitleInput").value.trim();
         if (!newTitle) {
-            cancelEditBoard(); 
+            cancelEditBoard();
             return;
         }
 
@@ -818,17 +818,17 @@ window.onload = function () {
     }
 
     function cancelEditBoard() {
-        getEl("editBoardModal").classList.add("hidden"); 
+        getEl("editBoardModal").classList.add("hidden");
         editingBoard = null;
     }
     getEl("saveEditBoardBtn").addEventListener("click", saveEditedBoard);
 
     function openEditBoardModal(board) {
-        editingBoard = board; 
-        
+        editingBoard = board;
+
         getEl("editBoardTitleInput").value = board.title;
-        
-        getEl("editBoardModal").classList.remove("hidden"); 
+
+        getEl("editBoardModal").classList.remove("hidden");
     }
 
     getEl("cancelEditBoardBtn").addEventListener("click", cancelEditBoard);
@@ -842,43 +842,40 @@ window.onload = function () {
 
 
     const renderBoardTask = (item) => {
-    const total = item.subtasks ? item.subtasks.length : 0;
-    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-    const attachmentsCount = (item.attachments || []).length; 
+        const total = item.subtasks ? item.subtasks.length : 0;
+        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        const attachmentsCount = (item.attachments || []).length;
 
-    const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
-    el.style.minHeight = "80px";
-    el.style.wordBreak = "break-word";
-    el.style.overflowWrap = "break-word"; 
-    el.style.whiteSpace = "normal";
+        const el = document.createElement('div');
+        el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
+        el.style.minHeight = "80px";
+        el.style.wordBreak = "break-word";
+        el.style.overflowWrap = "break-word";
+        el.style.whiteSpace = "normal";
 
-    // --- ЛОГІКА СКРІПКИ ---
-    let attachmentBtnHtml = '';
-    if (attachmentsCount > 0) {
-        attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
+        let attachmentBtnHtml = '';
+        if (attachmentsCount > 0) {
+            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
             <i class="fas fa-paperclip text-xs"></i><span class="ml-1">${attachmentsCount}</span>
         </button>`;
-    } else {
-         attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
+        } else {
+            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
             <i class="fas fa-paperclip"></i>
         </button>`;
-    }
-    // --- КІНЕЦЬ ЛОГІКИ СКРІПКИ ---
+        }
 
-
-    let subtasksHtml = '';
-    if(item.subtasks) {
-        subtasksHtml = item.subtasks.map((s, idx) => `
+        let subtasksHtml = '';
+        if (item.subtasks) {
+            subtasksHtml = item.subtasks.map((s, idx) => `
             <div class="flex items-start gap-2 mt-1">
                 <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
                 <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
             </div>
         `).join('');
-    }
+        }
 
-    el.innerHTML = `
+        el.innerHTML = `
         <div class="flex justify-between items-start mb-2">
             <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${item.text}</h4>
             <div class="flex gap-2 flex-shrink-0">
@@ -896,25 +893,25 @@ window.onload = function () {
         ${attachmentBtnHtml}
     `;
 
-    const deleteBtn = el.querySelector('.delete-item-btn');
-    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-    const editBtn = el.querySelector('.edit-item-btn');
-    if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
-    });
-
-    // НОВИЙ ОБРОБНИК ПОДІЙ ДЛЯ КНОПКИ СКРІПКИ
-    const attachmentBtnEl = el.querySelector('.attachment-btn');
-    if (attachmentBtnEl) {
-        attachmentBtnEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showAttachmentPopover(item);
+        const deleteBtn = el.querySelector('.delete-item-btn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const editBtn = el.querySelector('.edit-item-btn');
+        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
         });
-    }
 
-    boardTasksList.appendChild(el);
-};
+        // НОВИЙ ОБРОБНИК ПОДІЙ ДЛЯ КНОПКИ СКРІПКИ
+        const attachmentBtnEl = el.querySelector('.attachment-btn');
+        if (attachmentBtnEl) {
+            attachmentBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showAttachmentPopover(item);
+            });
+        }
+
+        boardTasksList.appendChild(el);
+    };
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');
@@ -930,15 +927,15 @@ window.onload = function () {
     };
 
     const subscribeToBoardItems = (boardId) => {
-        if(unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+        if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
         unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
             boardTasksList.innerHTML = '';
             boardStickersArea.innerHTML = '';
             snapshot.forEach(d => {
                 const item = { id: d.id, ...d.data() };
-                if(item.type === 'task') renderBoardTask(item);
-                else if(item.type === 'sticker') renderBoardSticker(item);
+                if (item.type === 'task') renderBoardTask(item);
+                else if (item.type === 'sticker') renderBoardSticker(item);
             });
         }, error => console.error("Board items subscription error:", error));
     };
@@ -965,26 +962,26 @@ window.onload = function () {
     let latestBoardActivities = [];
 
     const formatActivityText = (act) => {
-    const actor = getDisplayNameFor(act.performedBy);
-    switch(act.type) {
-        case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
-        case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
-        case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
-        case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
-        case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
-        case 'task_deleted': return `${actor} видалив елемент`;
-        case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`; 
-        case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`; 
-        case 'task_edited': return `${actor} змінив завдання з «${act.itemText || '…'}» на «${act.newItemText || '…'}»`;
-        default: return `${actor} зробив дію: ${act.type}`;
-    }
-};
+        const actor = getDisplayNameFor(act.performedBy);
+        switch (act.type) {
+            case 'task_added': return `${actor} створив завдання: «${act.text || act.itemText || 'Без назви'}»`;
+            case 'subtask_checked': return `${actor} викреслив пункт: «${act.subtaskText || '…'}»`;
+            case 'subtask_unchecked': return `${actor} відновив пункт: «${act.subtaskText || '…'}»`;
+            case 'sticker_added': return `${actor} додав стікер: «${act.stickerText || '…'}»`;
+            case 'sticker_removed': return `${actor} видалив стікер: «${act.stickerText || '…'}»`;
+            case 'task_deleted': return `${actor} видалив елемент`;
+            case 'attachment_added': return `${actor} додав посилання «${act.attachmentName}» до завдання «${act.itemText || '…'}»`;
+            case 'attachment_removed': return `${actor} видалив посилання «${act.attachmentName}» із завдання «${act.itemText || '…'}»`;
+            case 'task_edited': return `${actor} змінив завдання з «${act.itemText || '…'}» на «${act.newItemText || '…'}»`;
+            default: return `${actor} зробив дію: ${act.type}`;
+        }
+    };
 
     const subscribeToBoardActivities = (boardId) => {
         if (unsubscribeFromBoardActivities) unsubscribeFromBoardActivities();
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_activities'), where('boardId', '==', boardId));
         unsubscribeFromBoardActivities = onSnapshot(q, (snapshot) => {
-            latestBoardActivities = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
+            latestBoardActivities = snapshot.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0));
             renderBoardReport(latestBoardActivities);
             populateFilterUsers(latestBoardActivities);
         }, error => console.error("Board activities subscription error:", error));
@@ -1023,19 +1020,19 @@ window.onload = function () {
         const grouped = {};
         filtered.forEach(a => {
             const d = a.timestamp?.toDate ? a.timestamp.toDate() : (a.timestamp ? new Date(a.timestamp) : new Date());
-            const key = d.toISOString().slice(0,10);
+            const key = d.toISOString().slice(0, 10);
             if (!grouped[key]) grouped[key] = [];
             grouped[key].push(a);
         });
 
-        Object.keys(grouped).sort((a,b) => b.localeCompare(a)).forEach(dayKey => {
+        Object.keys(grouped).sort((a, b) => b.localeCompare(a)).forEach(dayKey => {
             const dayHeader = document.createElement('div');
             dayHeader.className = 'py-2 text-sm font-semibold text-gray-600';
             const day = new Date(dayKey);
             dayHeader.textContent = day.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
             boardReportBody.appendChild(dayHeader);
 
-            grouped[dayKey].sort((a,b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)).forEach(act => {
+            grouped[dayKey].sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)).forEach(act => {
                 const item = document.createElement('div');
                 item.className = 'timeline-item bg-white mb-3';
                 const avatar = document.createElement('div');
@@ -1101,7 +1098,7 @@ window.onload = function () {
 
     const addBoardTask_withLogging = async () => {
         const title = boardTaskTitle.value.trim();
-        if(!title || !currentBoardId) return;
+        if (!title || !currentBoardId) return;
 
         const subtaskInputs = document.querySelectorAll('.subtask-input');
         const subtasks = Array.from(subtaskInputs).map(inp => ({
@@ -1126,7 +1123,7 @@ window.onload = function () {
             addBoardTaskModal.classList.add('hidden');
             boardTaskTitle.value = '';
             subtasksContainer.innerHTML = '<input type="text" placeholder="Крок 1" class="subtask-input w-full px-3 py-1.5 rounded border border-gray-200 text-sm">';
-        } catch(e) { console.error("Error adding board task", e); }
+        } catch (e) { console.error("Error adding board task", e); }
     };
 
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
@@ -1150,7 +1147,7 @@ window.onload = function () {
     const addSticker_withLogging = async () => {
         try {
             const text = stickerTextInput.value.trim();
-            if(!text || !currentBoardId) return;
+            if (!text || !currentBoardId) return;
             const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), {
                 boardId: currentBoardId,
                 type: 'sticker',
@@ -1166,7 +1163,7 @@ window.onload = function () {
             });
             addStickerModal.classList.add('hidden');
             stickerTextInput.value = '';
-        } catch(e) { console.error("Error adding sticker", e); }
+        } catch (e) { console.error("Error adding sticker", e); }
     };
 
     const deleteBoardItem_withLogging = async (itemId) => {
@@ -1176,7 +1173,7 @@ window.onload = function () {
             const snapshot = await getDoc(itemRef);
             if (!snapshot.exists()) { console.warn('Item not found for deletion', itemId); return; }
             const item = { id: snapshot.id, ...snapshot.data() };
-            if(item.type === 'sticker') {
+            if (item.type === 'sticker') {
                 await logBoardActivity(item.boardId || currentBoardId, {
                     type: 'sticker_removed',
                     itemId: item.id,
@@ -1197,11 +1194,11 @@ window.onload = function () {
     };
 
     const subscribeToBoards = () => {
-        if(!userId) return;
+        if (!userId) return;
         const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), where('members', 'array-contains', userId));
         unsubscribeFromBoards = onSnapshot(q, (snapshot) => {
             boardsGrid.innerHTML = '';
-            if(snapshot.empty) {
+            if (snapshot.empty) {
                 boardsGrid.innerHTML = `<p class="text-center col-span-3 text-gray-500">Ви ще не маєте спільних дошок.</p>`;
                 return;
             }
@@ -1212,7 +1209,7 @@ window.onload = function () {
                 const el = document.createElement('div');
                 el.className = 'bg-white p-6 rounded-xl shadow-lg border border-orange-100 cursor-pointer hover:shadow-xl transition-all transform hover:-translate-y-1 relative group';
 
-                const deleteBtnHtml = isOwner 
+                const deleteBtnHtml = isOwner
                     ? `<button class="delete-board-btn absolute top-2 right-2 text-gray-300 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity" data-id="${board.id}" title="Видалити дошку"><i class="fas fa-trash-alt"></i></button>`
                     : '';
 
@@ -1228,18 +1225,18 @@ window.onload = function () {
                 `;
 
                 el.addEventListener('click', (e) => {
-                    if(e.target.closest('.delete-board-btn') || e.target.closest('.edit-board-btn')) return;
+                    if (e.target.closest('.delete-board-btn') || e.target.closest('.edit-board-btn')) return;
                     openActiveBoard(board);
                 });
 
-                if(isOwner && el.querySelector('.delete-board-btn')) {
+                if (isOwner && el.querySelector('.delete-board-btn')) {
                     el.querySelector('.delete-board-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
                         showConfirmModal(() => deleteBoard(board.id), `Видалити дошку "${board.title}"? Це видалить всі завдання та стікери на ній.`, "Видалити");
                     });
                 }
 
-                if(isOwner && el.querySelector('.edit-board-btn')) {
+                if (isOwner && el.querySelector('.edit-board-btn')) {
                     el.querySelector('.edit-board-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
                         openEditBoardModal(board);
@@ -1253,7 +1250,7 @@ window.onload = function () {
 
     const createBoard = async () => {
         const title = boardNameInput.value.trim();
-        if(!title || !userId) return;
+        if (!title || !userId) return;
         try {
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'boards'), {
                 title,
@@ -1263,11 +1260,11 @@ window.onload = function () {
             });
             createBoardModal.classList.add('hidden');
             boardNameInput.value = '';
-        } catch(e) { console.error("Error creating board", e); }
+        } catch (e) { console.error("Error creating board", e); }
     };
 
     const deleteBoard = async (boardId) => {
-        if(!boardId || !userId) return;
+        if (!boardId || !userId) return;
         try {
             const itemsQuery = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
             const itemsSnapshot = await getDocs(itemsQuery);
@@ -1276,19 +1273,16 @@ window.onload = function () {
             batch.delete(doc(db, 'artifacts', appId, 'public', 'data', 'boards', boardId));
             await batch.commit();
             showNotification('Успіх', 'Дошку успішно видалено.');
-        } catch(e) {
+        } catch (e) {
             console.error("Error deleting board:", e);
             showNotification('Помилка', 'Не вдалося видалити дошку.');
         }
     };
-    
 
-// --- ЛОГІКА Вкладень (Attachment Logic) ---
-
-const renderAttachmentItem = (item, attachment, index) => {
-    const li = document.createElement('div');
-    li.className = 'flex justify-between items-center p-2 bg-gray-100 rounded text-sm group';
-    li.innerHTML = `
+    const renderAttachmentItem = (item, attachment, index) => {
+        const li = document.createElement('div');
+        li.className = 'flex justify-between items-center p-2 bg-gray-100 rounded text-sm group';
+        li.innerHTML = `
         <a href="${attachment.url}" target="_blank" class="text-indigo-600 hover:text-indigo-800 truncate flex items-center max-w-[85%]">
             <i class="fas fa-external-link-alt text-xs mr-2"></i>
             <span class="font-medium">${attachment.name}</span>
@@ -1297,134 +1291,118 @@ const renderAttachmentItem = (item, attachment, index) => {
             <i class="fas fa-trash-alt"></i>
         </button>
     `;
-    li.querySelector('.remove-attachment-btn').addEventListener('click', () => removeAttachment_withLogging(item, index));
-    attachmentsList.appendChild(li);
-};
+        li.querySelector('.remove-attachment-btn').addEventListener('click', () => removeAttachment_withLogging(item, index));
+        attachmentsList.appendChild(li);
+    };
 
-const showAttachmentPopover = (item) => {
-    currentTaskWithAttachments = item;
-    attachmentTaskTitle.textContent = `Завдання: ${item.text}`;
-    attachmentsList.innerHTML = '';
-    
-    (item.attachments || []).forEach((att, index) => {
-        renderAttachmentItem(item, att, index);
-    });
-    
-    attachmentNameInput.value = '';
-    attachmentUrlInput.value = '';
-    attachmentModal.classList.remove('hidden');
-    attachmentUrlInput.focus();
-};
+    const showAttachmentPopover = (item) => {
+        currentTaskWithAttachments = item;
+        attachmentTaskTitle.textContent = `Завдання: ${item.text}`;
+        attachmentsList.innerHTML = '';
 
-const addAttachment_withLogging = async () => {
-    const name = attachmentNameInput.value.trim();
-    const url = attachmentUrlInput.value.trim();
-    
-    if (!name || !url || !currentTaskWithAttachments) {
-        showNotification('Помилка', 'Введіть назву та коректний URL.');
-        return;
-    }
-    
-    try {
-        new URL(url);
-    } catch (_) {
-        showNotification('Помилка', 'Введений URL не є коректним.');
-        return;  
-    }
-
-    try {
-        const item = currentTaskWithAttachments;
-        const taskId = item.id; // Зберігаємо ID
-
-        // 1. Оновлення Firebase за допомогою arrayUnion
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
-            attachments: arrayUnion({ 
-                name: name, 
-                url: url, 
-                createdAt: new Date() 
-            })
+        (item.attachments || []).forEach((att, index) => {
+            renderAttachmentItem(item, att, index);
         });
-        
-        // 2. Логування активності
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: 'attachment_added',
-            itemId: item.id,
-            itemText: item.text,
-            attachmentName: name
-        });
-        
-        // 3. Очищення полів вводу
+
         attachmentNameInput.value = '';
         attachmentUrlInput.value = '';
+        attachmentModal.classList.remove('hidden');
+        attachmentUrlInput.focus();
+    };
 
-        // <<< НОВИЙ БЛОК ДЛЯ ОНОВЛЕННЯ UI >>>
-        
-        // 4. Отримання свіжого документа з Firebase
-        const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
-        
-        if (freshDoc.exists()) {
-            // Оновлюємо глобальну змінну, щоб вона містила свіжий масив вкладень
-            currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
-            
-            // Повторно викликаємо функцію для рендерингу вкладень у модальному вікні
-            showAttachmentPopover(currentTaskWithAttachments);
-            
-            showNotification('Успіх', 'Посилання додано!');
-        } else {
-             showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+    const addAttachment_withLogging = async () => {
+        const name = attachmentNameInput.value.trim();
+        const url = attachmentUrlInput.value.trim();
+
+        if (!name || !url || !currentTaskWithAttachments) {
+            showNotification('Помилка', 'Введіть назву та коректний URL.');
+            return;
         }
 
-    } catch (e) {
-        console.error("Error adding attachment:", e);
-        showNotification('Помилка', 'Не вдалося додати посилання. Перевірте консоль.');
-    }
-};
-const removeAttachment_withLogging = async (item, index) => {
-    if (!confirm('Видалити це посилання?')) return;
-    
-    try {
-        const attachmentToRemove = item.attachments[index];
-        
-        // 1. Створюємо новий масив без елемента, який видаляється
-        const newAttachments = item.attachments.filter((_, idx) => idx !== index);
-        
-        const taskId = item.id; // Зберігаємо ID
-
-        // 2. Оновлення документу у Firebase
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
-            attachments: newAttachments
-        });
-        
-        // 3. Логування активності
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: 'attachment_removed',
-            itemId: item.id,
-            itemText: item.text,
-            attachmentName: attachmentToRemove.name
-        });
-
-        // <<< НОВИЙ БЛОК ДЛЯ ОНОВЛЕННЯ UI >>>
-        
-        // 4. Отримання свіжого документа з Firebase
-        const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
-        
-        if (freshDoc.exists()) {
-            // Оновлюємо глобальну змінну, щоб вона містила свіжий масив вкладень
-            currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
-            
-            // Повторно викликаємо функцію для рендерингу вкладень у модальному вікні
-            showAttachmentPopover(currentTaskWithAttachments);
-            
-            showNotification('Успіх', 'Посилання видалено!');
-        } else {
-             showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+        try {
+            new URL(url);
+        } catch (_) {
+            showNotification('Помилка', 'Введений URL не є коректним.');
+            return;
         }
 
-    } catch (e) {
-        console.error("Error removing attachment:", e);
-        showNotification('Помилка', 'Не вдалося видалити посилання. Перевірте консоль.');
-    }
-};
+        try {
+            const item = currentTaskWithAttachments;
+            const taskId = item.id;
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
+                attachments: arrayUnion({
+                    name: name,
+                    url: url,
+                    createdAt: new Date()
+                })
+            });
+
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'attachment_added',
+                itemId: item.id,
+                itemText: item.text,
+                attachmentName: name
+            });
+
+            attachmentNameInput.value = '';
+            attachmentUrlInput.value = '';
+
+            const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
+
+            if (freshDoc.exists()) {
+                currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
+
+                showAttachmentPopover(currentTaskWithAttachments);
+
+                showNotification('Успіх', 'Посилання додано!');
+            } else {
+                showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+            }
+
+        } catch (e) {
+            console.error("Error adding attachment:", e);
+            showNotification('Помилка', 'Не вдалося додати посилання. Перевірте консоль.');
+        }
+    };
+    const removeAttachment_withLogging = async (item, index) => {
+        if (!confirm('Видалити це посилання?')) return;
+
+        try {
+            const attachmentToRemove = item.attachments[index];
+
+            const newAttachments = item.attachments.filter((_, idx) => idx !== index);
+
+            const taskId = item.id;
+
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
+                attachments: newAttachments
+            });
+
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: 'attachment_removed',
+                itemId: item.id,
+                itemText: item.text,
+                attachmentName: attachmentToRemove.name
+            });
+
+            const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
+
+            if (freshDoc.exists()) {
+                currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
+
+                showAttachmentPopover(currentTaskWithAttachments);
+
+                showNotification('Успіх', 'Посилання видалено!');
+            } else {
+                showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+            }
+
+        } catch (e) {
+            console.error("Error removing attachment:", e);
+            showNotification('Помилка', 'Не вдалося видалити посилання. Перевірте консоль.');
+        }
+    };
 
     const openActiveBoard = (board) => {
         currentBoardId = board.id;
@@ -1436,7 +1414,7 @@ const removeAttachment_withLogging = async (item, index) => {
         switchMobileTab('tasks');
         boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
         Object.values(friendsCache).forEach(f => {
-            if(!board.members.includes(f.userId)) {
+            if (!board.members.includes(f.userId)) {
                 boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
             }
         });
@@ -1471,13 +1449,13 @@ const removeAttachment_withLogging = async (item, index) => {
 
     const addBoardMember = async () => {
         const friendId = boardFriendSelect.value;
-        if(!friendId || !currentBoardId) return;
+        if (!friendId || !currentBoardId) return;
         try {
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'boards', currentBoardId), { members: arrayUnion(friendId) });
             addBoardMemberModal.classList.add('hidden');
             const currentCount = parseInt(getEl('board-member-count').textContent);
             getEl('board-member-count').textContent = currentCount + 1;
-        } catch(e) { console.error("Error adding member", e); }
+        } catch (e) { console.error("Error adding member", e); }
     };
 
     googleSignInButton.addEventListener('click', signInWithGoogle);
@@ -1550,7 +1528,7 @@ const removeAttachment_withLogging = async (item, index) => {
     });
 
     actionActivateBtn.addEventListener('click', () => {
-        if(currentTaskForAction) {
+        if (currentTaskForAction) {
             updateTaskStatus(currentTaskForAction.id, 'active', currentTaskForAction.originalSharedTaskId);
             hideTaskActionsModal();
         }
@@ -1585,11 +1563,11 @@ const removeAttachment_withLogging = async (item, index) => {
     chatMessageInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendMessage(); });
 
     boardsBtn.addEventListener('click', () => { mainContent.classList.add('hidden'); boardsSection.classList.remove('hidden'); subscribeToBoards(); });
-    backToTasksFromBoardsBtn.addEventListener('click', () => { boardsSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if(unsubscribeFromBoards) unsubscribeFromBoards(); });
+    backToTasksFromBoardsBtn.addEventListener('click', () => { boardsSection.classList.add('hidden'); mainContent.classList.remove('hidden'); if (unsubscribeFromBoards) unsubscribeFromBoards(); });
     createBoardBtn.addEventListener('click', () => { boardNameInput.value = ''; createBoardModal.classList.remove('hidden'); });
     cancelBoardBtn.addEventListener('click', () => createBoardModal.classList.add('hidden'));
     saveBoardBtn.addEventListener('click', createBoard);
-    backToBoardsListBtn.addEventListener('click', () => { activeBoardView.classList.add('hidden'); activeBoardView.classList.remove('flex'); boardsListView.classList.remove('hidden'); if(unsubscribeFromBoardItems) unsubscribeFromBoardItems(); });
+    backToBoardsListBtn.addEventListener('click', () => { activeBoardView.classList.add('hidden'); activeBoardView.classList.remove('flex'); boardsListView.classList.remove('hidden'); if (unsubscribeFromBoardItems) unsubscribeFromBoardItems(); });
 
     addBoardMemberBtn.addEventListener('click', () => addBoardMemberModal.classList.remove('hidden'));
     cancelBoardMemberBtn.addEventListener('click', () => addBoardMemberModal.classList.add('hidden'));

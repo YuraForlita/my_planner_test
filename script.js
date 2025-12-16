@@ -1334,18 +1334,18 @@ const addAttachment_withLogging = async () => {
 
     try {
         const item = currentTaskWithAttachments;
-        
-        // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: Використовуємо new Date() замість serverTimestamp() >>>
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+        const taskId = item.id; // Зберігаємо ID
+
+        // 1. Оновлення Firebase за допомогою arrayUnion
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
             attachments: arrayUnion({ 
                 name: name, 
                 url: url, 
-                // Встановлюємо клієнтську мітку часу, щоб обійти обмеження SDK
                 createdAt: new Date() 
             })
         });
         
-        // Тут serverTimestamp() все ще може використовуватись для логування, оскільки він знаходиться на верхньому рівні
+        // 2. Логування активності
         await logBoardActivity(item.boardId || currentBoardId, {
             type: 'attachment_added',
             itemId: item.id,
@@ -1353,8 +1353,26 @@ const addAttachment_withLogging = async () => {
             attachmentName: name
         });
         
+        // 3. Очищення полів вводу
         attachmentNameInput.value = '';
         attachmentUrlInput.value = '';
+
+        // <<< НОВИЙ БЛОК ДЛЯ ОНОВЛЕННЯ UI >>>
+        
+        // 4. Отримання свіжого документа з Firebase
+        const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
+        
+        if (freshDoc.exists()) {
+            // Оновлюємо глобальну змінну, щоб вона містила свіжий масив вкладень
+            currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
+            
+            // Повторно викликаємо функцію для рендерингу вкладень у модальному вікні
+            showAttachmentPopover(currentTaskWithAttachments);
+            
+            showNotification('Успіх', 'Посилання додано!');
+        } else {
+             showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+        }
 
     } catch (e) {
         console.error("Error adding attachment:", e);

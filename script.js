@@ -1608,61 +1608,54 @@ const subscribeToBoardNotifications = () => {
         return;
     }
     
-    // Перевіряємо, чи ми вже підписані
-    // Якщо у вас є глобальна змінна, яка тримає функцію відписки, її тут треба викликати.
-    // Наприклад: if (unsubscribeNotifications) unsubscribeNotifications();
-
+    // Створення посилання на колекцію
     const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
     
+    // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: ВИДАЛЯЄМО orderBy("timestamp", "desc") >>>
+    // Залишаємо лише фільтр по boardId
     const q = query(
         notificationsRef, 
         where("boardId", "==", currentBoardId),
-        orderBy("timestamp", "desc"),
-        limit(10) 
+        limit(10) // Ліміт залишаємо
     );
 
-    console.log(`Запуск підписки на сповіщення для дошки: ${currentBoardId}`);
+    console.log(`[NOTIF] Запуск підписки на сповіщення для дошки: ${currentBoardId}`);
 
-    // onSnapshot тепер буде мати функцію відписки, яку можна зберегти
-    const unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+    onSnapshot(q, (snapshot) => {
         
-        console.log(`Отримано оновлення сповіщень. Загальна кількість змін: ${snapshot.docChanges().length}`);
+        console.log(`[NOTIF] Отримано оновлення сповіщень. Загальна кількість змін: ${snapshot.docChanges().length}`);
         
         snapshot.docChanges().forEach((change) => {
-            console.log(`Тип зміни: ${change.type}, ID: ${change.doc.id}`);
+            console.log(`[NOTIF] Тип зміни: ${change.type}, ID: ${change.doc.id}`);
             
             if (change.type === "added") {
                 const notif = change.doc.data();
                 const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
                 
-                // Перевіряємо, чи це не наше власне сповіщення
-                if (notif.notifierId === currentUserId) {
-                    console.log(`Сповіщення відхилено: Ви самі натиснули дзвіночок. ID: ${change.doc.id}`);
-                    // Якщо ми видаляємо наші власні нотифікації:
+                // Якщо це не наше власне сповіщення
+                if (notif.notifierId !== currentUserId) {
+                    const message = `Користувач ${notif.notifierName} сповіщає про завдання: "${notif.itemText}"`;
+                    
+                    console.log(`[NOTIF] ✅ Відображаємо сповіщення для іншого користувача: ${message}`);
+                    showNotification('🔔 Сповіщення про завдання', message);
+                    
+                    // Видаляємо сповіщення
                     deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
-                         console.error("Помилка видалення власного сповіщення:", e);
+                         console.error("[NOTIF] Помилка видалення сповіщення після відображення:", e);
                     });
-                    return; 
+                } else {
+                    console.log(`[NOTIF] Сповіщення відхилено: Ви самі натиснули дзвіночок. ID: ${change.doc.id}`);
+                    // Також видаляємо наше власне, щоб воно не з'явилося знову
+                    deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
+                         console.error("[NOTIF] Помилка видалення власного сповіщення:", e);
+                    });
                 }
-                
-                const message = `Користувач ${notif.notifierName} сповіщає про завдання: "${notif.itemText}"`;
-                
-                console.log(`✅ Відображаємо сповіщення для іншого користувача: ${message}`);
-                showNotification('🔔 Сповіщення про завдання', message);
-                
-                // Видаляємо сповіщення, щоб воно більше не відображалося
-                deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
-                     console.error("Помилка видалення сповіщення після відображення:", e);
-                });
             }
         });
     }, (error) => {
-         console.error("Помилка в onSnapshot для сповіщень (Permission Denied?):", error);
-         showNotification('Помилка', 'Не вдалося підписатися на сповіщення.');
+         console.error("[NOTIF] Помилка в onSnapshot для сповіщень:", error);
+         showNotification('Помилка', 'Не вдалося підписатися на сповіщення. Перевірте консоль.');
     });
-
-    // Тут ви повинні зберегти unsubscribeNotifications, якщо плануєте змінювати дошки
-    // наприклад, у глобальну змінну: unsubscribeNotifications = unsubscribeNotifications;
 };
 
     resourcesBtn.addEventListener('click', openResourcesView);

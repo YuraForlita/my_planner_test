@@ -1335,15 +1335,17 @@ const addAttachment_withLogging = async () => {
     try {
         const item = currentTaskWithAttachments;
         
-        // <<< ВИПРАВЛЕННЯ: serverTimestamp() всередині arrayUnion >>>
+        // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: Використовуємо new Date() замість serverTimestamp() >>>
         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
             attachments: arrayUnion({ 
                 name: name, 
                 url: url, 
-                createdAt: serverTimestamp() 
+                // Встановлюємо клієнтську мітку часу, щоб обійти обмеження SDK
+                createdAt: new Date() 
             })
         });
         
+        // Тут serverTimestamp() все ще може використовуватись для логування, оскільки він знаходиться на верхньому рівні
         await logBoardActivity(item.boardId || currentBoardId, {
             type: 'attachment_added',
             itemId: item.id,
@@ -1359,7 +1361,6 @@ const addAttachment_withLogging = async () => {
         showNotification('Помилка', 'Не вдалося додати посилання. Перевірте консоль.');
     }
 };
-
 const removeAttachment_withLogging = async (item, index) => {
     if (!confirm('Видалити це посилання?')) return;
     
@@ -1370,7 +1371,7 @@ const removeAttachment_withLogging = async (item, index) => {
         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
             attachments: newAttachments
         });
-        
+
         await logBoardActivity(item.boardId || currentBoardId, {
             type: 'attachment_removed',
             itemId: item.id,

@@ -1384,12 +1384,18 @@ const removeAttachment_withLogging = async (item, index) => {
     
     try {
         const attachmentToRemove = item.attachments[index];
+        
+        // 1. Створюємо новий масив без елемента, який видаляється
         const newAttachments = item.attachments.filter((_, idx) => idx !== index);
         
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
+        const taskId = item.id; // Зберігаємо ID
+
+        // 2. Оновлення документу у Firebase
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId), {
             attachments: newAttachments
         });
-
+        
+        // 3. Логування активності
         await logBoardActivity(item.boardId || currentBoardId, {
             type: 'attachment_removed',
             itemId: item.id,
@@ -1397,9 +1403,26 @@ const removeAttachment_withLogging = async (item, index) => {
             attachmentName: attachmentToRemove.name
         });
 
+        // <<< НОВИЙ БЛОК ДЛЯ ОНОВЛЕННЯ UI >>>
+        
+        // 4. Отримання свіжого документа з Firebase
+        const freshDoc = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', taskId));
+        
+        if (freshDoc.exists()) {
+            // Оновлюємо глобальну змінну, щоб вона містила свіжий масив вкладень
+            currentTaskWithAttachments = { ...freshDoc.data(), id: freshDoc.id };
+            
+            // Повторно викликаємо функцію для рендерингу вкладень у модальному вікні
+            showAttachmentPopover(currentTaskWithAttachments);
+            
+            showNotification('Успіх', 'Посилання видалено!');
+        } else {
+             showNotification('Помилка', 'Завдання не знайдено для оновлення UI.');
+        }
+
     } catch (e) {
         console.error("Error removing attachment:", e);
-        showNotification('Помилка', 'Не вдалося видалити посилання.');
+        showNotification('Помилка', 'Не вдалося видалити посилання. Перевірте консоль.');
     }
 };
 

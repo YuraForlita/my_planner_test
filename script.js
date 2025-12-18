@@ -840,54 +840,54 @@ window.onload = function () {
         editingBoardTask = null;
     });
     const formatTextForDisplay = (text) => {
-    if (!text) return '';
-    
-    let safeText = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-        
-    return safeText.replace(/\n/g, '<br>');
-};
+        if (!text) return '';
+
+        let safeText = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        return safeText.replace(/\n/g, '<br>');
+    };
 
     const renderBoardTask = (item) => {
-    const total = item.subtasks ? item.subtasks.length : 0;
-    const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-    const isCompleted = percent === 100 && total > 0;
-    const completedClass = isCompleted ? 'border-green-500 shadow-lg' : 'border-indigo-500';
-    const attachmentsCount = (item.attachments || []).length; 
+        const total = item.subtasks ? item.subtasks.length : 0;
+        const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        const isCompleted = percent === 100 && total > 0;
+        const completedClass = isCompleted ? 'border-green-500 shadow-lg' : 'border-indigo-500';
+        const attachmentsCount = (item.attachments || []).length;
 
-    const el = document.createElement('div');
-    el.className = `board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 ${completedClass}`;
-    el.style.minHeight = "80px";
-    el.style.wordBreak = "break-word";
-    el.style.overflowWrap = "break-word"; 
-    el.style.whiteSpace = "normal";
+        const el = document.createElement('div');
+        el.className = `board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 ${completedClass}`;
+        el.style.minHeight = "80px";
+        el.style.wordBreak = "break-word";
+        el.style.overflowWrap = "break-word";
+        el.style.whiteSpace = "normal";
 
-    let attachmentBtnHtml = '';
-    if (attachmentsCount > 0) {
-        attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
+        let attachmentBtnHtml = '';
+        if (attachmentsCount > 0) {
+            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
             <i class="fas fa-paperclip text-xs"></i><span class="ml-1">${attachmentsCount}</span>
         </button>`;
-    } else {
-         attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
+        } else {
+            attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-gray-400 hover:bg-gray-500 opacity-0 group-hover:opacity-100" title="Додати посилання">
             <i class="fas fa-paperclip"></i>
         </button>`;
-    }
+        }
 
 
-    let subtasksHtml = '';
-    if(item.subtasks) {
-        subtasksHtml = item.subtasks.map((s, idx) => `
+        let subtasksHtml = '';
+        if (item.subtasks) {
+            subtasksHtml = item.subtasks.map((s, idx) => `
             <div class="flex items-start gap-2 mt-1">
                 <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
                 <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${formatTextForDisplay(s.text)}</span>
             </div>
         `).join('');
-    }
+        }
 
-    el.innerHTML = `
+        el.innerHTML = `
         <div class="flex justify-between items-start mb-2">
             <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${formatTextForDisplay(item.text)}</h4>
             <div class="flex gap-2 flex-shrink-0">
@@ -905,36 +905,36 @@ window.onload = function () {
         </div>
         ${attachmentBtnHtml}
     `;
-    
 
-    const deleteBtn = el.querySelector('.delete-item-btn');
-    if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
-    const editBtn = el.querySelector('.edit-item-btn');
-    if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
-    el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
-    });
 
-    // Обробник для кнопки СКРІПКИ
-    const attachmentBtnEl = el.querySelector('.attachment-btn');
-    if (attachmentBtnEl) {
-        attachmentBtnEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            showAttachmentPopover(item);
+        const deleteBtn = el.querySelector('.delete-item-btn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
+        const editBtn = el.querySelector('.edit-item-btn');
+        if (editBtn) editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditBoardTask(item); });
+        el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', (e) => toggleSubtask_withLogging(item, parseInt(e.target.dataset.idx), e.target.checked));
         });
-    }
 
-    // НОВИЙ ОБРОБНИК ДЛЯ КНОПКИ ДЗВІНОЧКА
-    const notifyBtn = el.querySelector('.notify-item-btn');
-    if (notifyBtn) {
-        notifyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            notifyUsersAboutTask_withLogging(item);
-        });
-    }
+        // Обробник для кнопки СКРІПКИ
+        const attachmentBtnEl = el.querySelector('.attachment-btn');
+        if (attachmentBtnEl) {
+            attachmentBtnEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showAttachmentPopover(item);
+            });
+        }
 
-    boardTasksList.appendChild(el);
-};
+        // НОВИЙ ОБРОБНИК ДЛЯ КНОПКИ ДЗВІНОЧКА
+        const notifyBtn = el.querySelector('.notify-item-btn');
+        if (notifyBtn) {
+            notifyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notifyUsersAboutTask_withLogging(item);
+            });
+        }
+
+        boardTasksList.appendChild(el);
+    };
 
     const renderBoardSticker = (item) => {
         const el = document.createElement('div');
@@ -950,31 +950,88 @@ window.onload = function () {
     };
 
     const subscribeToBoardItems = (boardId) => {
-    if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-    
-    // Створюємо посилання на колекцію
-    const boardItemsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_items');
+        if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
 
-    // <<< НОВИЙ СКЛАДЕНИЙ ЗАПИТ ДЛЯ СОРТУВАННЯ >>>
-    const q = query(
-        boardItemsRef, 
-        where('boardId', '==', boardId),
-        // 1. Сортуємо за статусом: 1 (Невиконане) йде першим
-        orderBy("sortOrder", "asc"),
-        // 2. Сортуємо за часом: Новіші завдання (вищі значення timestamp) йдуть раніше
-        orderBy("timestamp", "desc")
-    );
+        // Створюємо посилання на колекцію
+        const boardItemsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_items');
 
-    unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-        boardTasksList.innerHTML = '';
-        boardStickersArea.innerHTML = '';
-        snapshot.forEach(d => {
-            const item = { id: d.id, ...d.data() };
-            if (item.type === 'task') renderBoardTask(item);
-            else if (item.type === 'sticker') renderBoardSticker(item);
-        });
-    }, error => console.error("Board items subscription error:", error));
-};
+        // <<< НОВИЙ СКЛАДЕНИЙ ЗАПИТ ДЛЯ СОРТУВАННЯ >>>
+        const q = query(
+            boardItemsRef,
+            where('boardId', '==', boardId),
+            // 1. Сортуємо за статусом: 1 (Невиконане) йде першим
+            orderBy("sortOrder", "asc"),
+            // 2. Сортуємо за часом: Новіші завдання (вищі значення timestamp) йдуть раніше
+            orderBy("timestamp", "desc")
+        );
+
+        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+            boardTasksList.innerHTML = '';
+            boardStickersArea.innerHTML = '';
+            snapshot.forEach(d => {
+                const item = { id: d.id, ...d.data() };
+                if (item.type === 'task') renderBoardTask(item);
+                else if (item.type === 'sticker') renderBoardSticker(item);
+            });
+        }, error => console.error("Board items subscription error:", error));
+    };
+
+    const migrateOldTasks = async () => {
+        if (!currentBoardId || !auth.currentUser) {
+            console.error("Міграція неможлива: немає ID дошки або користувача.");
+            return;
+        }
+
+        const boardItemsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_items');
+
+        // Запит, який знайде ВСІ завдання на поточній дошці (без сортування)
+        const q = query(boardItemsRef, where('boardId', '==', currentBoardId));
+
+        try {
+            const snapshot = await getDocs(q);
+
+            if (snapshot.empty) {
+                console.log("Немає завдань для міграції.");
+                return;
+            }
+
+            const batch = writeBatch(db);
+            let migratedCount = 0;
+
+            snapshot.forEach(docSnapshot => {
+                const item = docSnapshot.data();
+
+                // Перевіряємо, чи потрібно оновлення (тобто, чи відсутнє поле sortOrder)
+                if (item.sortOrder === undefined) {
+
+                    // Встановлюємо початкові значення:
+                    // 1. Статус сортування: 1 (Невиконане, бо ми не знаємо його статусу, але хай буде вгорі)
+                    // 2. Мітка часу: використовуємо існуючий createdAt або поточну дату, якщо createdAt відсутній
+
+                    const taskUpdates = {
+                        sortOrder: 1, // Припускаємо, що старе завдання - невиконане
+                        timestamp: item.createdAt || new Date() // Використовуємо існуючий час або новий час
+                    };
+
+                    const itemRef = doc(db, 'artifacts', appId, 'public', 'data', 'board_items', docSnapshot.id);
+                    batch.update(itemRef, taskUpdates);
+                    migratedCount++;
+                }
+            });
+
+            if (migratedCount > 0) {
+                await batch.commit();
+                showNotification('Міграція успішна', `Оновлено ${migratedCount} старих завдань для сортування.`);
+                console.log(`Міграція завершена. Оновлено завдань: ${migratedCount}`);
+            } else {
+                console.log("Усі завдання вже мають необхідні поля сортування.");
+            }
+
+        } catch (e) {
+            console.error("Помилка при міграції старих завдань:", e);
+            showNotification('Помилка', 'Не вдалося оновити старі завдання.');
+        }
+    };
 
     const logBoardActivity = async (boardId, payload) => {
         try {
@@ -1166,41 +1223,41 @@ window.onload = function () {
     };
 
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
-    try {
-        if (!item || !Array.isArray(item.subtasks)) return;
+        try {
+            if (!item || !Array.isArray(item.subtasks)) return;
 
-        // 1. Оновлення статусу підзавдання
-        const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
-        const oldText = newSubtasks[idx]?.text || '';
-        newSubtasks[idx].completed = isChecked;
+            // 1. Оновлення статусу підзавдання
+            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
+            const oldText = newSubtasks[idx]?.text || '';
+            newSubtasks[idx].completed = isChecked;
 
-        // 2. Логіка сортування: Перевіряємо, чи всі підзавдання виконані
-        const total = newSubtasks.length;
-        const done = newSubtasks.filter(s => s.completed).length;
-        // Завдання вважається виконаним, якщо є підзавдання (total > 0) і всі вони виконані
-        const allCompleted = total > 0 && done === total; 
-        
-        // Встановлюємо sortOrder: 1 (невиконане) або 2 (виконане)
-        const newSortOrder = allCompleted ? 2 : 1; 
+            // 2. Логіка сортування: Перевіряємо, чи всі підзавдання виконані
+            const total = newSubtasks.length;
+            const done = newSubtasks.filter(s => s.completed).length;
+            // Завдання вважається виконаним, якщо є підзавдання (total > 0) і всі вони виконані
+            const allCompleted = total > 0 && done === total;
 
-        // 3. Створення об'єкта оновлення
-        const updates = {
-            subtasks: newSubtasks,
-            sortOrder: newSortOrder // Оновлюємо поле для сортування
-        };
+            // Встановлюємо sortOrder: 1 (невиконане) або 2 (виконане)
+            const newSortOrder = allCompleted ? 2 : 1;
 
-        // 4. Оновлення документа у Firestore
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), updates);
+            // 3. Створення об'єкта оновлення
+            const updates = {
+                subtasks: newSubtasks,
+                sortOrder: newSortOrder // Оновлюємо поле для сортування
+            };
 
-        // 5. Логування активності (без змін)
-        await logBoardActivity(item.boardId || currentBoardId, {
-            type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
-            itemId: item.id,
-            subtaskIdx: idx,
-            subtaskText: oldText
-        });
-    } catch (e) { console.error("Error toggling subtask:", e); }
-};
+            // 4. Оновлення документа у Firestore
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), updates);
+
+            // 5. Логування активності (без змін)
+            await logBoardActivity(item.boardId || currentBoardId, {
+                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+                itemId: item.id,
+                subtaskIdx: idx,
+                subtaskText: oldText
+            });
+        } catch (e) { console.error("Error toggling subtask:", e); }
+    };
 
     const addSticker_withLogging = async () => {
         try {
@@ -1463,40 +1520,41 @@ window.onload = function () {
     };
 
     const openActiveBoard = (board) => {
-    currentBoardId = board.id;
-    activeBoardTitle.textContent = board.title;
-    getEl('board-member-count').textContent = board.members.length;
-    boardsListView.classList.add('hidden');
-    activeBoardView.classList.remove('hidden');
-    activeBoardView.classList.add('flex');
-    switchMobileTab('tasks');
-    boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
-    Object.values(friendsCache).forEach(f => {
-        if (!board.members.includes(f.userId)) {
-            boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
-        }
-    });
+        currentBoardId = board.id;
+        activeBoardTitle.textContent = board.title;
+        getEl('board-member-count').textContent = board.members.length;
+        boardsListView.classList.add('hidden');
+        activeBoardView.classList.remove('hidden');
+        activeBoardView.classList.add('flex');
+        switchMobileTab('tasks');
+        boardFriendSelect.innerHTML = '<option value="">Виберіть друга</option>';
+        Object.values(friendsCache).forEach(f => {
+            if (!board.members.includes(f.userId)) {
+                boardFriendSelect.innerHTML += `<option value="${f.userId}">${f.name}</option>`;
+            }
+        });
 
-    // Оновлена підписка:
-    subscribeToBoardItems(board.id);
-    subscribeToBoardActivities(board.id);
-    // <<< НОВИЙ ВИКЛИК ПІДПИСКИ НА СПОВІЩЕННЯ >>>
-    subscribeToBoardNotifications();
+        // Оновлена підписка:
+        subscribeToBoardItems(board.id);
+        subscribeToBoardActivities(board.id);
+        // <<< НОВИЙ ВИКЛИК ПІДПИСКИ НА СПОВІЩЕННЯ >>>
+        subscribeToBoardNotifications();
 
-    (function addBoardReportButton() {
-        try {
-            const header = document.querySelector('#active-board-title')?.parentElement;
-            if (!header) return;
-            if (getEl('open-board-report-btn')) return;
-            const btn = document.createElement('button');
-            btn.id = 'open-board-report-btn';
-            btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
-            btn.textContent = 'Звіт';
-            btn.addEventListener('click', openBoardReport);
-            header.appendChild(btn);
-        } catch (e) { console.error(e); }
-    })();
-};
+        (function addBoardReportButton() {
+            try {
+                const header = document.querySelector('#active-board-title')?.parentElement;
+                if (!header) return;
+                if (getEl('open-board-report-btn')) return;
+                const btn = document.createElement('button');
+                btn.id = 'open-board-report-btn';
+                btn.className = 'px-3 py-1 rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 text-sm';
+                btn.textContent = 'Звіт';
+                btn.addEventListener('click', openBoardReport);
+                header.appendChild(btn);
+            } catch (e) { console.error(e); }
+        })();
+        migrateOldTasks();
+    };
 
     saveBoardTaskBtn.addEventListener('click', addBoardTask_withLogging);
     saveStickerBtn.addEventListener('click', addSticker_withLogging);
@@ -1612,95 +1670,95 @@ window.onload = function () {
 
 
     const notifyUsersAboutTask_withLogging = async (item) => {
-    if (!currentBoardId) return showNotification('Помилка', 'Дошка не вибрана.');
-    if (!auth.currentUser) return showNotification('Помилка', 'Ви не авторизовані.');
+        if (!currentBoardId) return showNotification('Помилка', 'Дошка не вибрана.');
+        if (!auth.currentUser) return showNotification('Помилка', 'Ви не авторизовані.');
 
-    // Колекція, яка використовуватиметься для тригера сповіщень
-    const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
+        // Колекція, яка використовуватиметься для тригера сповіщень
+        const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
 
-    try {
-        await addDoc(notificationsRef, {
-            boardId: currentBoardId,
-            itemId: item.id,
-            itemText: item.text,
-            notifierId: auth.currentUser.uid,
-            // ВИКОРИСТОВУЄМО АКТУАЛЬНЕ ІМ'Я З DISPLAYNAME АБО КЕШУ
-            notifierName: getDisplayNameFor(auth.currentUser.uid), 
-            timestamp: serverTimestamp() // Використовуємо serverTimestamp для запису в основному документі
-        });
-        
-        // Логування активності 
-        await logBoardActivity(currentBoardId, {
-            type: 'task_notified',
-            itemId: item.id,
-            itemText: item.text,
-        });
+        try {
+            await addDoc(notificationsRef, {
+                boardId: currentBoardId,
+                itemId: item.id,
+                itemText: item.text,
+                notifierId: auth.currentUser.uid,
+                // ВИКОРИСТОВУЄМО АКТУАЛЬНЕ ІМ'Я З DISPLAYNAME АБО КЕШУ
+                notifierName: getDisplayNameFor(auth.currentUser.uid),
+                timestamp: serverTimestamp() // Використовуємо serverTimestamp для запису в основному документі
+            });
 
-        showNotification('Успіх', 'Учасникам надіслано сповіщення!');
-        
-    } catch (e) {
-        console.error("Помилка надсилання сповіщення:", e);
-        showNotification('Помилка', 'Не вдалося надіслати сповіщення.');
-    }
-};
+            // Логування активності 
+            await logBoardActivity(currentBoardId, {
+                type: 'task_notified',
+                itemId: item.id,
+                itemText: item.text,
+            });
 
-// --- ПІДПИСКА НА СПОВІЩЕННЯ ---
+            showNotification('Успіх', 'Учасникам надіслано сповіщення!');
 
-const subscribeToBoardNotifications = () => {
-    if (!currentBoardId) {
-        console.warn("Підписка на сповіщення не запущена: немає currentBoardId.");
-        return;
-    }
-    
-    // Створення посилання на колекцію
-    const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
-    
-    // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: ВИДАЛЯЄМО orderBy("timestamp", "desc") >>>
-    // Залишаємо лише фільтр по boardId
-    const q = query(
-        notificationsRef, 
-        where("boardId", "==", currentBoardId),
-        limit(10) // Ліміт залишаємо
-    );
+        } catch (e) {
+            console.error("Помилка надсилання сповіщення:", e);
+            showNotification('Помилка', 'Не вдалося надіслати сповіщення.');
+        }
+    };
 
-    console.log(`[NOTIF] Запуск підписки на сповіщення для дошки: ${currentBoardId}`);
+    // --- ПІДПИСКА НА СПОВІЩЕННЯ ---
 
-    onSnapshot(q, (snapshot) => {
-        
-        console.log(`[NOTIF] Отримано оновлення сповіщень. Загальна кількість змін: ${snapshot.docChanges().length}`);
-        
-        snapshot.docChanges().forEach((change) => {
-            console.log(`[NOTIF] Тип зміни: ${change.type}, ID: ${change.doc.id}`);
-            
-            if (change.type === "added") {
-                const notif = change.doc.data();
-                const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
-                
-                // Якщо це не наше власне сповіщення
-                if (notif.notifierId !== currentUserId) {
-                    const message = `Користувач ${notif.notifierName} сповіщає про завдання: "${notif.itemText}"`;
-                    
-                    console.log(`[NOTIF] ✅ Відображаємо сповіщення для іншого користувача: ${message}`);
-                    showNotification('🔔 Сповіщення про завдання', message);
-                    
-                    // Видаляємо сповіщення
-                    deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
-                         console.error("[NOTIF] Помилка видалення сповіщення після відображення:", e);
-                    });
-                } else {
-                    console.log(`[NOTIF] Сповіщення відхилено: Ви самі натиснули дзвіночок. ID: ${change.doc.id}`);
-                    // Також видаляємо наше власне, щоб воно не з'явилося знову
-                    deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
-                         console.error("[NOTIF] Помилка видалення власного сповіщення:", e);
-                    });
+    const subscribeToBoardNotifications = () => {
+        if (!currentBoardId) {
+            console.warn("Підписка на сповіщення не запущена: немає currentBoardId.");
+            return;
+        }
+
+        // Створення посилання на колекцію
+        const notificationsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_notifications');
+
+        // <<< ГОЛОВНЕ ВИПРАВЛЕННЯ: ВИДАЛЯЄМО orderBy("timestamp", "desc") >>>
+        // Залишаємо лише фільтр по boardId
+        const q = query(
+            notificationsRef,
+            where("boardId", "==", currentBoardId),
+            limit(10) // Ліміт залишаємо
+        );
+
+        console.log(`[NOTIF] Запуск підписки на сповіщення для дошки: ${currentBoardId}`);
+
+        onSnapshot(q, (snapshot) => {
+
+            console.log(`[NOTIF] Отримано оновлення сповіщень. Загальна кількість змін: ${snapshot.docChanges().length}`);
+
+            snapshot.docChanges().forEach((change) => {
+                console.log(`[NOTIF] Тип зміни: ${change.type}, ID: ${change.doc.id}`);
+
+                if (change.type === "added") {
+                    const notif = change.doc.data();
+                    const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
+
+                    // Якщо це не наше власне сповіщення
+                    if (notif.notifierId !== currentUserId) {
+                        const message = `Користувач ${notif.notifierName} сповіщає про завдання: "${notif.itemText}"`;
+
+                        console.log(`[NOTIF] ✅ Відображаємо сповіщення для іншого користувача: ${message}`);
+                        showNotification('🔔 Сповіщення про завдання', message);
+
+                        // Видаляємо сповіщення
+                        deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
+                            console.error("[NOTIF] Помилка видалення сповіщення після відображення:", e);
+                        });
+                    } else {
+                        console.log(`[NOTIF] Сповіщення відхилено: Ви самі натиснули дзвіночок. ID: ${change.doc.id}`);
+                        // Також видаляємо наше власне, щоб воно не з'явилося знову
+                        deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_notifications', change.doc.id)).catch(e => {
+                            console.error("[NOTIF] Помилка видалення власного сповіщення:", e);
+                        });
+                    }
                 }
-            }
+            });
+        }, (error) => {
+            console.error("[NOTIF] Помилка в onSnapshot для сповіщень:", error);
+            showNotification('Помилка', 'Не вдалося підписатися на сповіщення. Перевірте консоль.');
         });
-    }, (error) => {
-         console.error("[NOTIF] Помилка в onSnapshot для сповіщень:", error);
-         showNotification('Помилка', 'Не вдалося підписатися на сповіщення. Перевірте консоль.');
-    });
-};
+    };
 
     resourcesBtn.addEventListener('click', openResourcesView);
     backToTasksFromResourcesBtn.addEventListener('click', closeResourcesView);

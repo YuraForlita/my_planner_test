@@ -854,10 +854,12 @@ window.onload = function () {
     const total = item.subtasks ? item.subtasks.length : 0;
     const done = item.subtasks ? item.subtasks.filter(s => s.completed).length : 0;
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+    const isCompleted = percent === 100 && total > 0;
+    const completedClass = isCompleted ? 'border-green-500 shadow-lg' : 'border-indigo-500';
     const attachmentsCount = (item.attachments || []).length; 
 
     const el = document.createElement('div');
-    el.className = 'board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 border-indigo-500';
+    el.className = `board-task-card p-3 mb-3 border rounded flex flex-col relative group hover:shadow-lg transition-shadow border-t-4 ${completedClass}`;
     el.style.minHeight = "80px";
     el.style.wordBreak = "break-word";
     el.style.overflowWrap = "break-word"; 
@@ -895,7 +897,7 @@ window.onload = function () {
             </div>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
-            <div class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+            <div class="bg-${isCompleted ? 'green' : 'indigo'}-600 h-1.5 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
         </div>
         <div class="text-xs text-gray-500 mb-2">${done}/${total} виконано</div>
         <div class="pl-1 space-y-1">

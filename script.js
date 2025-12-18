@@ -880,7 +880,7 @@ window.onload = function () {
 
     el.innerHTML = `
         <div class="flex justify-between items-start mb-2">
-            <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${item.text}</h4>
+            <h4 class="font-bold text-gray-800 break-words flex-grow mr-2">${formatTextForDisplay(item.text)}</h4>
             <div class="flex gap-2 flex-shrink-0">
                 <button class="text-yellow-500 hover:text-yellow-600 notify-item-btn" title="Сповістити про це завдання"><i class="fas fa-bell"></i></button>
                 <button class="text-blue-400 hover:text-blue-600 edit-item-btn"><i class="fas fa-edit"></i></button>
@@ -896,6 +896,13 @@ window.onload = function () {
         </div>
         ${attachmentBtnHtml}
     `;
+
+    const formatTextForDisplay = (text) => {
+    if (!text) return '';
+    
+    // Замінюємо всі символи нового рядка (\n) на HTML-тег <br>
+    return text.replace(/\n/g, '<br>');
+};
 
     const deleteBtn = el.querySelector('.delete-item-btn');
     if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));

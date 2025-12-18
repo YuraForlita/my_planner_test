@@ -839,7 +839,18 @@ window.onload = function () {
         getEl("editBoardTaskModal").classList.add("hidden");
         editingBoardTask = null;
     });
-
+    const formatTextForDisplay = (text) => {
+    if (!text) return '';
+    
+    // 1. Екрануємо символи < та >, щоб запобігти XSS
+    let safeText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+        
+    // 2. Замінюємо \n на <br> (тепер безпечно)
+    return safeText.replace(/\n/g, '<br>');
+};
 
     const renderBoardTask = (item) => {
     const total = item.subtasks ? item.subtasks.length : 0;
@@ -1741,10 +1752,4 @@ const subscribeToBoardNotifications = () => {
 
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     if (initialAuthToken) { signInWithCustomToken(auth, initialAuthToken).catch(() => signInAnonymously(auth)); } else { signInAnonymously(auth); }
-};
-const formatTextForDisplay = (text) => {
-    if (!text) return '';
-    
-    // Замінюємо всі символи нового рядка (\n) на HTML-тег <br>
-    return text.replace(/\n/g, '<br>');
 };

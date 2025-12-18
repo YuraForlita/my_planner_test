@@ -896,13 +896,7 @@ window.onload = function () {
         </div>
         ${attachmentBtnHtml}
     `;
-
-    const formatTextForDisplay = (text) => {
-    if (!text) return '';
     
-    // Замінюємо всі символи нового рядка (\n) на HTML-тег <br>
-    return text.replace(/\n/g, '<br>');
-};
 
     const deleteBtn = el.querySelector('.delete-item-btn');
     if (deleteBtn) deleteBtn.addEventListener('click', () => deleteBoardItem_withLogging(item.id));
@@ -1747,4 +1741,10 @@ const subscribeToBoardNotifications = () => {
 
     const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
     if (initialAuthToken) { signInWithCustomToken(auth, initialAuthToken).catch(() => signInAnonymously(auth)); } else { signInAnonymously(auth); }
+};
+const formatTextForDisplay = (text) => {
+    if (!text) return '';
+    
+    // Замінюємо всі символи нового рядка (\n) на HTML-тег <br>
+    return text.replace(/\n/g, '<br>');
 };

@@ -950,18 +950,31 @@ window.onload = function () {
     };
 
     const subscribeToBoardItems = (boardId) => {
-        if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
-        const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'board_items'), where('boardId', '==', boardId));
-        unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
-            boardTasksList.innerHTML = '';
-            boardStickersArea.innerHTML = '';
-            snapshot.forEach(d => {
-                const item = { id: d.id, ...d.data() };
-                if (item.type === 'task') renderBoardTask(item);
-                else if (item.type === 'sticker') renderBoardSticker(item);
-            });
-        }, error => console.error("Board items subscription error:", error));
-    };
+    if (unsubscribeFromBoardItems) unsubscribeFromBoardItems();
+    
+    // Створюємо посилання на колекцію
+    const boardItemsRef = collection(db, 'artifacts', appId, 'public', 'data', 'board_items');
+
+    // <<< НОВИЙ СКЛАДЕНИЙ ЗАПИТ ДЛЯ СОРТУВАННЯ >>>
+    const q = query(
+        boardItemsRef, 
+        where('boardId', '==', boardId),
+        // 1. Сортуємо за статусом: 1 (Невиконане) йде першим
+        orderBy("sortOrder", "asc"),
+        // 2. Сортуємо за часом: Новіші завдання (вищі значення timestamp) йдуть раніше
+        orderBy("timestamp", "desc")
+    );
+
+    unsubscribeFromBoardItems = onSnapshot(q, (snapshot) => {
+        boardTasksList.innerHTML = '';
+        boardStickersArea.innerHTML = '';
+        snapshot.forEach(d => {
+            const item = { id: d.id, ...d.data() };
+            if (item.type === 'task') renderBoardTask(item);
+            else if (item.type === 'sticker') renderBoardSticker(item);
+        });
+    }, error => console.error("Board items subscription error:", error));
+};
 
     const logBoardActivity = async (boardId, payload) => {
         try {
@@ -1136,7 +1149,9 @@ window.onload = function () {
                 type: 'task',
                 text: title,
                 subtasks,
-                createdAt: serverTimestamp()
+                createdAt: serverTimestamp(),
+                sortOrder: 1,
+                timestamp: serverTimestamp()
             });
 
             await logBoardActivity(currentBoardId, {
@@ -1151,22 +1166,41 @@ window.onload = function () {
     };
 
     const toggleSubtask_withLogging = async (item, idx, isChecked) => {
-        try {
-            if (!item || !Array.isArray(item.subtasks)) return;
-            const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
-            const oldText = newSubtasks[idx]?.text || '';
-            newSubtasks[idx].completed = isChecked;
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), {
-                subtasks: newSubtasks
-            });
-            await logBoardActivity(item.boardId || currentBoardId, {
-                type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
-                itemId: item.id,
-                subtaskIdx: idx,
-                subtaskText: oldText
-            });
-        } catch (e) { console.error("Error toggling subtask:", e); }
-    };
+    try {
+        if (!item || !Array.isArray(item.subtasks)) return;
+
+        // 1. Оновлення статусу підзавдання
+        const newSubtasks = JSON.parse(JSON.stringify(item.subtasks));
+        const oldText = newSubtasks[idx]?.text || '';
+        newSubtasks[idx].completed = isChecked;
+
+        // 2. Логіка сортування: Перевіряємо, чи всі підзавдання виконані
+        const total = newSubtasks.length;
+        const done = newSubtasks.filter(s => s.completed).length;
+        // Завдання вважається виконаним, якщо є підзавдання (total > 0) і всі вони виконані
+        const allCompleted = total > 0 && done === total; 
+        
+        // Встановлюємо sortOrder: 1 (невиконане) або 2 (виконане)
+        const newSortOrder = allCompleted ? 2 : 1; 
+
+        // 3. Створення об'єкта оновлення
+        const updates = {
+            subtasks: newSubtasks,
+            sortOrder: newSortOrder // Оновлюємо поле для сортування
+        };
+
+        // 4. Оновлення документа у Firestore
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'board_items', item.id), updates);
+
+        // 5. Логування активності (без змін)
+        await logBoardActivity(item.boardId || currentBoardId, {
+            type: isChecked ? 'subtask_checked' : 'subtask_unchecked',
+            itemId: item.id,
+            subtaskIdx: idx,
+            subtaskText: oldText
+        });
+    } catch (e) { console.error("Error toggling subtask:", e); }
+};
 
     const addSticker_withLogging = async () => {
         try {

@@ -842,13 +842,11 @@ window.onload = function () {
     const formatTextForDisplay = (text) => {
     if (!text) return '';
     
-    // 1. Екрануємо символи < та >, щоб запобігти XSS
     let safeText = text
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
         
-    // 2. Замінюємо \n на <br> (тепер безпечно)
     return safeText.replace(/\n/g, '<br>');
 };
 
@@ -865,7 +863,6 @@ window.onload = function () {
     el.style.overflowWrap = "break-word"; 
     el.style.whiteSpace = "normal";
 
-    // --- ЛОГІКА СКРІПКИ ---
     let attachmentBtnHtml = '';
     if (attachmentsCount > 0) {
         attachmentBtnHtml = `<button class="attachment-btn absolute top-[-10px] right-[-10px] w-7 h-7 rounded-full text-white shadow-md flex items-center justify-center text-xs font-bold transition-transform transform hover:scale-110 z-10 bg-indigo-600" title="Вкладено ${attachmentsCount} посилань">
@@ -876,7 +873,6 @@ window.onload = function () {
             <i class="fas fa-paperclip"></i>
         </button>`;
     }
-    // --- КІНЕЦЬ ЛОГІКИ СКРІПКИ ---
 
 
     let subtasksHtml = '';
@@ -884,7 +880,7 @@ window.onload = function () {
         subtasksHtml = item.subtasks.map((s, idx) => `
             <div class="flex items-start gap-2 mt-1">
                 <input type="checkbox" class="mt-1 cursor-pointer" ${s.completed ? 'checked' : ''} data-idx="${idx}">
-                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${s.text}</span>
+                <span class="text-sm ${s.completed ? 'line-through text-gray-400' : 'text-gray-700'} break-words">${formatTextForDisplay(s.text)}</span>
             </div>
         `).join('');
     }
